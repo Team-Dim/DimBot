@@ -35,9 +35,9 @@ async def on_ready():
                 emb.set_footer(text=f"{url} | {rss.published}")
                 await ch.send(embed=emb)
                 data[url] = rss.title
-        with open('rss.json', 'w') as f:
-            json.dump(data, f)
-        await asyncio.sleep(60)
+                with open('rss.json', 'w') as f:
+                    json.dump(data, f)
+        await asyncio.sleep(600)
 
 
 bot.run(tokens.discord)
