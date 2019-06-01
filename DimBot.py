@@ -17,6 +17,7 @@ with open('urls.json', 'r') as file:
 
 async def rss_process(domain: str):
     print(f"{domain}: Checking RSS...")
+    await asyncio.sleep(10)
     try:
         feed = feedparser.parse(rss_urls[domain]).entries[0]
         if domain not in botglobal.rss_data.keys():
