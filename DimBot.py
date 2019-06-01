@@ -27,6 +27,8 @@ async def rss_process(domain: str):
                 process_discord(domain, feed)
             )
             botglobal.rss_data[domain] = feed.title
+        else:
+            print(f"{domain}: No updates.")
     except IndexError:
         print(f"{domain}: IndexError")
 
