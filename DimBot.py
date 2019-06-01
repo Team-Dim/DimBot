@@ -7,41 +7,58 @@ import feedparser
 from discord.ext import commands
 from random import randint
 from bs4 import BeautifulSoup
+from botglob import BotGlob
 
-bot = commands.Bot(command_prefix='>')
+bot = commands.Bot(command_prefix='d.')
+botglobal = BotGlob()
 with open('urls.json', 'r') as file:
     rss_urls = json.load(file)
-on_ready_triggered = False
+
+
+async def rss_process(domain: str):
+    print(f"{domain}: Checking RSS...")
+    try:
+        feed = feedparser.parse(rss_urls[domain]).entries[0]
+        if domain not in botglobal.rss_data.keys():
+            botglobal.rss_data[domain] = "None"
+        if botglobal.rss_data[domain] != feed.title:
+            print(f"{domain}: Detected news")
+            await asyncio.gather(
+                process_discord(domain, feed)
+            )
+            botglobal.rss_data[domain] = feed.title
+    except IndexError:
+        print(f"{domain}: IndexError")
+
+
+async def process_discord(domain: str, feed):
+    content = BeautifulSoup(feed.description, "html.parser")
+    emb = discord.Embed()
+    emb.colour = discord.Colour.from_rgb(randint(0, 255), randint(0, 255), randint(0, 255))
+    emb.title = feed.title
+    emb.description = content.get_text()
+    emb.url = feed.link
+    emb.set_footer(text=f"{domain} | {feed.published}")
+    await botglobal.ch.send(embed=emb)
+    print(f"{domain}: Sent Discord")
 
 
 @bot.event
 async def on_ready():
-    global on_ready_triggered
-    if not on_ready_triggered:
-        on_ready_triggered = True
+    if not botglobal.readied:
+        botglobal.readied = True
         print('on_ready')
-        with open('rss.json', 'r') as f:
-            data = json.load(f)
-        ch = bot.get_channel(581699408870113310)
+        botglobal.ch = bot.get_channel(581699408870113310)
         while True:
-            for url in rss_urls:
-                rss = feedparser.parse(rss_urls[url]).entries[0]
-                if url not in data.keys():
-                    data[url] = "None"
-                if data[url] != rss.title:
-                    print(f"Detected news for {url}, Sending...")
-                    content = BeautifulSoup(rss.description, "html.parser")
-                    emb = discord.Embed()
-                    emb.colour = discord.Colour.from_rgb(randint(0, 255), randint(0, 255), randint(0, 255))
-                    emb.title = rss.title
-                    emb.description = content.get_text()
-                    emb.url = rss.link
-                    emb.set_footer(text=f"{url} | {rss.published}")
-                    await ch.send(embed=emb)
-                    data[url] = rss.title
-                    with open('rss.json', 'w') as f:
-                        json.dump(data, f)
+            tasks = []
+            for domain in rss_urls:
+                tasks.append(rss_process(domain))
+            await asyncio.gather(*tasks)
+            with open('rss.json', 'w') as f:
+                json.dump(botglobal.rss_data, f)
             await asyncio.sleep(600)
+    else:
+        print('BOT IS ALREADY READY!')
 
 
 bot.run(tokens.discord)
