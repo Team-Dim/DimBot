@@ -9,3 +9,4 @@ class BotGlob:
         with open('rss.json', 'r') as f:
             self.rss_data = json.load(f)
         self.ch = None
+        self.rss_updated = False

@@ -23,6 +23,7 @@ async def rss_process(domain: str):
             botglobal.rss_data[domain] = "None"
         if botglobal.rss_data[domain] != feed.title:
             print(f"{domain}: Detected news")
+            botglobal.rss_updated = True
             await asyncio.gather(
                 process_discord(domain, feed)
             )
@@ -52,12 +53,14 @@ async def on_ready():
         print('on_ready')
         botglobal.ch = bot.get_channel(581699408870113310)
         while True:
+            botglobal.rss_updated = False
             tasks = []
             for domain in rss_urls:
                 tasks.append(rss_process(domain))
             await asyncio.gather(*tasks)
-            with open('rss.json', 'w') as f:
-                json.dump(botglobal.rss_data, f)
+            if botglobal.rss_updated:
+                with open('rss.json', 'w') as f:
+                    json.dump(botglobal.rss_data, f)
             await asyncio.sleep(600)
     else:
         print('BOT IS ALREADY READY!')
