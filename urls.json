@@ -1,7 +1,22 @@
 {
-  "GSMArena": "https://www.gsmarena.com/rss-news-reviews.php3",
-  "TechPowerUp News": "https://www.techpowerup.com/rss/news",
-  "TechPowerUp Review": "https://www.techpowerup.com/rss/reviews",
-  "VideoCardz": "https://feeds.feedburner.com/VideoCardzcom",
-  "IGG-Games": "https://igg-games.com/feed"
+  "GSMArena": {
+    "url": "https://www.gsmarena.com/rss-news-reviews.php3",
+    "role": 595540579920904205
+  },
+  "TechPowerUp News": {
+    "url": "https://www.techpowerup.com/rss/news",
+    "role": 595541577309618176
+  },
+  "TechPowerUp Review": {
+    "url": "https://www.techpowerup.com/rss/reviews",
+    "role": 595541758327128065
+  },
+  "VideoCardz": {
+    "url": "https://feeds.feedburner.com/VideoCardzcom",
+    "role": 595542162066767883
+  },
+  "IGG-Games": {
+    "url":"https://igg-games.com/feed",
+    "role": 595534677692121090
+  }
 }

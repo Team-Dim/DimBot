@@ -10,3 +10,4 @@ class BotGlob:
             self.rss_data = json.load(f)
         self.ch = None
         self.rss_updated = False
+        self.guild = None
