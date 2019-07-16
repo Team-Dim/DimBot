@@ -13,7 +13,7 @@ bot = commands.Bot(command_prefix='d.')
 botglobal = BotGlob()
 with open('urls.json', 'r') as file:
     rss_urls = json.load(file)
-bot_ver = "0.1.0"
+bot_ver = "0.1.1"
 
 
 async def rss_process(domain: str):
@@ -50,13 +50,13 @@ async def process_discord(domain: str, feed):
 
 @bot.event
 async def on_ready():
+    await bot.change_presence(activity=discord.Game(name=f"bot v{bot_ver}"))
     botglobal.guild = bot.get_guild(285366651312930817)
     if not botglobal.readied:
         botglobal.readied = True
         print('on_ready')
         chid = 372386868236386307 if dimsecret.debug else 581699408870113310
         botglobal.ch = bot.get_channel(chid)
-        await bot.change_presence(activity=discord.Game(name=f"bot v{bot_ver}"))
         while True:
             botglobal.rss_updated = False
             for task in asyncio.as_completed([rss_process(domain) for domain in rss_urls]):
