@@ -1,8 +1,8 @@
 import asyncio
 import builtins
-import functools
 import json
 import threading
+from concurrent.futures.thread import ThreadPoolExecutor
 from random import randint
 
 import discord
@@ -17,14 +17,14 @@ bot = commands.Bot(command_prefix='d.')
 botglobal = BotGlob()
 with open('urls.json', 'r') as file:
     rss_urls = json.load(file)
-bot_ver = "0.2a"
+bot_ver = "0.2b1"
 
 
 def print(msg: str):
     builtins.print(f"[{threading.current_thread().name}] {msg}")
 
 
-async def rss_process(domain: str, loop):
+def rss_process(domain: str):
     print(f"{domain}: Checking RSS...")
     try:
         feed = feedparser.parse(rss_urls[domain]['url']).entries[0]
@@ -33,7 +33,14 @@ async def rss_process(domain: str, loop):
         if botglobal.rss_data[domain] != feed.title:
             print(f"{domain}: Detected news")
             botglobal.rss_updated = True
-            await process_discord(domain, feed, loop)
+            content = BeautifulSoup(feed.description, "html.parser")
+            emb = discord.Embed()
+            emb.colour = discord.Colour.from_rgb(randint(0, 255), randint(0, 255), randint(0, 255))
+            emb.title = feed.title
+            emb.description = content.get_text()
+            emb.url = feed.link
+            emb.set_footer(text=f"{domain} | {feed.published}")
+            asyncio.run_coroutine_threadsafe(send_discord(domain, emb), bot.loop)
             botglobal.rss_data[domain] = feed.title
         else:
             print(f"{domain}: No updates.")
@@ -41,28 +48,12 @@ async def rss_process(domain: str, loop):
         print(f"{domain}: IndexError")
 
 
-async def process_discord(domain: str, feed, loop):
-    content = BeautifulSoup(feed.description, "html.parser")
-    emb = discord.Embed()
-    emb.colour = discord.Colour.from_rgb(randint(0, 255), randint(0, 255), randint(0, 255))
-    emb.title = feed.title
-    emb.description = content.get_text()
-    emb.url = feed.link
-    emb.set_footer(text=f"{domain} | {feed.published}")
-    asyncio.run_coroutine_threadsafe(sendDiscord(domain, emb), loop)
-
-
-async def sendDiscord(domain, emb):
+async def send_discord(domain, emb):
     role = botglobal.guild.get_role(rss_urls[domain]['role'])
     await role.edit(mentionable=True)
     await botglobal.ch.send(content=role.mention, embed=emb)
     await role.edit(mentionable=False)
     print(f"{domain}: Sent Discord")
-
-
-def ycess(domain: str, loop):
-    lp = asyncio.new_event_loop()
-    lp.run_until_complete(rss_process(domain, loop))
 
 
 @bot.event
@@ -74,12 +65,12 @@ async def on_ready():
         print('on_ready')
         chid = 372386868236386307 if dimsecret.debug else 581699408870113310
         botglobal.ch = bot.get_channel(chid)
+        pool = ThreadPoolExecutor(max_workers=4)
         while True:
             botglobal.rss_updated = False
-            loop = asyncio.get_running_loop()
             for domain in rss_urls:
-                await loop.run_in_executor(None, functools.partial(ycess, domain, loop))
-            if botglobal.rss_updated:
+                pool.submit(rss_process, domain)
+            if botglobal.rss_updated and not dimsecret.debug:
                 with open('rss.json', 'w') as f:
                     json.dump(botglobal.rss_data, f)
             await asyncio.sleep(600)
