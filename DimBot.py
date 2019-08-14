@@ -1,7 +1,6 @@
 import asyncio
-import builtins
 import json
-import threading
+import logging
 from concurrent.futures.thread import ThreadPoolExecutor
 from random import randint
 
@@ -17,21 +16,20 @@ bot = commands.Bot(command_prefix='d.')
 botglobal = BotGlob()
 with open('urls.json', 'r') as file:
     rss_urls = json.load(file)
-bot_ver = "0.2b1"
-
-
-def print(msg: str):
-    builtins.print(f"[{threading.current_thread().name}] {msg}")
+bot_ver = "0.2.0"
+logging.basicConfig(format='[%(threadName)s/%(levelname)s] [%(asctime)s] %(message)s',
+                    datefmt='%H:%M:%S',
+                    level=logging.INFO)
 
 
 def rss_process(domain: str):
-    print(f"{domain}: Checking RSS...")
+    logging.info(f"{domain}: Checking RSS...")
     try:
         feed = feedparser.parse(rss_urls[domain]['url']).entries[0]
         if domain not in botglobal.rss_data.keys():
             botglobal.rss_data[domain] = ""
         if botglobal.rss_data[domain] != feed.title:
-            print(f"{domain}: Detected news")
+            logging.info(f"{domain}: Detected news")
             botglobal.rss_updated = True
             content = BeautifulSoup(feed.description, "html.parser")
             emb = discord.Embed()
@@ -43,9 +41,9 @@ def rss_process(domain: str):
             asyncio.run_coroutine_threadsafe(send_discord(domain, emb), bot.loop)
             botglobal.rss_data[domain] = feed.title
         else:
-            print(f"{domain}: No updates.")
+            logging.info(f"{domain}: No updates.")
     except IndexError:
-        print(f"{domain}: IndexError")
+        logging.warning(f"{domain}: IndexError")
 
 
 async def send_discord(domain, emb):
@@ -53,7 +51,7 @@ async def send_discord(domain, emb):
     await role.edit(mentionable=True)
     await botglobal.ch.send(content=role.mention, embed=emb)
     await role.edit(mentionable=False)
-    print(f"{domain}: Sent Discord")
+    logging.info(f"{domain}: Sent Discord")
 
 
 @bot.event
@@ -62,7 +60,7 @@ async def on_ready():
     botglobal.guild = bot.get_guild(285366651312930817)
     if not botglobal.readied:
         botglobal.readied = True
-        print('on_ready')
+        logging.debug('on_ready')
         chid = 372386868236386307 if dimsecret.debug else 581699408870113310
         botglobal.ch = bot.get_channel(chid)
         pool = ThreadPoolExecutor(max_workers=4)
@@ -75,7 +73,7 @@ async def on_ready():
                     json.dump(botglobal.rss_data, f)
             await asyncio.sleep(600)
     else:
-        print('BOT IS ALREADY READY!')
+        logging.warning('BOT IS ALREADY READY!')
 
 
 bot.run(dimsecret.discord)
