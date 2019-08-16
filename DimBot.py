@@ -1,7 +1,6 @@
 import asyncio
 import json
 import logging
-import threading
 from concurrent.futures.thread import ThreadPoolExecutor
 from random import randint
 
@@ -17,7 +16,7 @@ bot = commands.Bot(command_prefix='d.')
 botglobal = BotGlob()
 with open('urls.json', 'r') as file:
     rss_urls = json.load(file)
-bot_ver = "0.2.1"
+bot_ver = "0.2.2"
 logger = logging.getLogger("DimBot")
 logger.setLevel(logging.DEBUG if dimsecret.debug else logging.INFO)
 ch = logging.StreamHandler()
@@ -27,7 +26,7 @@ ch.setFormatter(logging.Formatter(fmt='[%(threadName)s/%(levelname)s] [%(asctime
 logger.addHandler(ch)
 
 
-def rss_process(domain: str, lock: threading.Lock):
+def rss_process(domain: str):
     logger.info(f"{domain}: Checking RSS...")
     try:
         feed = feedparser.parse(rss_urls[domain]['url']).entries[0]
@@ -44,8 +43,7 @@ def rss_process(domain: str, lock: threading.Lock):
             emb.description = content.get_text()
             emb.url = feed.link
             emb.set_footer(text=f"{domain} | {feed.published}")
-            with lock:
-                asyncio.run_coroutine_threadsafe(send_discord(domain, emb), bot.loop)
+            asyncio.run_coroutine_threadsafe(send_discord(domain, emb), bot.loop)
         else:
             logger.info(f"{domain}: No updates.")
     except IndexError:
@@ -71,18 +69,16 @@ async def on_ready():
         pool = ThreadPoolExecutor(max_workers=4)
         while True:
             botglobal.rss_updated = False
-            lock = threading.RLock()
             jobs = []
             for domain in rss_urls:
-                jobs.append(pool.submit(rss_process, domain, lock))
+                jobs.append(pool.submit(rss_process, domain))
             for j in jobs:
                 while j.running():
                     pass
-            with lock:
-                logger.debug('Synced thread pool, continuing')
-                if botglobal.rss_updated and not dimsecret.debug:
-                    with open('rss.json', 'w') as f:
-                        json.dump(botglobal.rss_data, f)
+            logger.debug('Synced thread pool, continuing')
+            if botglobal.rss_updated and not dimsecret.debug:
+                with open('rss.json', 'w') as f:
+                    json.dump(botglobal.rss_data, f)
             await asyncio.sleep(600)
     else:
         logger.warning('BOT IS ALREADY READY!')
