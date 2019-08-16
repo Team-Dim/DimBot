@@ -16,11 +16,12 @@ bot = commands.Bot(command_prefix='d.')
 botglobal = BotGlob()
 with open('urls.json', 'r') as file:
     rss_urls = json.load(file)
-bot_ver = "0.2.2"
+bot_ver = "0.2.3"
 logger = logging.getLogger("DimBot")
-logger.setLevel(logging.DEBUG if dimsecret.debug else logging.INFO)
+lvl = logging.DEBUG if dimsecret.debug else logging.INFO
+logger.setLevel(lvl)
 ch = logging.StreamHandler()
-ch.setLevel(logger.getEffectiveLevel())
+ch.setLevel(lvl)
 ch.setFormatter(logging.Formatter(fmt='[%(threadName)s/%(levelname)s] [%(asctime)s] %(message)s',
                                   datefmt='%H:%M:%S'))
 logger.addHandler(ch)
@@ -51,10 +52,13 @@ def rss_process(domain: str):
 
 
 async def send_discord(domain, emb):
-    role = botglobal.guild.get_role(rss_urls[domain]['role'])
-    await role.edit(mentionable=True)
-    await botglobal.ch.send(content=role.mention, embed=emb)
-    await role.edit(mentionable=False)
+    if dimsecret.debug:
+        await botglobal.ch.send(embed=emb)
+    else:
+        role = botglobal.guild.get_role(rss_urls[domain]['role'])
+        await role.edit(mentionable=True)
+        await botglobal.ch.send(content=role.mention, embed=emb)
+        await role.edit(mentionable=False)
     logger.info(f"{domain}: Sent Discord")
 
 
