@@ -16,7 +16,7 @@ bot = commands.Bot(command_prefix='d.')
 botglobal = BotGlob()
 with open('urls.json', 'r') as file:
     rss_urls = json.load(file)
-bot_ver = "0.2.4"
+bot_ver = "0.2.4-2"
 logger = logging.getLogger("DimBot")
 lvl = logging.DEBUG if dimsecret.debug else logging.INFO
 logger.setLevel(lvl)
