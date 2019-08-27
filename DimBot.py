@@ -52,7 +52,7 @@ def rss_process(domain: str):
 
 
 async def send_discord(domain, emb):
-    cnt = botglobal.guild.get_role(rss_urls[domain]['role']).mention if dimsecret.debug else ''
+    cnt = '' if dimsecret.debug else botglobal.guild.get_role(rss_urls[domain]['role']).mention
     await botglobal.ch.send(content=cnt, embed=emb)
     logger.info(f"{domain}: Sent Discord")
 
