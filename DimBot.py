@@ -16,7 +16,7 @@ bot = commands.Bot(command_prefix='d.')
 botglobal = BotGlob()
 with open('urls.json', 'r') as file:
     rss_urls = json.load(file)
-bot_ver = "0.2.4-2"
+bot_ver = "0.2.5"
 logger = logging.getLogger("DimBot")
 lvl = logging.DEBUG if dimsecret.debug else logging.INFO
 logger.setLevel(lvl)
@@ -52,8 +52,7 @@ def rss_process(domain: str):
 
 
 async def send_discord(domain, emb):
-    cnt = '' if dimsecret.debug else botglobal.guild.get_role(rss_urls[domain]['role']).mention
-    await botglobal.ch.send(content=cnt, embed=emb)
+    await botglobal.ch.send(embed=emb)
     logger.info(f"{domain}: Sent Discord")
 
 
