@@ -64,7 +64,7 @@ async def on_ready():
         botglobal.readied = True
         logger.debug('on_ready')
         botglobal.ch = bot.get_channel(372386868236386307 if dimsecret.debug else 581699408870113310)
-        pool = ThreadPoolExecutor(max_workers=4)
+        pool = ThreadPoolExecutor(max_workers=2)
         while True:
             botglobal.rss_updated = False
             jobs = []
