@@ -13,5 +13,8 @@
   },
   "IGG-Games": {
     "url":"https://igg-games.com/feed"
+  },
+  "WarFrame": {
+    "url": "https://forums.warframe.com/forum/2-pc-announcements.xml"
   }
 }
