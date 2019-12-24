@@ -16,7 +16,6 @@ bot = commands.Bot(command_prefix='d.')
 botglobal = BotGlob()
 with open('urls.json', 'r') as file:
     rss_urls = json.load(file)
-bot_ver = "0.2.5"
 logger = logging.getLogger("DimBot")
 lvl = logging.DEBUG if dimsecret.debug else logging.INFO
 logger.setLevel(lvl)
@@ -49,6 +48,7 @@ def rss_process(domain: str):
             logger.info(f"{domain}: No updates.")
     except IndexError:
         logger.warning(f"{domain}: IndexError")
+    botglobal.done += 1
 
 
 async def send_discord(domain, emb):
@@ -58,7 +58,7 @@ async def send_discord(domain, emb):
 
 @bot.event
 async def on_ready():
-    await bot.change_presence(activity=discord.Game(name=f"bot v{bot_ver}"))
+    await bot.change_presence(activity=discord.Game(name="bot v0.2.6"))
     botglobal.guild = bot.get_guild(285366651312930817)
     if not botglobal.readied:
         botglobal.readied = True
@@ -67,12 +67,10 @@ async def on_ready():
         pool = ThreadPoolExecutor(max_workers=2)
         while True:
             botglobal.rss_updated = False
-            jobs = []
             for domain in rss_urls:
-                jobs.append(pool.submit(rss_process, domain))
-            for j in jobs:
-                while j.running():
-                    pass
+                pool.submit(rss_process, domain)
+            while botglobal.done != 5:
+                pass
             logger.debug('Synced thread pool, continuing')
             if botglobal.rss_updated and not dimsecret.debug:
                 with open('rss.json', 'w') as f:

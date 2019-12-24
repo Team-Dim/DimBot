@@ -11,3 +11,4 @@ class BotGlob:
         self.ch = None
         self.rss_updated = False
         self.guild = None
+        self.done = 0
