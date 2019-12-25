@@ -12,6 +12,7 @@ from discord.ext import commands
 import dimsecret
 from botglob import BotGlob
 
+playing = '%s v0.2.7' % 'DEBUG' if dimsecret.debug else 'bot'
 bot = commands.Bot(command_prefix='d.')
 botglobal = BotGlob()
 with open('urls.json', 'r') as file:
@@ -48,6 +49,7 @@ def rss_process(domain: str):
             logger.info(f"{domain}: No updates.")
     except IndexError:
         logger.warning(f"{domain}: IndexError")
+    logger.debug('%s: done' % domain)
     botglobal.done += 1
 
 
@@ -58,7 +60,7 @@ async def send_discord(domain, emb):
 
 @bot.event
 async def on_ready():
-    await bot.change_presence(activity=discord.Game(name="bot v0.2.6"))
+    await bot.change_presence(activity=discord.Game(name=playing))
     botglobal.guild = bot.get_guild(285366651312930817)
     if not botglobal.readied:
         botglobal.readied = True
@@ -66,15 +68,18 @@ async def on_ready():
         botglobal.ch = bot.get_channel(372386868236386307 if dimsecret.debug else 581699408870113310)
         pool = ThreadPoolExecutor(max_workers=2)
         while True:
+            botglobal.done = 0
             botglobal.rss_updated = False
             for domain in rss_urls:
                 pool.submit(rss_process, domain)
-            while botglobal.done != 5:
+            while botglobal.done != len(rss_urls.keys()):
                 pass
             logger.debug('Synced thread pool, continuing')
-            if botglobal.rss_updated and not dimsecret.debug:
+            if botglobal.rss_updated:
                 with open('rss.json', 'w') as f:
                     json.dump(botglobal.rss_data, f)
+                logger.debug('Updated file')
+            logger.debug('Start 10 minutes wait')
             await asyncio.sleep(600)
     else:
         logger.warning('BOT IS ALREADY READY!')
