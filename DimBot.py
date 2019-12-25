@@ -12,7 +12,7 @@ from discord.ext import commands
 import dimsecret
 from botglob import BotGlob
 
-playing = '%s v0.2.7' % 'DEBUG' if dimsecret.debug else 'bot'
+playing = '%s v0.2.8' % ('DEBUG' if dimsecret.debug else 'bot')
 bot = commands.Bot(command_prefix='d.')
 botglobal = BotGlob()
 with open('urls.json', 'r') as file:
@@ -77,7 +77,7 @@ async def on_ready():
             logger.debug('Synced thread pool, continuing')
             if botglobal.rss_updated:
                 with open('rss.json', 'w') as f:
-                    json.dump(botglobal.rss_data, f)
+                    json.dump(botglobal.rss_data, f, indent=2, separators=(',', ': '))
                 logger.debug('Updated file')
             logger.debug('Start 10 minutes wait')
             await asyncio.sleep(600)
