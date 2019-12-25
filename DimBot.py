@@ -12,13 +12,13 @@ from discord.ext import commands
 import dimsecret
 from botglob import BotGlob
 
-playing = ' v0.2.9.1'
+playing = ' v0.2.9.2'
 if dimsecret.debug:
-    playing = f':clown:{playing}'
+    playing = f'DEBUG{playing}'
     lvl = logging.DEBUG
     news_ch = 372386868236386307
 else:
-    playing = f'DEBUG{playing}'
+    playing = f':clown:{playing}'
     lvl = logging.INFO
     news_ch = 581699408870113310
 
