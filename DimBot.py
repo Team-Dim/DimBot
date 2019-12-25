@@ -12,13 +12,22 @@ from discord.ext import commands
 import dimsecret
 from botglob import BotGlob
 
-playing = '%s v0.2.8' % ('DEBUG' if dimsecret.debug else 'bot')
+playing = ' v0.2.9'
+if dimsecret.debug:
+    playing = f':clown:{playing}'
+    lvl = logging.DEBUG
+    news_ch = 372386868236386307
+else:
+    playing = f'DEBUG{playing}'
+    lvl = logging.info
+    news_ch = 581699408870113310
+
+
 bot = commands.Bot(command_prefix='d.')
 botglobal = BotGlob()
 with open('urls.json', 'r') as file:
     rss_urls = json.load(file)
 logger = logging.getLogger("DimBot")
-lvl = logging.DEBUG if dimsecret.debug else logging.INFO
 logger.setLevel(lvl)
 ch = logging.StreamHandler()
 ch.setLevel(lvl)
@@ -65,7 +74,7 @@ async def on_ready():
     if not botglobal.readied:
         botglobal.readied = True
         logger.debug('on_ready')
-        botglobal.ch = bot.get_channel(372386868236386307 if dimsecret.debug else 581699408870113310)
+        botglobal.ch = bot.get_channel(news_ch)
         pool = ThreadPoolExecutor(max_workers=2)
         while True:
             botglobal.done = 0
