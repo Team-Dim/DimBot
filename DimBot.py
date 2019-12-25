@@ -12,13 +12,13 @@ from discord.ext import commands
 import dimsecret
 from botglob import BotGlob
 
-playing = ' v0.2.9.2'
+playing = ' v0.2.10'
 if dimsecret.debug:
     playing = f'DEBUG{playing}'
     lvl = logging.DEBUG
     news_ch = 372386868236386307
 else:
-    playing = f':clown:{playing}'
+    playing = f'bot {playing}'
     lvl = logging.INFO
     news_ch = 581699408870113310
 
@@ -60,6 +60,12 @@ def rss_process(domain: str):
         logger.warning(f"{domain}: IndexError")
     logger.debug('%s: done' % domain)
     botglobal.done += 1
+    if botglobal.done == len(rss_urls.keys()):
+        logger.debug('Synced thread pool, continuing')
+        if botglobal.rss_updated:
+            with open('rss.json', 'w') as f:
+                json.dump(botglobal.rss_data, f, indent=2, separators=(',', ': '))
+            logger.debug('Updated file')
 
 
 async def send_discord(domain, emb):
@@ -81,13 +87,6 @@ async def on_ready():
             botglobal.rss_updated = False
             for domain in rss_urls:
                 pool.submit(rss_process, domain)
-            while botglobal.done != len(rss_urls.keys()):
-                pass
-            logger.debug('Synced thread pool, continuing')
-            if botglobal.rss_updated:
-                with open('rss.json', 'w') as f:
-                    json.dump(botglobal.rss_data, f, indent=2, separators=(',', ': '))
-                logger.debug('Updated file')
             logger.debug('Start 10 minutes wait')
             await asyncio.sleep(600)
     else:
