@@ -1,5 +1,6 @@
 import logging
 
+import discord
 from discord.ext import commands
 
 import dimsecret
@@ -16,6 +17,8 @@ class Missile:
             self.lvl = logging.DEBUG
         else:
             self.lvl = logging.INFO
+        self.guild = None
+        self.bottyland = None
 
     def get_logger(self, name: str):
         logger = logging.getLogger(name)

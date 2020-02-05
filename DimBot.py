@@ -15,8 +15,7 @@ from tribe import Tribe
 
 bot = commands.Bot(command_prefix='d.')
 bot.missile = Missile(bot)
-bot.guild = None
-playing = ' v0.2.11'
+playing = ' v0.3'
 if dimsecret.debug:
     playing = f'DEBUG{playing}'
     news_ch = 372386868236386307
@@ -32,10 +31,10 @@ logger = bot.missile.get_logger('DimBot')
 
 @bot.event
 async def on_ready():
-    bot.guild = bot.get_guild(285366651312930817)
+    bot.missile.guild = bot.get_guild(285366651312930817)
+    bot.missile.bottyland = bot.get_channel(372386868236386307)
     await bot.change_presence(activity=discord.Game(name=playing))
-    botglobal.guild = bot.guild
-    bot.add_cog(Tribe(bot))
+    botglobal.guild = bot.missile.guild
     # Maybe move below to cog 'Raceline'
     if not botglobal.readied:
         botglobal.readied = True
@@ -89,5 +88,5 @@ async def send_discord(domain, emb):
     await botglobal.ch.send(embed=emb)
     logger.info(f"{domain}: Sent Discord")
 
-
+bot.add_cog(Tribe(bot))
 bot.run(dimsecret.discord)
