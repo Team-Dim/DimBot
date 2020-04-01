@@ -17,7 +17,7 @@ from tribe import Tribe
 
 bot = commands.Bot(command_prefix='d.')
 bot.missile = Missile(bot)
-playing = ' v0.3.1.3'
+playing = ' v0.3.1.4'
 if dimsecret.debug:
     playing = f'DEBUG{playing}'
     news_ch = 372386868236386307
@@ -30,41 +30,49 @@ with open('urls.json', 'r') as file:
     rss_urls = json.load(file)
 logger = bot.missile.get_logger('DimBot')
 
-
 # April Fools
+corona_md5 = '0dea05a1a0dde35942d99dbb30b3e085'
+
+
+def bin_md5(md5: str):
+    return str(bin(int(md5, 16))[2:].zfill(128))
+
+
+corona_bin = bin_md5(corona_md5)
+
+
 @bot.event
 async def on_message(msg):
     if msg.author.name != "DimBot":
         hex_md5 = hashlib.md5(f'{msg.content}{msg.id}'.encode('utf-8')).hexdigest()
         new_gen_md5 = hashlib.md5(f'{bot.missile.current_dna}{hex_md5}'.encode('utf-8')).hexdigest()
-        md5 = str(bin(int(hex_md5, 16))[2:].zfill(128))
-        new_md5 = str(bin(int(new_gen_md5, 16))[2:].zfill(128))
+        bin = bin_md5(hex_md5)
+        new_md5 = bin_md5(new_gen_md5)
         count = 0
-        if msg.author.id in bot.missile.dna.keys():
-            og = bot.missile.dna[msg.author.id]
-            for i in range(128):
-                if og[i] == md5[i]:
-                    count += 1
+        for i in range(128):
+            if corona_bin[i] == bin[i]:
+                count += 1
         current_count = 0
         if bot.missile.current_dna != '':
             for i in range(128):
-                if bot.missile.current_dna[i] == md5[i]:
+                if bot.missile.current_dna[i] == bin[i]:
                     current_count += 1
         emb = discord.Embed(title='Message contamination info')
         emb.add_field(name='Message DNA', value=hex_md5)
         infection = round(random.uniform(0, 1) * 100, 1)
-        self_mod = round(count/128 * 100, 1)
-        infected_by = round(current_count/128 * 100, 1)
-        emb.add_field(name='self-modified rate', value=f'{self_mod}%')
+        self_mod = round(count / 128 * 100, 1)
+        infected_by = round(current_count / 128 * 100, 1)
+        emb.add_field(name='% similarity of coronavirus DNA', value=f'{self_mod}%')
         emb.add_field(name='Probability of infected by others', value=f'{infected_by}%')
         await bot.missile.quch.send(embed=emb)
-        if infection < self_mod and not role(msg.author):
-            await bot.missile.quch.send(f"**WARNING!** {msg.author.mention}'s body has evolved coronavirus by himself!")
+        if self_mod > 80 and not role(msg.author):
+            await bot.missile.quch.send(f"**WARNING!** {msg.author.mention}'s latest message has 80% DNA of coronavirus. He is now INFECTED!")
             await msg.author.add_roles(bot.missile.role)
-        if infected_by < self_mod and role(bot.missile.current_author) and not role(msg.author):
-            await bot.missile.quch.send(f"**OH FUCK!** {msg.author.mention} IS INFECTED BY {bot.missile.current_author.mention}!!!")
+        if infection < infected_by and role(bot.missile.current_author) and not role(msg.author):
+            await bot.missile.quch.send(
+                f"**OH FUCK!** {msg.author.mention} IS INFECTED BY {bot.missile.current_author.mention}!!!")
             await msg.author.add_roles(bot.missile.role)
-        bot.missile.dna[msg.author.id] = md5
+        bot.missile.dna[msg.author.id] = bin
         bot.missile.current_dna = new_md5
         bot.missile.current_author = msg.author
 
