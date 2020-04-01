@@ -16,7 +16,7 @@ class Tribe(Cog):
 
     async def get_invite_used(self):
         invites = await self.bot.missile.guild.invites()
-        invite = next(
+        #invite = next(
 
     async def get_invite_uses(self, code: str):
         invites = await self.bot.missile.guild.invites()

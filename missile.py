@@ -18,12 +18,6 @@ class Missile:
             self.lvl = logging.INFO
         self.guild = None
         self.bottyland = None
-        #April Fools
-        self.dna = dict()
-        self.current_dna = ''
-        self.quch = None
-        self.current_author = None
-        self.role = None
 
     def get_logger(self, name: str):
         logger = logging.getLogger(name)
