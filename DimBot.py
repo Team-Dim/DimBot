@@ -17,7 +17,7 @@ from tribe import Tribe
 
 bot = commands.Bot(command_prefix='d.')
 bot.missile = Missile(bot)
-playing = ' v0.3.1'
+playing = ' v0.3.1.1'
 if dimsecret.debug:
     playing = f'DEBUG{playing}'
     news_ch = 372386868236386307
@@ -63,7 +63,7 @@ async def on_message(msg):
             print(f'{msg.author.name} self infected')
             await bot.missile.quch.send(f"**WARNING!** {msg.author.mention}'s body has evolved coronavirus by himself!")
             await msg.author.add_roles(bot.missile.role)
-        if infected_by < self_mod and not role(msg.author):
+        if infected_by < self_mod and role(bot.missile.current_author) and not role(msg.author):
             print(f'{msg.author.name} infected by {bot.missile.current_author.name}')
             await bot.missile.quch.send(f"**OH FUCK!** {msg.author.mention} IS INFECTED BY {bot.missile.current_author.mention}!!!")
             await msg.author.add_roles(bot.missile.role)
