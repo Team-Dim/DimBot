@@ -17,7 +17,7 @@ from tribe import Tribe
 
 bot = commands.Bot(command_prefix='d.')
 bot.missile = Missile(bot)
-playing = ' v0.3.1.4'
+playing = ' v0.3.1.5'
 if dimsecret.debug:
     playing = f'DEBUG{playing}'
     news_ch = 372386868236386307
@@ -49,8 +49,9 @@ async def on_message(msg):
         bin = bin_md5(hex_md5)
         new_md5 = bin_md5(new_gen_md5)
         count = 0
-        for i in range(128):
-            if corona_bin[i] == bin[i]:
+        for i in range(28):
+            x = random.randint(0, 127)
+            if corona_bin[x] == bin[x]:
                 count += 1
         current_count = 0
         if bot.missile.current_dna != '':
