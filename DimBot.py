@@ -17,7 +17,7 @@ from tribe import Tribe
 
 bot = commands.Bot(command_prefix='d.')
 bot.missile = Missile(bot)
-playing = ' v0.3.1.1'
+playing = ' v0.3.1.2'
 if dimsecret.debug:
     playing = f'DEBUG{playing}'
     news_ch = 372386868236386307
@@ -55,11 +55,13 @@ async def on_message(msg):
         infection = round(random.uniform(0, 1) * 100, 1)
         self_mod = round(count/128 * 100, 1)
         infected_by = round(current_count/128 * 100, 1)
-        emb.add_field(name='self-modified rate', value=str(self_mod))
-        emb.add_field(name='Probability of infected by others', value=str(infected_by))
+        emb.add_field(name='self-modified rate', value=f'{self_mod}%')
+        emb.add_field(name='Probability of infected by others', value=f'{infected_by}%')
+        for a in msg.attactments:
+            if a.height:
+                emb.set_image(url=a.url)
         await bot.missile.quch.send(embed=emb)
         if infection < self_mod and not role(msg.author):
-
             print(f'{msg.author.name} self infected')
             await bot.missile.quch.send(f"**WARNING!** {msg.author.mention}'s body has evolved coronavirus by himself!")
             await msg.author.add_roles(bot.missile.role)
@@ -71,9 +73,10 @@ async def on_message(msg):
         bot.missile.current_dna = md5
         bot.missile.current_author = msg.author
 
+
 def role(m):
-    for role in m.roles:
-        if role.id == 694735841909538836:
+    for r in m.roles:
+        if r.id == 694735841909538836:
             return True
     return False
 
