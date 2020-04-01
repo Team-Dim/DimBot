@@ -1,5 +1,7 @@
 import asyncio
+import hashlib
 import json
+import random
 from concurrent.futures.thread import ThreadPoolExecutor
 from random import randint
 
@@ -15,7 +17,7 @@ from tribe import Tribe
 
 bot = commands.Bot(command_prefix='d.')
 bot.missile = Missile(bot)
-playing = ' v0.3'
+playing = ' v0.3.1'
 if dimsecret.debug:
     playing = f'DEBUG{playing}'
     news_ch = 372386868236386307
@@ -29,9 +31,58 @@ with open('urls.json', 'r') as file:
 logger = bot.missile.get_logger('DimBot')
 
 
+# April Fools
+@bot.event
+async def on_message(msg):
+    if msg.author.name != "DimBot":
+        await msg.delete()
+        hex_md5 = hashlib.md5(f'{msg.content}{msg.id}'.encode('utf-8')).hexdigest()
+        md5 = str(bin(int(hex_md5, 16))[2:].zfill(128))
+        count = 0
+        if msg.author.id in bot.missile.dna.keys():
+            og = bot.missile.dna[msg.author.id]
+            for i in range(128):
+                if og[i] == md5[i]:
+                    count += 1
+        current_count = 0
+        if bot.missile.current_dna != '':
+            for i in range(128):
+                if bot.missile.current_dna[i] == md5[i]:
+                    current_count += 1
+        emb = discord.Embed(title=str(msg.author),
+                            description=msg.content)
+        emb.add_field(name='Coronavirus DNA', value=hex_md5)
+        infection = round(random.uniform(0, 1) * 100, 1)
+        self_mod = round(count/128 * 100, 1)
+        infected_by = round(current_count/128 * 100, 1)
+        emb.add_field(name='self-modified rate', value=str(self_mod))
+        emb.add_field(name='Probability of infected by others', value=str(infected_by))
+        await bot.missile.quch.send(embed=emb)
+        if infection < self_mod and not role(msg.author):
+
+            print(f'{msg.author.name} self infected')
+            await bot.missile.quch.send(f"**WARNING!** {msg.author.mention}'s body has evolved coronavirus by himself!")
+            await msg.author.add_roles(bot.missile.role)
+        if infected_by < self_mod and not role(msg.author):
+            print(f'{msg.author.name} infected by {bot.missile.current_author.name}')
+            await bot.missile.quch.send(f"**OH FUCK!** {msg.author.mention} IS INFECTED BY {bot.missile.current_author.mention}!!!")
+            await msg.author.add_roles(bot.missile.role)
+        bot.missile.dna[msg.author.id] = md5
+        bot.missile.current_dna = md5
+        bot.missile.current_author = msg.author
+
+def role(m):
+    for role in m.roles:
+        if role.id == 694735841909538836:
+            return True
+    return False
+
+
 @bot.event
 async def on_ready():
+    bot.missile.quch = bot.get_channel(694714241827078224)
     bot.missile.guild = bot.get_guild(285366651312930817)
+    bot.missile.role = bot.missile.guild.get_role(694735841909538836)
     bot.missile.bottyland = bot.get_channel(372386868236386307)
     await bot.change_presence(activity=discord.Game(name=playing))
     botglobal.guild = bot.missile.guild
@@ -87,6 +138,7 @@ def rss_process(domain: str):
 async def send_discord(domain, emb):
     await botglobal.ch.send(embed=emb)
     logger.info(f"{domain}: Sent Discord")
+
 
 bot.add_cog(Tribe(bot))
 bot.run(dimsecret.discord)
