@@ -17,7 +17,7 @@ from tribe import Tribe
 
 bot = commands.Bot(command_prefix='d.')
 bot.missile = Missile(bot)
-playing = ' v0.3.1.2'
+playing = ' v0.3.1.3'
 if dimsecret.debug:
     playing = f'DEBUG{playing}'
     news_ch = 372386868236386307
@@ -35,9 +35,10 @@ logger = bot.missile.get_logger('DimBot')
 @bot.event
 async def on_message(msg):
     if msg.author.name != "DimBot":
-        await msg.delete()
         hex_md5 = hashlib.md5(f'{msg.content}{msg.id}'.encode('utf-8')).hexdigest()
+        new_gen_md5 = hashlib.md5(f'{bot.missile.current_dna}{hex_md5}'.encode('utf-8')).hexdigest()
         md5 = str(bin(int(hex_md5, 16))[2:].zfill(128))
+        new_md5 = str(bin(int(new_gen_md5, 16))[2:].zfill(128))
         count = 0
         if msg.author.id in bot.missile.dna.keys():
             og = bot.missile.dna[msg.author.id]
@@ -49,28 +50,22 @@ async def on_message(msg):
             for i in range(128):
                 if bot.missile.current_dna[i] == md5[i]:
                     current_count += 1
-        emb = discord.Embed(title=str(msg.author),
-                            description=msg.content)
-        emb.add_field(name='Coronavirus DNA', value=hex_md5)
+        emb = discord.Embed(title='Message contamination info')
+        emb.add_field(name='Message DNA', value=hex_md5)
         infection = round(random.uniform(0, 1) * 100, 1)
         self_mod = round(count/128 * 100, 1)
         infected_by = round(current_count/128 * 100, 1)
         emb.add_field(name='self-modified rate', value=f'{self_mod}%')
         emb.add_field(name='Probability of infected by others', value=f'{infected_by}%')
-        for a in msg.attactments:
-            if a.height:
-                emb.set_image(url=a.url)
         await bot.missile.quch.send(embed=emb)
         if infection < self_mod and not role(msg.author):
-            print(f'{msg.author.name} self infected')
             await bot.missile.quch.send(f"**WARNING!** {msg.author.mention}'s body has evolved coronavirus by himself!")
             await msg.author.add_roles(bot.missile.role)
         if infected_by < self_mod and role(bot.missile.current_author) and not role(msg.author):
-            print(f'{msg.author.name} infected by {bot.missile.current_author.name}')
             await bot.missile.quch.send(f"**OH FUCK!** {msg.author.mention} IS INFECTED BY {bot.missile.current_author.mention}!!!")
             await msg.author.add_roles(bot.missile.role)
         bot.missile.dna[msg.author.id] = md5
-        bot.missile.current_dna = md5
+        bot.missile.current_dna = new_md5
         bot.missile.current_author = msg.author
 
 
