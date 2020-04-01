@@ -17,7 +17,7 @@ from tribe import Tribe
 
 bot = commands.Bot(command_prefix='d.')
 bot.missile = Missile(bot)
-playing = ' v0.3.1.5'
+playing = ' v0.3.1.6'
 if dimsecret.debug:
     playing = f'DEBUG{playing}'
     news_ch = 372386868236386307
@@ -49,9 +49,8 @@ async def on_message(msg):
         bin = bin_md5(hex_md5)
         new_md5 = bin_md5(new_gen_md5)
         count = 0
-        for i in range(28):
-            x = random.randint(0, 127)
-            if corona_bin[x] == bin[x]:
+        for i in range(128):
+            if corona_bin[i] == bin[i]:
                 count += 1
         current_count = 0
         if bot.missile.current_dna != '':
@@ -66,8 +65,8 @@ async def on_message(msg):
         emb.add_field(name='% similarity of coronavirus DNA', value=f'{self_mod}%')
         emb.add_field(name='Probability of infected by others', value=f'{infected_by}%')
         await bot.missile.quch.send(embed=emb)
-        if self_mod > 80 and not role(msg.author):
-            await bot.missile.quch.send(f"**WARNING!** {msg.author.mention}'s latest message has 80% DNA of coronavirus. He is now INFECTED!")
+        if self_mod > 60 and not role(msg.author):
+            await bot.missile.quch.send(f"**WARNING!** {msg.author.mention}'s latest message has 60% DNA of coronavirus. He is now INFECTED!")
             await msg.author.add_roles(bot.missile.role)
         if infection < infected_by and role(bot.missile.current_author) and not role(msg.author):
             await bot.missile.quch.send(
