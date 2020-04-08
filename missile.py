@@ -1,5 +1,6 @@
 import logging
 
+import discord
 from discord.ext import commands
 
 import dimsecret
@@ -29,3 +30,7 @@ class Missile:
                                           datefmt='%H:%M:%S'))
         logger.addHandler(ch)
         return logger
+
+    @staticmethod
+    async def append_message(msg: discord.Message, append_content: str, delimiter: str = '\n'):
+        await msg.edit(content=f'{msg.content}{delimiter}{append_content}')

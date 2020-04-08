@@ -8,19 +8,25 @@ import feedparser
 from bs4 import BeautifulSoup
 from discord.ext import commands
 
-import dimsecret
 from botglob import BotGlob
+import dimsecret
 from missile import Missile
 from tribe import Tribe
+from vireg import Vireg
 
 bot = commands.Bot(command_prefix='d.')
 bot.missile = Missile(bot)
-playing = ' v0.3.1.99'
+nickname = "ChingDim's nurse"
+version = 'v0.3.2'
+activity = discord.Activity(
+    name='Colors weave into a spire of flame',
+    type=discord.ActivityType.listening
+)
 if dimsecret.debug:
-    playing = f'DEBUG{playing}'
+    nickname += f' [{version}]'
     news_ch = 372386868236386307
 else:
-    playing = f'bot{playing}'
+    nickname += f' {{{version}}}'
     news_ch = 581699408870113310
 
 botglobal = BotGlob()
@@ -33,7 +39,10 @@ logger = bot.missile.get_logger('DimBot')
 async def on_ready():
     bot.missile.guild = bot.get_guild(285366651312930817)
     bot.missile.bottyland = bot.get_channel(372386868236386307)
-    await bot.change_presence(activity=discord.Game(name=playing))
+    logger.info(f'Guild count: {len(bot.guilds)}')
+    for guild in bot.guilds:
+        await guild.me.edit(nick=nickname)
+    await bot.change_presence(activity=activity)
     botglobal.guild = bot.missile.guild
     # Maybe move below to cog 'Raceline'
     if not botglobal.readied:
@@ -90,4 +99,5 @@ async def send_discord(domain, emb):
 
 
 bot.add_cog(Tribe(bot))
+bot.add_cog(Vireg(bot))
 bot.run(dimsecret.discord)

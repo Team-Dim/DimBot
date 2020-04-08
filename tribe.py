@@ -3,20 +3,19 @@ from discord.ext.commands import Cog
 
 
 class Tribe(Cog):
-
     """
     :param self.invites List[]
     """
+
     def __init__(self, bot):
         self.bot = bot
         self.logger = bot.missile.get_logger('Tribe')
         self.bbm_invite: int = 0
         self.invites = None
 
-
     async def get_invite_used(self):
         invites = await self.bot.missile.guild.invites()
-        #invite = next(
+        # invite = next(
 
     async def get_invite_uses(self, code: str):
         invites = await self.bot.missile.guild.invites()
