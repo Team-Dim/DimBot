@@ -11,7 +11,7 @@ class Vireg(commands.Cog):
         self.bot = bot
         self.logger = bot.missile.get_logger('Vireg')
         self.region_id = 'eu-north-1' if dimsecret.debug else 'ap-southeast-1'
-
+        self.logger.debug('Connecting to AWS session')
         session = boto3.session.Session(
             region_name=self.region_id,
             aws_access_key_id=dimsecret.aws_access_key,
@@ -19,7 +19,7 @@ class Vireg(commands.Cog):
         )
         self.ec2 = session.resource('ec2')
         self.ssm = session.client('ssm')
-
+        self.logger.debug('Fetching SSM parameter')
         response = self.ssm.get_parameter(Name=f'/aws/service/global-infrastructure/regions/{self.region_id}/longName')
         self.region_name = response['Parameter']['Value']
 
@@ -35,7 +35,7 @@ class Vireg(commands.Cog):
             instance.start()
             await Missile.append_message(msg, "Start request has been sent. Waiting for the instance to be booted...")
             instance.wait_until_running()
-            await Missile.append_message(msg, 'Instance has ssuccessfully started')
+            await Missile.append_message(msg, 'Instance has successfully started')
         await Missile.append_message(
             msg,
             f'in {self.region_id} **"{self.region_name}"**. IP address: **{instance.public_ip_address}** ',

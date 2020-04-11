@@ -1,4 +1,5 @@
 import asyncio
+import platform
 import json
 from concurrent.futures.thread import ThreadPoolExecutor
 from random import randint
@@ -17,7 +18,7 @@ from vireg import Vireg
 bot = commands.Bot(command_prefix='d.')
 bot.missile = Missile(bot)
 nickname = "ChingDim's nurse"
-version = 'v0.3.2'
+version = 'v0.3.2.1'
 activity = discord.Activity(
     name='Colors weave into a spire of flame',
     type=discord.ActivityType.listening
@@ -33,6 +34,11 @@ botglobal = BotGlob()
 with open('urls.json', 'r') as file:
     rss_urls = json.load(file)
 logger = bot.missile.get_logger('DimBot')
+
+
+@bot.command()
+async def info(ctx):
+    await ctx.send(f'Python `{platform.python_version()}`, discord.py `{discord.__version__}`. Debug mode: **{dimsecret.debug}**')
 
 
 @bot.event
