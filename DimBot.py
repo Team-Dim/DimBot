@@ -13,16 +13,18 @@ from botglob import BotGlob
 import dimsecret
 from missile import Missile
 from tribe import Tribe
-from vireg import Vireg
+from bruckserver import vireg
 
 bot = commands.Bot(command_prefix='d.')
 bot.missile = Missile(bot)
+
 nickname = "ChingDim's nurse"
-version = 'v0.3.2.1'
+version = 'v0.3.3'
 activity = discord.Activity(
-    name='Colors weave into a spire of flame',
-    type=discord.ActivityType.listening
+        name='Silent flower 💮',
+        type=discord.ActivityType.watching
 )
+
 if dimsecret.debug:
     nickname += f' [{version}]'
     news_ch = 372386868236386307
@@ -38,13 +40,17 @@ logger = bot.missile.get_logger('DimBot')
 
 @bot.command()
 async def info(ctx):
-    await ctx.send(f'Python `{platform.python_version()}`, discord.py `{discord.__version__}`. Debug mode: **{dimsecret.debug}**')
+    await ctx.send(
+        f'Python `{platform.python_version()}`, discord.py `{discord.__version__}`. Debug mode: **{dimsecret.debug}**\n'
+        'Bot source code: https://github.com/TCLRainbow/DimBot')
 
 
 @bot.event
 async def on_ready():
     bot.missile.guild = bot.get_guild(285366651312930817)
     bot.missile.bottyland = bot.get_channel(372386868236386307)
+    bot.missile.bruck_ch = bot.get_channel(688948118712090644)
+    await vireg.run_server(logger, bot)
     logger.info(f'Guild count: {len(bot.guilds)}')
     for guild in bot.guilds:
         await guild.me.edit(nick=nickname)
@@ -105,5 +111,5 @@ async def send_discord(domain, emb):
 
 
 bot.add_cog(Tribe(bot))
-bot.add_cog(Vireg(bot))
+bot.add_cog(vireg.Vireg(bot))
 bot.run(dimsecret.discord)
