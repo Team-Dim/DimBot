@@ -20,7 +20,7 @@ async def _setup_server(routes, logger):
 
 async def run_server(logger, bot):
     routes = web.RouteTableDef()
-    channel = bot.missile.bottyland if dimsecret.debug else bot.missile.bruck_ch
+    channel = bot.missile.bottyland  # if dimsecret.debug else bot.missile.bruck_ch
 
     @routes.get('/hook')
     async def root(request: web.Request):
