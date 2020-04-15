@@ -2,7 +2,7 @@ from aiohttp import web
 
 import dimsecret
 
-_address, _port = 'localhost', 80
+_address, _port = '0.0.0.0', 80
 
 
 async def _setup_server(routes, logger):
