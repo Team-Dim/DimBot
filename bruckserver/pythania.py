@@ -1,6 +1,6 @@
 from aiohttp import web
 
-_address, _port = '0.0.0.0', 80
+_address, _port = 'localhost', 80
 
 
 async def _setup_server(routes, logger):
