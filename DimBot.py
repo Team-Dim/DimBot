@@ -50,7 +50,6 @@ async def on_ready():
     bot.missile.guild = bot.get_guild(285366651312930817)
     bot.missile.bottyland = bot.get_channel(372386868236386307)
     bot.missile.bruck_ch = bot.get_channel(688948118712090644)
-    await pythania.run_server(bot.missile.get_logger('Pythania'), bot)
     logger.info(f'Guild count: {len(bot.guilds)}')
     for guild in bot.guilds:
         await guild.me.edit(nick=nickname)
