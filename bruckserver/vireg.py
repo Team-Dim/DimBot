@@ -49,8 +49,8 @@ class Vireg(commands.Cog):
             delimiter=' '
         )
 
-    @commands.check(is_rainbow)
     @commands.command()
+    @commands.check(is_rainbow)
     async def eu(self, ctx):
         await self.boot_instance(ctx, dimsecret.eu_instance_id, 'eu-north-1')
 
