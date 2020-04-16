@@ -1,6 +1,6 @@
 import asyncio
-import platform
 import json
+import platform
 from concurrent.futures.thread import ThreadPoolExecutor
 from random import randint
 
@@ -9,11 +9,11 @@ import feedparser
 from bs4 import BeautifulSoup
 from discord.ext import commands
 
-from botglob import BotGlob
 import dimsecret
+from botglob import BotGlob
+from bruckserver import vireg
 from missile import Missile
 from tribe import Tribe
-from bruckserver import vireg, pythania
 
 bot = commands.Bot(command_prefix='d.')
 bot.missile = Missile(bot)
