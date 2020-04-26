@@ -1,7 +1,5 @@
 from aiohttp import web
 
-import dimsecret
-
 
 async def _setup_server(routes, logger):
     app = web.Application()
@@ -27,10 +25,17 @@ async def run_server(logger, channel):
         return web.Response()
 
     @routes.post('/join')
-    async def player_join(request: web.Request):
+    async def join(request: web.Request):
         logger.info('Received PlayerJoinEvent')
         data = await request.text()
-        await channel.send(f'{data} has joined the server.')
+        await channel.send(f'**{data}** has joined the server.')
+        return web.Response()
+
+    @routes.post('/quit')
+    async def player_quit(request: web.Request):
+        logger.info('Received PlayerQuitEvent')
+        data = await request.text()
+        await channel.send(f'**{data}** has left the server.')
         return web.Response()
 
     await _setup_server(routes, logger)
