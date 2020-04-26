@@ -51,9 +51,13 @@ class Vireg(commands.Cog):
 
     @commands.command()
     @commands.check(is_rainbow)
+    async def host(self, ctx):
+        await run_server(self.bot.missile.get_logger('Pythania'), self.bot)
+
+    @commands.command()
+    @commands.check(is_rainbow)
     async def eu(self, ctx):
         await self.boot_instance(ctx, dimsecret.eu_instance_id, 'eu-north-1')
-        await run_server(self.bot.missile.get_logger("Pythania"), self.bot)
 
     @commands.command()
     async def start(self, ctx):

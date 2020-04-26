@@ -19,11 +19,11 @@ from tribe import Tribe
 bot = commands.Bot(command_prefix='d.')
 bot.missile = Missile(bot)
 
-nickname = "ChingDim's nurse"
-version = 'v0.3.3'
+nickname = "DimBot"
+version = 'v0.3.4'
 activity = discord.Activity(
-        name='Silent flower 💮',
-        type=discord.ActivityType.watching
+        name='🌈French Dokkaebi🌈',
+        type=discord.ActivityType.playing
 )
 
 if dimsecret.debug:
