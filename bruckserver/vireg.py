@@ -49,20 +49,19 @@ class Vireg(commands.Cog):
             delimiter=' '
         )
 
-    @commands.command()
-    @commands.check(is_rainbow)
-    async def host(self, ctx):
+    async def _boot_server(self):
         await run_server(self.bot.missile.get_logger('Pythania'), self.bot)
 
     @commands.command()
     @commands.check(is_rainbow)
     async def eu(self, ctx):
         await self.boot_instance(ctx, dimsecret.eu_instance_id, 'eu-north-1')
+        await self._boot_server()
 
     @commands.command()
     async def start(self, ctx):
         if dimsecret.debug:
             await ctx.send('⚠DimBot is currently in **DEBUG** mode, things may not work as expected!⚠')
         await self.boot_instance(ctx, dimsecret.bruck_instance_id, 'ap-southeast-1')
-        await run_server(self.bot.missile.get_logger('Pythania'), self.bot)
+        await self._boot_server()
 
