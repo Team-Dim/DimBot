@@ -10,16 +10,14 @@ async def _setup_server(routes, logger):
     logger.debug('Setup runner...')
     await runner.setup()
     logger.debug('Runner has been set up.')
-    address = '0.0.0.0'
-    site = web.TCPSite(runner, address, dimsecret.port)
+    site = web.TCPSite(runner, '0.0.0.0', 80)
     logger.debug('Starting website...')
     await site.start()
-    logger.info(f'Site now running on {address}:{dimsecret.port}')
+    logger.info('Site now running')
 
 
-async def run_server(logger, bot):
+async def run_server(logger, channel):
     routes = web.RouteTableDef()
-    channel = bot.missile.bottyland if dimsecret.debug else bot.missile.bruck_ch
 
     @routes.get('/hook')
     async def hook(request: web.Request):

@@ -15,6 +15,7 @@ class Vireg(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logger = bot.missile.get_logger('Vireg')
+        self.http_not_started = True
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -49,19 +50,21 @@ class Vireg(commands.Cog):
             delimiter=' '
         )
 
-    async def _boot_server(self):
-        await run_server(self.bot.missile.get_logger('Pythania'), self.bot)
+    async def _boot_server(self, ctx):
+        if self.http_not_started:
+            await run_server(self.bot.missile.get_logger('Pythania'), ctx.channel)
+            self.http_not_started = False
 
     @commands.command()
     @commands.check(is_rainbow)
     async def eu(self, ctx):
         await self.boot_instance(ctx, dimsecret.eu_instance_id, 'eu-north-1')
-        await self._boot_server()
+        await self._boot_server(ctx)
 
     @commands.command()
     async def start(self, ctx):
         if dimsecret.debug:
             await ctx.send('⚠DimBot is currently in **DEBUG** mode, things may not work as expected!⚠')
         await self.boot_instance(ctx, dimsecret.bruck_instance_id, 'ap-southeast-1')
-        await self._boot_server()
+        await self._boot_server(ctx)
 

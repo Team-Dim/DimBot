@@ -20,7 +20,7 @@ bot = commands.Bot(command_prefix='d.')
 bot.missile = Missile(bot)
 
 nickname = "DimBot"
-version = 'v0.3.4.1'
+version = 'v0.3.4.2'
 activity = discord.Activity(
         name='🌈French Dokkaebi🌈',
         type=discord.ActivityType.playing
