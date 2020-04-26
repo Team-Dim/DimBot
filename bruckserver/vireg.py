@@ -18,11 +18,11 @@ class Vireg(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        self.logger.debug('on_ready')
+        self.logger.info('on_ready')
 
     async def boot_instance(self, ctx, instance_id: str, region_id: str):
         msg = await ctx.send('Connecting to Amazon Web Service...')
-        self.logger.debug('Connecting to AWS')
+        self.logger.info('Connecting to AWS')
         session = boto3.session.Session(
             region_name=region_id,
             aws_access_key_id=dimsecret.aws_access_key,
