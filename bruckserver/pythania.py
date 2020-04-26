@@ -19,7 +19,6 @@ async def run_server(logger, channel):
 
     @routes.get('/hook')
     async def hook(request: web.Request):
-        logger.info(request.protocol)
         logger.info('Received Lokeon hook')
         await channel.send("Lokeon has connected to DimBot. This is as amazing as Neil Armstrong landed on the 🌕!")
         return web.Response()
@@ -36,6 +35,12 @@ async def run_server(logger, channel):
         logger.info('Received PlayerQuitEvent')
         data = await request.text()
         await channel.send(f'**{data}** has left the server.')
+        return web.Response()
+
+    @routes.get('/shutdown')
+    async def shutdown(requests: web.Request):
+        logger.info('bruckserver is shutting down')
+        await channel.send('Lokeon is shutting down.')
         return web.Response()
 
     await _setup_server(routes, logger)
