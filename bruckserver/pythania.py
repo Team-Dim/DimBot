@@ -1,6 +1,6 @@
 from aiohttp import web
 
-_address, _port = '0.0.0.0', 80
+import dimsecret
 
 
 async def _setup_server(routes, logger):
@@ -10,7 +10,7 @@ async def _setup_server(routes, logger):
     logger.debug('Setup runner...')
     await runner.setup()
     logger.debug('Runner has been set up.')
-    site = web.TCPSite(runner, _address, _port)
+    site = web.TCPSite(runner, '0.0.0.0', 4026)
     logger.debug('Starting website...')
     await site.start()
     logger.info('Site now running.')
@@ -18,13 +18,11 @@ async def _setup_server(routes, logger):
 
 async def run_server(logger, bot):
     routes = web.RouteTableDef()
-    channel = bot.missile.bottyland  # if dimsecret.debug else bot.missile.bruck_ch
+    channel = bot.missile.bottyland if dimsecret.debug else bot.missile.bruck_ch
 
     @routes.get('/hook')
-    async def root(request: web.Request):
-        logger.info(f'{request.scheme} {request.version}')
-        logger.info(request.headers)
+    async def root():
+        logger.info('Received Lokeon hook')
         await channel.send("Lokeon has connected to DimBot. This is as amazing as Neil Armstrong landed on the 🌕!")
-        return web.Response(text="Test")
 
     await _setup_server(routes, logger)

@@ -13,6 +13,7 @@ import dimsecret
 from botglob import BotGlob
 from bruckserver import vireg
 from missile import Missile
+from raceline import Raceline
 from tribe import Tribe
 
 bot = commands.Bot(command_prefix='d.')
@@ -109,6 +110,7 @@ async def send_discord(domain, emb):
     logger.info(f"{domain}: Sent Discord")
 
 
+bot.add_cog(Raceline(bot))
 bot.add_cog(Tribe(bot))
 bot.add_cog(vireg.Vireg(bot))
 bot.run(dimsecret.discord)
