@@ -52,6 +52,8 @@ class Vireg(commands.Cog):
 
     async def _boot_server(self, ctx):
         if self.http_not_started:
+            # TODO: if _boot_server is called in a different channel after the first call
+            #  it will still send Pythania logs to the first channel.
             await run_server(self.bot.missile.get_logger('Pythania'), ctx.channel)
             self.http_not_started = False
 

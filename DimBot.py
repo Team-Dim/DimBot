@@ -20,7 +20,7 @@ bot = commands.Bot(command_prefix='d.')
 bot.missile = Missile(bot)
 
 nickname = "DimBot"
-version = 'v0.3.5'
+version = 'v0.3.5.1'
 activity = discord.Activity(
         name='⚔️DSE add oil🛢️',
         type=discord.ActivityType.listening

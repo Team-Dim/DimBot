@@ -27,22 +27,23 @@ async def run_server(logger, channel):
     async def join(request: web.Request):
         logger.info('Received PlayerJoinEvent')
         data = await request.text()
-        await channel.send(f'**{data}** :handshake: Minecraft server.')
+        await channel.send(f'**{data}** :handshake: Minecraft server')
         return web.Response()
 
     @routes.post('/quit')
     async def player_quit(request: web.Request):
         logger.info('Received PlayerQuitEvent')
         data = await request.text()
-        await channel.send(f'**{data}** :wave: Minecraft server.')
+        await channel.send(f'**{data}** :wave: Minecraft server')
         return web.Response()
 
     @routes.get('/shutdown')
     async def shutdown(request: web.Request):
-        if 'idle' in request.rel_url.query:
-            await channel.send(':angry: Minecraft server has been idle for 15 minutes. YOU SHOULD /STOP BY YOURSELF!!!1')
+        name = request.rel_url.query['name']
+        if name == '':
+            await channel.send(':angry: Minecraft server has been idle for 15 minutes. YOU SHOULD /STOP BY YOURSELF!!!')
         logger.info('mcser is shutting down')
-        await channel.send('Instance is shutting down.')
+        await channel.send(f'**{name}** :axe: Minecraft server')
         return web.Response()
 
     await _setup_server(routes, logger)
