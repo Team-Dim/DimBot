@@ -20,27 +20,29 @@ async def run_server(logger, channel):
     @routes.get('/hook')
     async def hook(request: web.Request):
         logger.info('Received Lokeon hook')
-        await channel.send("Minecraft server has successfully reached DimBot.")
+        await channel.send("Minecraft server :handshake: DimBot")
         return web.Response()
 
     @routes.post('/join')
     async def join(request: web.Request):
         logger.info('Received PlayerJoinEvent')
         data = await request.text()
-        await channel.send(f'**{data}** has joined the server.')
+        await channel.send(f'**{data}** :handshake: Minecraft server.')
         return web.Response()
 
     @routes.post('/quit')
     async def player_quit(request: web.Request):
         logger.info('Received PlayerQuitEvent')
         data = await request.text()
-        await channel.send(f'**{data}** has left the server.')
+        await channel.send(f'**{data}** :wave: Minecraft server.')
         return web.Response()
 
     @routes.get('/shutdown')
-    async def shutdown(requests: web.Request):
+    async def shutdown(request: web.Request):
+        if 'idle' in request.rel_url.query:
+            await channel.send(':angry: Minecraft server has been idle for 15 minutes. YOU SHOULD /STOP BY YOURSELF!!!1')
         logger.info('mcser is shutting down')
-        await channel.send('Minecraft server is shutting down.')
+        await channel.send('Instance is shutting down.')
         return web.Response()
 
     await _setup_server(routes, logger)

@@ -20,10 +20,10 @@ bot = commands.Bot(command_prefix='d.')
 bot.missile = Missile(bot)
 
 nickname = "DimBot"
-version = 'v0.3.4.5'
+version = 'v0.3.5'
 activity = discord.Activity(
-        name='🌈French Dokkaebi🌈',
-        type=discord.ActivityType.playing
+        name='⚔️DSE add oil🛢️',
+        type=discord.ActivityType.listening
 )
 
 if dimsecret.debug:
