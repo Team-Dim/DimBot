@@ -43,7 +43,7 @@ async def run_server(logger, channel):
         if name == '':
             await channel.send(':angry: Minecraft server has been idle for 15 minutes. YOU SHOULD /STOP BY YOURSELF!!!')
         logger.info('mcser is shutting down')
-        await channel.send(f'**{name}** :axe: Minecraft server')
+        await channel.send(f'** {name}** :axe: Minecraft server')
         return web.Response()
 
     await _setup_server(routes, logger)
