@@ -20,7 +20,7 @@ bot = commands.Bot(command_prefix='d.')
 bot.missile = Missile(bot)
 
 nickname = "DimBot"
-version = 'v0.3.6'
+version = 'v0.3.6.1'
 activity = discord.Activity(
     name='⚔️DSE add oil🛢️',
     type=discord.ActivityType.listening
@@ -49,19 +49,20 @@ async def info(ctx):
 # Happy birthday, Alex!
 @bot.event
 async def on_voice_state_update(member, before, after):
-    if after.channel and not before.channel and member.id == 264756129916125184:
+    if after.channel and not before.channel and member.id == 690870180594581514:
         channel: discord.VoiceChannel = after.channel
         members = channel.members
         for m in members:
             await m.edit(mute=True)
         client = await channel.connect()
-        await asyncio.sleep(3)
+        await asyncio.sleep(2)
         client.play(
             discord.FFmpegPCMAudio(source='/root/DimBot/HBT.mp3'))
         await asyncio.sleep(15)
         for m in members:
             await m.edit(mute=False)
         await client.disconnect()
+        await bot.missile.bottyland.send('<@264756129916125184>')
 
 
 @bot.event
