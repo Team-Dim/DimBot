@@ -1,5 +1,5 @@
 beautifulsoup4
 feedparser
-discord.py[voice]>=1.0.0
+discord.py>=1.0.0
 boto3
 aiohttp>=3.6 # Pythania requires at least 3.6

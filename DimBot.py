@@ -20,9 +20,9 @@ bot = commands.Bot(command_prefix='d.')
 bot.missile = Missile(bot)
 
 nickname = "DimBot"
-version = 'v0.3.6.2'
+version = 'v0.4'
 activity = discord.Activity(
-    name='⚔️DSE add oil🛢️',
+    name='Lokeon',
     type=discord.ActivityType.listening
 )
 
@@ -46,18 +46,6 @@ async def info(ctx):
         'Bot source code: https://github.com/TCLRainbow/DimBot')
 
 
-# Happy birthday, Alex!
-@bot.event
-async def on_voice_state_update(member, before, after):
-    if after.channel and not before.channel and member.id == 690870180594581514:
-        channel: discord.VoiceChannel = after.channel
-        client = await channel.connect()
-        await asyncio.sleep(2)
-        client.play(discord.FFmpegPCMAudio(source='/root/DimBot/HBT.mp3'))
-        await asyncio.sleep(15)
-        await client.disconnect()
-
-
 @bot.event
 async def on_ready():
     bot.missile.guild = bot.get_guild(285366651312930817)
@@ -65,7 +53,8 @@ async def on_ready():
     bot.missile.bruck_ch = bot.get_channel(688948118712090644)
     logger.info(f'Guild count: {len(bot.guilds)}')
     for guild in bot.guilds:
-        await guild.me.edit(nick=nickname)
+        if guild.me.nick != nickname:
+            await guild.me.edit(nick=nickname)
     await bot.change_presence(activity=activity)
     botglobal.guild = bot.missile.guild
     # Maybe move below to cog 'Raceline'
