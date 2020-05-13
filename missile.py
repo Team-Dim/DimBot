@@ -19,6 +19,7 @@ class Missile:
             self.lvl = logging.INFO
         self.guild = None
         self.bottyland = None
+        self.newsfeed = None
 
     def get_logger(self, name: str):
         logger = logging.getLogger(name)
