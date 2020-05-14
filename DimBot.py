@@ -16,7 +16,7 @@ bot = commands.Bot(command_prefix='d.')
 bot.missile = Missile(bot)
 
 nickname = "DimBot"
-version = 'v0.4.1'
+version = 'v0.4.1.1'
 activity = discord.Activity(
     name='Lokeon',
     type=discord.ActivityType.listening
