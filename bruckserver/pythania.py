@@ -1,5 +1,7 @@
 from aiohttp import web
 
+__version__ = '1.1'
+
 
 async def _setup_server(routes, logger):
     app = web.Application()

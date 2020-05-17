@@ -1,6 +1,7 @@
 .idea
 dimsecret.py
 rss.json
+DimBot.db
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

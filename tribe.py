@@ -1,11 +1,10 @@
 import discord
 from discord.ext.commands import Cog
 
+__version__ = '1.2'
+
 
 class Tribe(Cog):
-    """
-    :param self.invites List[]
-    """
 
     def __init__(self, bot):
         self.bot = bot
@@ -30,7 +29,7 @@ class Tribe(Cog):
 
     @Cog.listener()
     async def on_ready(self):
-        self.logger.debug('on ready')
+        self.logger.debug('on_ready')
         self.invites = await self.bot.missile.guild.invites()
         self.bbm_invite = await self.get_invite_uses('g6Yrteq')
 

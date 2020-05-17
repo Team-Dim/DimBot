@@ -11,6 +11,8 @@ import feedparser
 from bs4 import BeautifulSoup
 from discord.ext import commands
 
+__version__ = '3.0'
+
 
 class Raceline(commands.Cog):
 
@@ -21,7 +23,7 @@ class Raceline(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        self.logger.info('on_ready')
+        self.logger.debug('on_ready')
         with open('urls.json', 'r') as f:
             url = json.load(f)
         with open('rss.json', 'r') as f:
@@ -59,10 +61,10 @@ class Raceline(commands.Cog):
             emb = discord.Embed(title=feed.title, description=content.get_text(), url=feed.link)
             emb.colour = discord.Colour.from_rgb(randint(0, 255), randint(0, 255), randint(0, 255))
             emb.set_footer(text=f"{domain} | {feed.published}")
-            asyncio.set_event_loop(self.bot.loop)
             asyncio.run_coroutine_threadsafe(self.send_discord(emb), self.bot.loop)
             self.logger.info(f"{domain}: Sent Discord")
-        self.logger.debug(f"{domain}: Done")
+        self.logger.info(f"{domain}: Done")
+        return asyncio.get_event_loop()
 
     async def send_discord(self, emb):
         await self.bot.missile.newsfeed.send(embed=emb)

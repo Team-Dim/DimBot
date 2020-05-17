@@ -7,9 +7,6 @@ import dimsecret
 
 
 class Missile:
-    """
-    Contains shared stuff, should replace BotGlob
-    """
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -20,6 +17,7 @@ class Missile:
         self.guild = None
         self.bottyland = None
         self.newsfeed = None
+        self.loop = False
 
     def get_logger(self, name: str):
         logger = logging.getLogger(name)

@@ -10,6 +10,9 @@ def is_rainbow(ctx):
     return ctx.author.id == 264756129916125184
 
 
+__version__ = '1.2'
+
+
 class Vireg(commands.Cog):
 
     def __init__(self, bot):
@@ -69,4 +72,3 @@ class Vireg(commands.Cog):
             await ctx.send('⚠DimBot is currently in **DEBUG** mode, things may not work as expected!⚠')
         await self.boot_instance(ctx, dimsecret.bruck_instance_id, 'ap-southeast-1')
         await self._boot_server(ctx)
-
