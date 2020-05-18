@@ -1,7 +1,8 @@
 import asyncio
+import glob
 import json
 import platform
-from glob import glob
+from os import listdir
 
 import boto3
 import discord
@@ -19,7 +20,7 @@ bot = commands.Bot(command_prefix='d.')
 bot.missile = Missile(bot)
 
 nickname = "DimBot"
-version = 'v0.4.2'
+version = 'v0.4.2.1'
 activity = discord.Activity(
     name='Lokeon',
     type=discord.ActivityType.listening
@@ -53,12 +54,17 @@ async def info(ctx):
         '**Project Blin**: *Confidential*\n'
         f'**Project Vireg** `{vireg.__version__}`: Connects to AWS and manage a minecraft server instance.\n'
         f'**Project Pythania** `{pythania.__version__}`: HTTP server sub-project used by `Vireg`.\n'
-        '**Project Beural**: *Confidential*'
+        '**Project Beural**: *Confidential*\n'
         '**Project Skybow**: *Confidential*'
     )
 
 
+def is_debug(ctx):
+    return dimsecret.debug
+
+
 @bot.event
+@commands.check(is_debug)
 async def on_ready():
     bot.missile.guild = bot.get_guild(285366651312930817)
     bot.missile.bottyland = bot.get_channel(372386868236386307)
@@ -72,28 +78,32 @@ async def on_ready():
 
 
 @bot.command()
-@commands.check(vireg.is_rainbow)
-async def music(ctx, name: str):
-    results = glob(f'D:\\Music\\{name}?.mp3')
-    print(results)
-    client = await ctx.author.voice.channel.connect()
-    song_name = 'Tantal - Xenoblade Chronicles 2 OST 053.mp3'
-    path = f'D:\\Music\\{song_name}'
-    await ctx.send(f'Now playing `{song_name}`')
-    logger.debug('Play once')
-    client.play(discord.FFmpegPCMAudio(source=path,
-                                       executable='D:\\GitHub.Tyrrrz\\ffmpeg.exe'))
-    await asyncio.sleep(skybow.get_audio_length(path))
-    while bot.missile.loop:
-        logger.debug('in loop')
-        client.play(discord.FFmpegPCMAudio(source=path,
-                                           executable='D:\\GitHub.Tyrrrz\\ffmpeg.exe'))
-        await asyncio.sleep(skybow.get_audio_length(path))
-    await client.disconnect()
+@commands.check(is_debug)
+async def play(ctx, name: str):
+    if name == 'list':
+        content = ''
+        for fname in listdir('D:\\Music'):
+            content += f'{fname}\n'
+        await ctx.send(content)
+    else:
+        try:
+            file = next(glob.iglob(f'D:\\Music\\*{glob.escape(name)}*'))
+            client = await ctx.author.voice.channel.connect()
+            name = file.split('\\')[2]
+            await ctx.send(f'Now playing `{name}`')
+            client.play(discord.FFmpegPCMAudio(source=file,
+                                               executable='D:\\GitHub.Tyrrrz\\ffmpeg.exe'))
+            await asyncio.sleep(skybow.get_audio_length(file))
+            while bot.missile.loop:
+                client.play(discord.FFmpegPCMAudio(source=file,
+                                                   executable='D:\\GitHub.Tyrrrz\\ffmpeg.exe'))
+                await asyncio.sleep(skybow.get_audio_length(file))
+            await client.disconnect()
+        except StopIteration:
+            await ctx.send('No song found!')
 
 
 @bot.command()
-@commands.check(vireg.is_rainbow)
 async def loop(ctx):
     bot.missile.loop = not bot.missile.loop
     await ctx.send(f'Bot loop: **{bot.missile.loop}**')
