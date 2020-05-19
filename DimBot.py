@@ -20,9 +20,9 @@ bot = commands.Bot(command_prefix='d.')
 bot.missile = Missile(bot)
 
 nickname = "DimBot"
-version = 'v0.4.2.2'
+version = 'v0.4.3'
 activity = discord.Activity(
-    name='Lokeon',
+    name='Echo',
     type=discord.ActivityType.listening
 )
 
@@ -75,6 +75,12 @@ async def on_ready():
         if guild.me.nick != nickname:
             await guild.me.edit(nick=nickname)
     await bot.change_presence(activity=activity)
+
+
+@bot.event
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.errors.BadArgument):
+        pass
 
 
 @bot.command()

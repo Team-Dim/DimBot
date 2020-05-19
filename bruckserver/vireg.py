@@ -22,7 +22,7 @@ class Vireg(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        self.logger.info('on_ready')
+        self.logger.debug('on_ready')
 
     async def boot_instance(self, ctx, instance_id: str, region_id: str):
         msg = await ctx.send('Connecting to Amazon Web Service...')
