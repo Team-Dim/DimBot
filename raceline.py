@@ -19,6 +19,7 @@ class Raceline(commands.Cog):
         self.bot = bot
         self.logger = bot.missile.get_logger('Raceline')
         self.pool = ThreadPoolExecutor()
+        self.new = True
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -27,7 +28,9 @@ class Raceline(commands.Cog):
             url = json.load(f)
         with open('rss.json', 'r') as f:
             rss = json.load(f)
-        await self.rss_task(url, rss)
+        if self.new:
+            self.new = False
+            await self.rss_task(url, rss)
 
     async def rss_task(self, url: dict, rss: dict):
         futures = []
