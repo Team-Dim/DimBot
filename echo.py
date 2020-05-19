@@ -1,9 +1,12 @@
 import random
 import sqlite3
 
+import discord
 from discord.ext import commands
 
-__version__ = '0'
+__version__ = '1.0'
+
+from bruckserver import vireg
 
 
 class Echo(commands.Cog):
@@ -17,6 +20,18 @@ class Echo(commands.Cog):
     def get_quote(self, index: int):
         self.cursor.execute("SELECT * FROM quotes WHERE ROWID = ?", str(index))
         return self.cursor.fetchone()
+
+    def is_og_sender(self, coro):
+        async def wrapper(ctx, index: int):
+            quote = self.get_quote(index)
+            if quote:
+                if quote[2] == ctx.author.id:
+                    await coro(ctx, index)
+                else:
+                    await ctx.send("You must be the quote uploader to delete the quote!")
+            else:
+                await ctx.send('No quote found!')
+        return wrapper
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -38,29 +53,61 @@ class Echo(commands.Cog):
         content += f"Quote #{index}:\n> {quote[0]} - {quote[1]}\n Uploaded by {self.bot.get_user(quote[2])}"
         await ctx.send(content)
 
-    @quote.command(aliases=['a'])
-    async def add(self, ctx, *, args):
-        await ctx.send('Quoter?')
+    @quote.command(aliases=['q'])
+    async def quoter(self, ctx, *, quoter):
+        self.cursor.execute("SELECT ROWID, msg FROM quotes WHERE quoter = ?", (quoter,))
+        quotes = self.cursor.fetchall()
+        content = f"The following are **{quoter}**'s quotes:\n"
+        for quote in quotes:
+            content += f'> {quote[0]}. {quote[1]}\n'
+        await ctx.send(content)
+
+    @quote.command(aliases=['u'])
+    async def uploader(self, ctx, user: discord.User):
+        self.cursor.execute("SELECT ROWID, msg, quoter FROM quotes WHERE uid = ?", (user.id,))
+        quotes = self.cursor.fetchall()
+        content = f"The following are quotes uploaded by **{user}**:\n"
+        for quote in quotes:
+            content += f'> {quote[0]}. {quote[1]} - {quote[2]}\n'
+        await ctx.send(content)
+
+    @quote.command()
+    @commands.check(vireg.is_rainbow)
+    async def exe(self, ctx):
+        await ctx.send('SQL statement?')
 
         def check(m):
             return m.author.id == ctx.author.id and m.channel == ctx.channel
 
-        msg = await self.bot.wait_for('message', timeout=10, check=check)
-        if msg:
-            self.cursor.execute("INSERT INTO quotes VALUES (?, ?, ?)", (args, msg.content, ctx.author.id))
-            self.db.commit()
-            await ctx.send(f"Added quote #{self.cursor.lastrowid}")
+        msg = await self.bot.wait_for('message', check=check)
+        self.cursor.execute(msg.content)
+        self.db.commit()
+        await ctx.send('Done')
+
+    @quote.command(aliases=['a'])
+    async def add(self, ctx, *, args):
+        self.cursor.execute("SELECT ROWID FROM quotes WHERE msg = ?", (args, ))
+        exists = self.cursor.fetchone()
+        if exists:
+            await ctx.send(f'This quote duplicates with #{exists[0]}')
+        else:
+            await ctx.send('Quoter?')
+
+            def check(m):
+                return m.author.id == ctx.author.id and m.channel == ctx.channel
+
+            msg = await self.bot.wait_for('message', timeout=10, check=check)
+            if msg:
+                self.cursor.execute("INSERT INTO quotes VALUES (?, ?, ?)", (args, msg.content, ctx.author.id))
+                self.db.commit()
+                await ctx.send(f"Added quote #{self.cursor.lastrowid}")
 
     @quote.command(aliases=['d', 'del'])
     async def delete(self, ctx, index: int):
-        quote = self.get_quote(index)
-        if quote:
-            if quote[2] == ctx.author.id:
-                self.cursor.execute("DELETE FROM quotes WHERE ROWID = ?", str(index))
-                self.db.commit()
-                await ctx.send("Deleted quote.")
-            else:
-                await ctx.send("You must be the quote uploader to delete the quote!")
-        else:
-            await ctx.send('No quote found!')
+        @self.is_og_sender
+        async def self_delete(ctx, index: int):
+            self.cursor.execute("DELETE FROM quotes WHERE ROWID = ?", str(index))
+            self.db.commit()
+            await ctx.send("Deleted quote.")
+        await self_delete(ctx, index)
 

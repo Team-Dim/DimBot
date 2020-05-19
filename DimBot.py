@@ -20,7 +20,7 @@ bot = commands.Bot(command_prefix='d.')
 bot.missile = Missile(bot)
 
 nickname = "DimBot"
-version = 'v0.4.3'
+version = 'v0.5'
 activity = discord.Activity(
     name='Echo',
     type=discord.ActivityType.listening
@@ -48,7 +48,7 @@ async def info(ctx):
         'Bot source code: https://github.com/TCLRainbow/DimBot\n\n'
         'This bot has the following modules:\n'
         f'**Project Raceline** `{raceline.__version__}`: Subscribe to multiple RSS feed and send them to discord channels.\n'
-        '**Project Echo** `(Beta)`: Add or search quotes through a SQL database.\n'
+        f'**Project Echo** `{echo.__version__}`: Add or search quotes through a SQL database.\n'
         f'**Project Tribe** `{tribe.__version__}`: Adds additional feature per role\n'
         '**Project Brighten**: *Confidential*\n'
         '**Project Blin**: *Confidential*\n'
