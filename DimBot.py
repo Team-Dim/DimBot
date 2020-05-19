@@ -80,7 +80,7 @@ async def on_ready():
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.errors.BadArgument):
-        pass
+        await ctx.send('Bad argument.')
 
 
 @bot.command()

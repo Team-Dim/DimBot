@@ -23,10 +23,6 @@ class Echo(commands.Cog):
         await ctx.send("Wiki for interacting with quote databse: https://github.com/TCLRainbow/DimBot/wiki/Project-Echo")
 
     @quote.command()
-    async def patch(self, ctx):
-        self.db.execute("ALTER TABLE quotes ADD COLUMN uid INTEGER")
-
-    @quote.command()
     async def index(self, ctx, index: int = 0):
         self.cursor.execute("SELECT COUNT(msg) FROM quotes")
         count = self.cursor.fetchone()[0]
@@ -36,7 +32,7 @@ class Echo(commands.Cog):
             content += f'There are **{count}** quotes in the database. This is a random one:\n'
         self.cursor.execute("SELECT * FROM quotes WHERE ROWID = ?", str(index))
         quote = self.cursor.fetchone()
-        content += f"Quote #{index}:\n> {quote[0]}\n- {quote[1]}"
+        content += f"Quote #{index}:\n> {quote[0]} - {quote[1]}\n Uploaded by {self.bot.get_user(quote[2])}"
         await ctx.send(content)
 
     @quote.command()
