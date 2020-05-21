@@ -11,6 +11,8 @@ from discord.ext import commands
 
 __version__ = '3.1'
 
+from dimsecret import debug
+
 
 class Raceline(commands.Cog):
 
@@ -18,7 +20,8 @@ class Raceline(commands.Cog):
         self.bot = bot
         self.logger = bot.missile.get_logger('Raceline')
         self.new = True
-        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())  # https://github.com/aio-libs/aiohttp/issues/4324
+        if debug:
+            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())  # https://github.com/aio-libs/aiohttp/issues/4324
 
     @commands.Cog.listener()
     async def on_ready(self):
