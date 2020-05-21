@@ -18,6 +18,7 @@ class Missile:
         self.bottyland = None
         self.newsfeed = None
         self.loop = False
+        self.new = True  # For DimBot change activity loop
 
     def get_logger(self, name: str):
         logger = logging.getLogger(name)

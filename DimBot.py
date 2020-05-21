@@ -1,6 +1,5 @@
 import asyncio
 import glob
-import json
 import platform
 from os import listdir
 
@@ -8,6 +7,7 @@ import boto3
 import discord
 from discord.ext import commands
 
+from random import choice
 import dimsecret
 import echo
 import raceline
@@ -20,11 +20,13 @@ bot = commands.Bot(command_prefix='d.')
 bot.missile = Missile(bot)
 
 nickname = "DimBot"
-version = 'v0.5'
-activity = discord.Activity(
-    name='Echo',
-    type=discord.ActivityType.listening
-)
+version = 'v0.5.1'
+activities = [
+    discord.Activity(name='Echo', type=discord.ActivityType.listening),
+    discord.Activity(name='Ricizus screaming', type=discord.ActivityType.listening),
+    discord.Activity(name='Rainbow codes', type=discord.ActivityType.watching),
+    discord.Activity(name='Rainbow laughs', type=discord.ActivityType.watching)
+]
 
 if dimsecret.debug:
     nickname += f' [{version}]'
@@ -33,8 +35,6 @@ else:
     nickname += f' {{{version}}}'
     news_ch = 581699408870113310
 
-with open('urls.json', 'r') as file:
-    rss_urls = json.load(file)
 logger = bot.missile.get_logger('DimBot')
 
 
@@ -64,7 +64,6 @@ def is_debug(ctx):
 
 
 @bot.event
-@commands.check(is_debug)
 async def on_ready():
     bot.missile.guild = bot.get_guild(285366651312930817)
     bot.missile.bottyland = bot.get_channel(372386868236386307)
@@ -74,7 +73,12 @@ async def on_ready():
     for guild in bot.guilds:
         if guild.me.nick != nickname:
             await guild.me.edit(nick=nickname)
-    await bot.change_presence(activity=activity)
+    if bot.missile.new:
+        bot.missile.new = False
+        while True:
+            logger.debug('Changed activity')
+            await bot.change_presence(activity=choice(activities))
+            await asyncio.sleep(300)
 
 
 @bot.event

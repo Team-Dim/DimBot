@@ -4,7 +4,7 @@ import sqlite3
 import discord
 from discord.ext import commands
 
-__version__ = '1.0'
+__version__ = '1.0.1'
 
 from bruckserver import vireg
 
@@ -20,18 +20,6 @@ class Echo(commands.Cog):
     def get_quote(self, index: int):
         self.cursor.execute("SELECT * FROM quotes WHERE ROWID = ?", str(index))
         return self.cursor.fetchone()
-
-    def is_og_sender(self, coro):
-        async def wrapper(ctx, index: int):
-            quote = self.get_quote(index)
-            if quote:
-                if quote[2] == ctx.author.id:
-                    await coro(ctx, index)
-                else:
-                    await ctx.send("You must be the quote uploader to delete the quote!")
-            else:
-                await ctx.send('No quote found!')
-        return wrapper
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -104,10 +92,13 @@ class Echo(commands.Cog):
 
     @quote.command(aliases=['d', 'del'])
     async def delete(self, ctx, index: int):
-        @self.is_og_sender
-        async def self_delete(ctx, index: int):
-            self.cursor.execute("DELETE FROM quotes WHERE ROWID = ?", str(index))
-            self.db.commit()
-            await ctx.send("Deleted quote.")
-        await self_delete(ctx, index)
-
+        quote = self.get_quote(index)
+        if quote:
+            if quote[2] == ctx.author.id:
+                self.cursor.execute("DELETE FROM quotes WHERE ROWID = ?", str(index))
+                self.db.commit()
+                await ctx.send("Deleted quote.")
+            else:
+                await ctx.send("You must be the quote uploader to delete the quote!")
+        else:
+            await ctx.send('No quote found!')
