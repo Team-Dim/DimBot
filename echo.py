@@ -4,7 +4,7 @@ import sqlite3
 import discord
 from discord.ext import commands
 
-__version__ = '1.0.1'
+__version__ = '1.0.2'
 
 from bruckserver import vireg
 
@@ -74,6 +74,9 @@ class Echo(commands.Cog):
 
     @quote.command(aliases=['a'])
     async def add(self, ctx, *, args):
+        if '<@' in args:
+            await ctx.send("You can't mention others in quote message!")
+            return
         self.cursor.execute("SELECT ROWID FROM quotes WHERE msg = ?", (args, ))
         exists = self.cursor.fetchone()
         if exists:

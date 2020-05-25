@@ -20,9 +20,10 @@ bot = commands.Bot(command_prefix='d.')
 bot.missile = Missile(bot)
 
 nickname = "DimBot"
-version = 'v0.5.1.1'
+version = 'v0.5.1.2'
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
+    discord.Activity(name='Lokeon', type=discord.ActivityType.listening),
     discord.Activity(name='Ricizus screaming', type=discord.ActivityType.listening),
     discord.Activity(name='Rainbow codes', type=discord.ActivityType.watching),
     discord.Activity(name='Rainbow laughs', type=discord.ActivityType.watching)
