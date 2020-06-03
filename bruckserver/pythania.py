@@ -1,6 +1,8 @@
+import asyncio
+
 from aiohttp import web
 
-__version__ = '1.2'
+__version__ = '1.2.1'
 
 
 class Pythania:
@@ -35,7 +37,7 @@ class Pythania:
         async def hook(request: web.Request):
             self.logger.debug('Received Lokeon hook')
             for channel in self.get_channels:
-                await channel.send("Minecraft server :handshake: DimBot")
+                asyncio.get_running_loop().create_task(channel.send("Minecraft server :handshake: DimBot"))
             return web.Response()
 
         @routes.post('/join')
@@ -51,7 +53,7 @@ class Pythania:
             self.logger.debug('Received PlayerQuitEvent')
             data = await request.text()
             for channel in self.get_channels:
-                await channel.send(f'**{data}** :wave: Minecraft server')
+                asyncio.get_running_loop().create_task(channel.send(f'**{data}** :wave: Minecraft server'))
             return web.Response()
 
         @routes.get('/shutdown')
@@ -59,11 +61,11 @@ class Pythania:
             name = request.rel_url.query['name']
             if name == '':
                 for channel in self.get_channels:
-                    await channel.send(
-                        ':angry: Minecraft server has been idle for 15 minutes. **玩完記得喺MINECRAFT入面/STOP!!!**')
+                    asyncio.get_running_loop().create_task(channel.send(
+                        ':angry: Minecraft server has been idle for 15 minutes. **玩完記得喺MINECRAFT入面/STOP!!!**'))
             self.logger.debug('mcser is shutting down')
             for channel in self._channels:
-                await channel.send(f'** {name}** :axe: Minecraft server')
+                asyncio.get_running_loop().create_task(channel.send(f'** {name}** :axe: Minecraft server'))
             self._channels = []
             return web.Response()
 
