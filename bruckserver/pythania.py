@@ -1,51 +1,70 @@
 from aiohttp import web
 
-__version__ = '1.1'
+__version__ = '1.2'
 
 
-async def _setup_server(routes, logger):
-    app = web.Application()
-    app.add_routes(routes)
-    runner = web.AppRunner(app)
-    logger.debug('Setup runner...')
-    await runner.setup()
-    logger.debug('Runner has been set up.')
-    site = web.TCPSite(runner, '0.0.0.0', 80)
-    logger.debug('Starting website...')
-    await site.start()
-    logger.info('Site now running')
+class Pythania:
+    def __init__(self, logger):
+        self._channels = []
+        self.logger = logger
 
+    @property
+    def get_channels(self):
+        return self._channels
 
-async def run_server(logger, channel):
-    routes = web.RouteTableDef()
+    def add_channel(self, channel):
+        if channel not in self._channels:
+            self._channels.append(channel)
 
-    @routes.get('/hook')
-    async def hook(request: web.Request):
-        logger.info('Received Lokeon hook')
-        await channel.send("Minecraft server :handshake: DimBot")
-        return web.Response()
+    async def _setup_server(self, routes):
+        app = web.Application()
+        app.add_routes(routes)
+        runner = web.AppRunner(app)
+        self.logger.debug('Setup runner...')
+        await runner.setup()
+        self.logger.debug('Runner has been set up.')
+        site = web.TCPSite(runner, '0.0.0.0', 80)
+        self.logger.debug('Starting website...')
+        await site.start()
+        self.logger.info('Site now running')
 
-    @routes.post('/join')
-    async def join(request: web.Request):
-        logger.info('Received PlayerJoinEvent')
-        data = await request.text()
-        await channel.send(f'**{data}** :handshake: Minecraft server')
-        return web.Response()
+    async def run_server(self):
+        routes = web.RouteTableDef()
 
-    @routes.post('/quit')
-    async def player_quit(request: web.Request):
-        logger.info('Received PlayerQuitEvent')
-        data = await request.text()
-        await channel.send(f'**{data}** :wave: Minecraft server')
-        return web.Response()
+        @routes.get('/hook')
+        async def hook(request: web.Request):
+            self.logger.debug('Received Lokeon hook')
+            for channel in self.get_channels:
+                await channel.send("Minecraft server :handshake: DimBot")
+            return web.Response()
 
-    @routes.get('/shutdown')
-    async def shutdown(request: web.Request):
-        name = request.rel_url.query['name']
-        if name == '':
-            await channel.send(':angry: Minecraft server has been idle for 15 minutes. YOU SHOULD /STOP BY YOURSELF!!!')
-        logger.info('mcser is shutting down')
-        await channel.send(f'** {name}** :axe: Minecraft server')
-        return web.Response()
+        @routes.post('/join')
+        async def join(request: web.Request):
+            self.logger.debug('Received PlayerJoinEvent')
+            data = await request.text()
+            for channel in self.get_channels:
+                await channel.send(f'**{data}** :handshake: Minecraft server')
+            return web.Response()
 
-    await _setup_server(routes, logger)
+        @routes.post('/quit')
+        async def player_quit(request: web.Request):
+            self.logger.debug('Received PlayerQuitEvent')
+            data = await request.text()
+            for channel in self.get_channels:
+                await channel.send(f'**{data}** :wave: Minecraft server')
+            return web.Response()
+
+        @routes.get('/shutdown')
+        async def shutdown(request: web.Request):
+            name = request.rel_url.query['name']
+            if name == '':
+                for channel in self.get_channels:
+                    await channel.send(
+                        ':angry: Minecraft server has been idle for 15 minutes. **玩完記得喺MINECRAFT入面/STOP!!!**')
+            self.logger.debug('mcser is shutting down')
+            for channel in self._channels:
+                await channel.send(f'** {name}** :axe: Minecraft server')
+            self._channels = []
+            return web.Response()
+
+        await self._setup_server(routes)

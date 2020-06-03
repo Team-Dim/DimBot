@@ -2,7 +2,7 @@ import boto3
 from discord.ext import commands
 
 import dimsecret
-from bruckserver.pythania import run_server
+from bruckserver.pythania import Pythania
 from missile import Missile
 
 
@@ -10,7 +10,7 @@ def is_rainbow(ctx):
     return ctx.author.id == 264756129916125184
 
 
-__version__ = '1.2'
+__version__ = '1.3'
 
 
 class Vireg(commands.Cog):
@@ -19,6 +19,7 @@ class Vireg(commands.Cog):
         self.bot = bot
         self.logger = bot.missile.get_logger('Vireg')
         self.http_not_started = True
+        self.pythania = Pythania(bot.missile.get_logger('Pythania'))
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -52,23 +53,18 @@ class Vireg(commands.Cog):
             f'in {region_id} **"{region_name}"**. IP address: **{instance.public_ip_address}** ',
             delimiter=' '
         )
-
-    async def _boot_server(self, ctx):
+        self.pythania.add_channel(ctx.channel)
         if self.http_not_started:
-            # TODO: if _boot_server is called in a different channel after the first call
-            #  it will still send Pythania logs to the first channel.
-            await run_server(self.bot.missile.get_logger('Pythania'), ctx.channel)
+            await self.pythania.run_server()
             self.http_not_started = False
 
     @commands.command()
     @commands.check(is_rainbow)
     async def eu(self, ctx):
         await self.boot_instance(ctx, dimsecret.eu_instance_id, 'eu-north-1')
-        await self._boot_server(ctx)
 
     @commands.command()
     async def start(self, ctx):
         if dimsecret.debug:
-            await ctx.send('⚠DimBot is currently in **DEBUG** mode, things may not work as expected!⚠')
+            await ctx.send('⚠DimBot is currently in **DEBUG** mode. I cannot receive messages from Lokeon, also things may not work as expected!⚠\n')
         await self.boot_instance(ctx, dimsecret.bruck_instance_id, 'ap-southeast-1')
-        await self._boot_server(ctx)

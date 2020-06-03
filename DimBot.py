@@ -2,12 +2,12 @@ import asyncio
 import glob
 import platform
 from os import listdir
+from random import choice
 
 import boto3
 import discord
 from discord.ext import commands
 
-from random import choice
 import dimsecret
 import echo
 import raceline
@@ -20,7 +20,7 @@ bot = commands.Bot(command_prefix='d.')
 bot.missile = Missile(bot)
 
 nickname = "DimBot"
-version = 'v0.5.2'
+version = 'v0.5.3'
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='Lokeon', type=discord.ActivityType.listening),
@@ -94,12 +94,7 @@ async def on_command_error(ctx, error):
 @bot.command()
 @commands.check(is_debug)
 async def play(ctx, name: str):
-    if name == 'list':
-        content = ''
-        for fname in listdir('D:\\Music'):
-            content += f'{fname}\n'
-        await ctx.send(content)
-    else:
+    if name:
         try:
             file = next(glob.iglob(f'D:\\Music\\*{glob.escape(name)}*'))
             client = await ctx.author.voice.channel.connect()
@@ -115,12 +110,26 @@ async def play(ctx, name: str):
             await client.disconnect()
         except StopIteration:
             await ctx.send('No song found!')
+    else:
+        content = ''
+        for fname in listdir('D:\\Music'):
+            content += f'{fname}\n'
+        await ctx.send(content)
 
 
 @bot.command()
 async def loop(ctx):
     bot.missile.loop = not bot.missile.loop
     await ctx.send(f'Bot loop: **{bot.missile.loop}**')
+
+
+# Eggy requested this command
+@bot.command()
+async def hug(ctx):
+    gif = choice(['https://tenor.com/view/milk-and-mocha-bear-couple-line-hug-cant-breathe-gif-12687187',
+                  'https://tenor.com/view/hugs-hug-ghost-hug-gif-4451998',
+                  'https://tenor.com/view/true-love-hug-miss-you-everyday-always-love-you-running-hug-gif-5534958'])
+    await ctx.send(f'{gif}\nhug {ctx.author.mention}')
 
 
 bot.add_cog(raceline.Raceline(bot))

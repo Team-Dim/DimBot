@@ -4,7 +4,7 @@ import sqlite3
 import discord
 from discord.ext import commands
 
-__version__ = '1.0.3'
+__version__ = '1.0.4'
 
 from bruckserver import vireg
 
@@ -98,7 +98,7 @@ class Echo(commands.Cog):
         quote = self.get_quote(index)
         if quote:
             if quote[2] == ctx.author.id:
-                self.cursor.execute("DELETE FROM quotes WHERE ROWID = ?", str(index))
+                self.cursor.execute("DELETE FROM quotes WHERE ROWID = ?", (index,))
                 self.db.commit()
                 await ctx.send("Deleted quote.")
             else:
