@@ -4,7 +4,7 @@ import sqlite3
 import discord
 from discord.ext import commands
 
-__version__ = '1.0.2'
+__version__ = '1.0.3'
 
 from bruckserver import vireg
 
@@ -18,7 +18,7 @@ class Echo(commands.Cog):
         self.cursor = self.db.cursor()
 
     def get_quote(self, index: int):
-        self.cursor.execute("SELECT * FROM quotes WHERE ROWID = ?", str(index))
+        self.cursor.execute("SELECT * FROM quotes WHERE ROWID = ?", (index,))
         return self.cursor.fetchone()
 
     @commands.Cog.listener()
