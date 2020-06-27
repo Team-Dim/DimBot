@@ -12,7 +12,7 @@ from discord.ext import commands
 
 __version__ = '4.0'
 
-from dimsecret import debug
+from dimsecret import debug, youtube
 
 
 class Raceline(commands.Cog):
@@ -40,12 +40,13 @@ class Raceline(commands.Cog):
 
     async def raceline_task(self, url: dict):
         while True:
-            rss_futures = []
+            resultless_futures = []
             for domain in url.keys():
-                rss_futures.append(self.pool.submit(self.rss_process, domain, url))
+                resultless_futures.append(self.pool.submit(self.rss_process, domain, url))
             message = default_msg = '' if debug else '<@664210105318768661> '
             bbm_futures = [self.pool.submit(self.bbm_process, addon_id) for addon_id in self.data['BBM'].keys()]
-            concurrent.futures.wait(rss_futures)
+            resultless_futures.append(self.pool.submit(self.yt_process))
+            concurrent.futures.wait(resultless_futures)
             concurrent.futures.wait(bbm_futures)
             for future in bbm_futures:
                 message += future.result()
@@ -104,3 +105,15 @@ class Raceline(commands.Cog):
 
         return message
 
+    def yt_process(self):
+        asyncio.new_event_loop().run_until_complete(self.async_yt())
+
+    async def async_yt(self):
+        self.logger.info('Checking YT')
+        async with aiohttp.ClientSession() as session:
+            async with session.get('https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=UCTuGoJ-MoQuSYVgtmJTa3-w&maxResults=10&order=date&type=video&key=' + youtube) as response:
+                json_response = await response.json()
+        if self.data['YT'] != json_response['items'][0]['id']['videoId']:
+            self.logger.debug('New YT video detected')
+            asyncio.run_coroutine_threadsafe(self.bot.missile.announcement.send("http://youtube.com/watch?v=" + json_response['items'][0]['id']['videoId']), self.bot.loop)
+        self.data['YT'] = json_response['items'][0]['id']['videoId']
