@@ -17,6 +17,7 @@ class Missile:
         self.guild = None
         self.bottyland = None
         self.newsfeed = None
+        self.announcement = None
         self.loop = False
         self.new = True  # For DimBot change activity loop
 

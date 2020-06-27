@@ -20,7 +20,7 @@ bot = commands.Bot(command_prefix='d.')
 bot.missile = Missile(bot)
 
 nickname = "DimBot"
-version = 'v0.5.3.1'
+version = 'v0.5.4'
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='Lokeon', type=discord.ActivityType.listening),
@@ -29,15 +29,17 @@ activities = [
     discord.Activity(name='Rainbow laughs', type=discord.ActivityType.watching),
     discord.Activity(name='comics', type=discord.ActivityType.watching),
     discord.Activity(name='AV', type=discord.ActivityType.watching),
-    discord.Activity(name='Terry moaning', type=discord.ActivityType.listening)
+    discord.Activity(name='Terry moaning', type=discord.ActivityType.listening),
+    discord.Activity(name='Bruck sleep', type=discord.ActivityType.watching)
 ]
 
 if dimsecret.debug:
     nickname += f' [{version}]'
-    news_ch = 372386868236386307
+    news_ch = announcement_ch = 372386868236386307
 else:
     nickname += f' {{{version}}}'
     news_ch = 581699408870113310
+    announcement_ch = 425703064733876225
 
 logger = bot.missile.get_logger('DimBot')
 
@@ -73,6 +75,7 @@ async def on_ready():
     bot.missile.bottyland = bot.get_channel(372386868236386307)
     bot.missile.bruck_ch = bot.get_channel(688948118712090644)
     bot.missile.newsfeed = bot.get_channel(news_ch)
+    bot.missile.announcement = bot.get_channel(announcement_ch)
     logger.info(f'Guild count: {len(bot.guilds)}')
     for guild in bot.guilds:
         if guild.me.nick != nickname:
@@ -94,7 +97,12 @@ async def on_command_error(ctx, error):
 @bot.command()
 @commands.check(is_debug)
 async def play(ctx, name: str):
-    if name:
+    if name == 'list':
+        content = ''
+        for fname in listdir('D:\\Music'):
+            content += f'{fname}\n'
+        await ctx.send(content)
+    else:
         try:
             file = next(glob.iglob(f'D:\\Music\\*{glob.escape(name)}*'))
             client = await ctx.author.voice.channel.connect()
@@ -110,11 +118,6 @@ async def play(ctx, name: str):
             await client.disconnect()
         except StopIteration:
             await ctx.send('No song found!')
-    else:
-        content = ''
-        for fname in listdir('D:\\Music'):
-            content += f'{fname}\n'
-        await ctx.send(content)
 
 
 @bot.command()
@@ -129,7 +132,7 @@ async def hug(ctx):
     gif = choice(['https://tenor.com/view/milk-and-mocha-bear-couple-line-hug-cant-breathe-gif-12687187',
                   'https://tenor.com/view/hugs-hug-ghost-hug-gif-4451998',
                   'https://tenor.com/view/true-love-hug-miss-you-everyday-always-love-you-running-hug-gif-5534958'])
-    await ctx.send(f'{gif}\nhug {ctx.author.mention}')
+    await ctx.send(f'{gif}\nHug {ctx.author.mention}')
 
 
 bot.add_cog(raceline.Raceline(bot))
