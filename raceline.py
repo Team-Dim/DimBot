@@ -43,7 +43,7 @@ class Raceline(commands.Cog):
             resultless_futures = []
             for domain in url.keys():
                 resultless_futures.append(self.pool.submit(self.rss_process, domain, url))
-            message = default_msg = '' if debug else '<@!664210105318768661> '
+            message = default_msg = '' if debug else '<@&664210105318768661> '
             bbm_futures = [self.pool.submit(self.bbm_process, addon_id) for addon_id in self.data['BBM'].keys()]
             resultless_futures.append(self.pool.submit(self.yt_process))
             concurrent.futures.wait(resultless_futures)
