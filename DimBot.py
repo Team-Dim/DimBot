@@ -20,7 +20,7 @@ bot = commands.Bot(command_prefix='d.')
 bot.missile = Missile(bot)
 
 nickname = "DimBot"
-version = 'v0.6'
+version = 'v0.6.1'
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='Lokeon', type=discord.ActivityType.listening),
@@ -76,6 +76,7 @@ async def on_ready():
     bot.missile.bruck_ch = bot.get_channel(688948118712090644)
     bot.missile.newsfeed = bot.get_channel(news_ch)
     bot.missile.announcement = bot.get_channel(announcement_ch)
+    bot.missile.logs = bot.get_channel(384636771805298689)
     logger.info(f'Guild count: {len(bot.guilds)}')
     for guild in bot.guilds:
         if guild.me.nick != nickname:
