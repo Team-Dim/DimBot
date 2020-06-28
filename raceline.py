@@ -10,7 +10,7 @@ import feedparser
 from bs4 import BeautifulSoup
 from discord.ext import commands
 
-__version__ = '4.0'
+__version__ = '4.0.1'
 
 from dimsecret import debug, youtube
 
@@ -43,7 +43,7 @@ class Raceline(commands.Cog):
             resultless_futures = []
             for domain in url.keys():
                 resultless_futures.append(self.pool.submit(self.rss_process, domain, url))
-            message = default_msg = '' if debug else '<@664210105318768661> '
+            message = default_msg = '' if debug else '<@!664210105318768661> '
             bbm_futures = [self.pool.submit(self.bbm_process, addon_id) for addon_id in self.data['BBM'].keys()]
             resultless_futures.append(self.pool.submit(self.yt_process))
             concurrent.futures.wait(resultless_futures)
@@ -93,7 +93,7 @@ class Raceline(commands.Cog):
                 json_response = await response.json()
             self.logger.debug(f'Parsing BBM {addon_id}...')
             for i, latest_file in enumerate(json_response['latestFiles']):
-                if latest_file['displayName'] != self.data['BBM'][addon_id][i]:
+                if latest_file['displayName'] not in self.data['BBM'][addon_id]:
                     async with session.get(
                             f"https://addons-ecs.forgesvc.net/api/v2/addon/{addon_id}/file/{latest_file['id']}/changelog") as response:
                         change_log = await response.text()
@@ -101,7 +101,7 @@ class Raceline(commands.Cog):
                     message += f"An update of **{json_response['name']}** is now available!\n" \
                                f"__**{latest_file['displayName']}** for **{latest_file['gameVersion'][0]}**__\n" \
                                f"{change_log.get_text()}\n\n"
-                    self.data['BBM'][addon_id][i] = latest_file['displayName']
+                self.data['BBM'][addon_id][i] = latest_file['displayName']
 
         return message
 

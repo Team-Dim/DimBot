@@ -8,6 +8,7 @@ import boto3
 import discord
 from discord.ext import commands
 
+import beural
 import dimsecret
 import echo
 import raceline
@@ -20,7 +21,7 @@ bot = commands.Bot(command_prefix='d.')
 bot.missile = Missile(bot)
 
 nickname = "DimBot"
-version = 'v0.6.1'
+version = 'v0.6.1.1'
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='Lokeon', type=discord.ActivityType.listening),
@@ -60,7 +61,7 @@ async def info(ctx):
         '**Project Blin**: *Confidential*\n'
         f'**Project Vireg** `{vireg.__version__}`: Connects to AWS and manage a minecraft server instance.\n'
         f'**Project Pythania** `{pythania.__version__}`: HTTP server sub-project used by `Vireg`.\n'
-        '**Project Beural**: *Confidential*\n'
+        f'**Project Beural** `{beural.__version__}` : Chat bot for answering BBM questions\n'
         '**Project Skybow**: *Confidential*'
     )
 
@@ -140,4 +141,5 @@ bot.add_cog(raceline.Raceline(bot))
 bot.add_cog(tribe.Tribe(bot))
 bot.add_cog(vireg.Vireg(bot))
 bot.add_cog(echo.Echo(bot))
+bot.add_cog(beural.Beural(bot))
 bot.run(dimsecret.discord)
