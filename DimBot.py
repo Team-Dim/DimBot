@@ -21,7 +21,7 @@ bot = commands.Bot(command_prefix='d.')
 bot.missile = Missile(bot)
 
 nickname = "DimBot"
-version = 'v0.6.1.2'
+version = 'v0.6.2'
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='Lokeon', type=discord.ActivityType.listening),
@@ -64,6 +64,22 @@ async def info(ctx):
         f'**Project Beural** `{beural.__version__}` : Chat bot for answering BBM questions\n'
         '**Project Skybow**: *Confidential*'
     )
+
+
+@bot.group()
+async def link(ctx):
+    pass
+
+
+@link.command()
+async def forge(ctx):
+    await ctx.send('Reply `Minecraft version-Forge version`')
+
+    def check(m):
+        return m.author.id == ctx.author.id and m.channel == ctx.channel
+
+    msg = await bot.wait_for('message', check=check)
+    await ctx.send(f'https://files.minecraftforge.net/maven/net/minecraftforge/forge/{msg.content}/forge-{msg.content}-installer.jar')
 
 
 def is_debug(ctx):
