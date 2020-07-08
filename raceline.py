@@ -10,7 +10,7 @@ import feedparser
 from bs4 import BeautifulSoup
 from discord.ext import commands
 
-__version__ = '4.0.1'
+__version__ = '4.0.2'
 
 from dimsecret import debug, youtube
 
@@ -98,8 +98,9 @@ class Raceline(commands.Cog):
                             f"https://addons-ecs.forgesvc.net/api/v2/addon/{addon_id}/file/{latest_file['id']}/changelog") as response:
                         change_log = await response.text()
                     change_log = BeautifulSoup(change_log, 'html.parser')
+                    game_version = None if len(latest_file['gameVersion']) == 0 else latest_file['gameVersion'][0]
                     message += f"An update of **{json_response['name']}** is now available!\n" \
-                               f"__**{latest_file['displayName']}** for **{latest_file['gameVersion'][0]}**__\n" \
+                               f"__**{latest_file['displayName']}** for **{game_version}**__\n" \
                                f"{change_log.get_text()}\n\n"
                 self.data['BBM'][addon_id][i] = latest_file['displayName']
 
