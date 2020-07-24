@@ -21,7 +21,7 @@ bot = commands.Bot(command_prefix='d.')
 bot.missile = Missile(bot)
 
 nickname = "DimBot"
-version = 'v0.6.3.1'
+version = 'v0.6.3.2'
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='Lokeon', type=discord.ActivityType.listening),
@@ -74,8 +74,7 @@ async def link(ctx):
 @link.command()
 async def forge(ctx):
     msg = await bot.missile.ask_msg(ctx, 'Reply `Minecraft version-Forge version`')
-    await ctx.send(
-        f'https://files.minecraftforge.net/maven/net/minecraftforge/forge/{msg.content}/forge-{msg.content}-installer.jar')
+    await ctx.send(f'https://files.minecraftforge.net/maven/net/minecraftforge/forge/{msg}/forge-{msg}-installer.jar')
 
 
 @link.command()
