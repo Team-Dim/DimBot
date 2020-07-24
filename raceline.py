@@ -23,6 +23,7 @@ class Raceline(commands.Cog):
         self.new = True
         self.pool = ThreadPoolExecutor()
         self.data = dict()
+        self.loop = asyncio.new_event_loop()
         if debug:
             asyncio.set_event_loop_policy(
                 asyncio.WindowsSelectorEventLoopPolicy())  # https://github.com/aio-libs/aiohttp/issues/4324
@@ -82,7 +83,7 @@ class Raceline(commands.Cog):
         self.logger.info(f"{domain}: Done")
 
     def bbm_process(self, addon_id: int):
-        return asyncio.new_event_loop().run_until_complete(self.async_bbm_process(addon_id))
+        return self.loop.run_until_complete(self.async_bbm_process(addon_id))
 
     async def async_bbm_process(self, addon_id: int):
         message = ''

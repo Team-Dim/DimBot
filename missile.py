@@ -36,3 +36,12 @@ class Missile:
     @staticmethod
     async def append_message(msg: discord.Message, append_content: str, delimiter: str = '\n'):
         await msg.edit(content=f'{msg.content}{delimiter}{append_content}')
+
+    @staticmethod
+    def check_same_author_and_channel(ctx):
+        return lambda msg: msg.author.id == ctx.author.id and msg.channel == ctx.channel
+
+    async def ask_msg(self, ctx, msg: str) -> discord.Message:
+        await ctx.send(msg)
+        reply = await self.bot.wait_for('message', check=self.check_same_author_and_channel(ctx))
+        return reply

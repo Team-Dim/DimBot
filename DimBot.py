@@ -21,7 +21,7 @@ bot = commands.Bot(command_prefix='d.')
 bot.missile = Missile(bot)
 
 nickname = "DimBot"
-version = 'v0.6.2.1'
+version = 'v0.6.3'
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='Lokeon', type=discord.ActivityType.listening),
@@ -73,13 +73,20 @@ async def link(ctx):
 
 @link.command()
 async def forge(ctx):
-    await ctx.send('Reply `Minecraft version-Forge version`')
+    msg = await bot.missile.ask_msg(ctx, 'Reply `Minecraft version-Forge version`')
+    await ctx.send(
+        f'https://files.minecraftforge.net/maven/net/minecraftforge/forge/{msg.content}/forge-{msg.content}-installer.jar')
 
-    def check(m):
-        return m.author.id == ctx.author.id and m.channel == ctx.channel
 
-    msg = await bot.wait_for('message', check=check)
-    await ctx.send(f'https://files.minecraftforge.net/maven/net/minecraftforge/forge/{msg.content}/forge-{msg.content}-installer.jar')
+@link.command()
+async def galacticraft(ctx):
+    mc = await bot.missile.ask_msg(ctx, 'Minecraft version?')
+    ga = await bot.missile.ask_msg(ctx, 'Galacticraft version?')
+    mc_ver = mc.rsplit(',', 1)[0]
+    ga_build = ga.rsplit('.', 1)[1]
+    await ctx.send(f'https://micdoodle8.com/new-builds/GC-{mc_ver}/{ga_build}/GalacticraftCore-{mc}-{ga}.jar'
+                   f'https://micdoodle8.com/new-builds/GC-{mc_ver}/{ga_build}/Galacticraft-Planet-{mc}-{ga}.jar'
+                   f'https://micdoodle8.com/new-builds/GC-{mc_ver}/{ga_build}/MicdoodleCore-{mc}-{ga}.jar')
 
 
 def is_debug(ctx):

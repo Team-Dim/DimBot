@@ -65,6 +65,10 @@ class Vireg(commands.Cog):
 
     @commands.command()
     async def start(self, ctx):
+        # Remove this check when Lokeon has finished rewriting.
+        if not is_rainbow(ctx):
+            await ctx.send(':construction: Sorry, this feature is currently not available, please ask ChingDim in Discord to help you!')
+            return
         if dimsecret.debug:
             await ctx.send('⚠DimBot is currently in **DEBUG** mode. I cannot receive messages from Lokeon, also things may not work as expected!⚠\n')
         await self.boot_instance(ctx, dimsecret.bruck_instance_id, 'ap-southeast-1')
