@@ -41,7 +41,7 @@ class Missile:
     def check_same_author_and_channel(ctx):
         return lambda msg: msg.author.id == ctx.author.id and msg.channel == ctx.channel
 
-    async def ask_msg(self, ctx, msg: str) -> discord.Message:
+    async def ask_msg(self, ctx, msg: str) -> str:
         await ctx.send(msg)
         reply = await self.bot.wait_for('message', check=self.check_same_author_and_channel(ctx))
-        return reply
+        return reply.content
