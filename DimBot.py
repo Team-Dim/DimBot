@@ -21,7 +21,7 @@ bot = commands.Bot(command_prefix='d.')
 bot.missile = Missile(bot)
 
 nickname = "DimBot"
-version = 'v0.6.3.2'
+version = 'v0.6.3.3'
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='Lokeon', type=discord.ActivityType.listening),
@@ -29,9 +29,8 @@ activities = [
     discord.Activity(name='Rainbow codes', type=discord.ActivityType.watching),
     discord.Activity(name='Rainbow laughs', type=discord.ActivityType.watching),
     discord.Activity(name='comics', type=discord.ActivityType.watching),
-    discord.Activity(name='AV', type=discord.ActivityType.watching),
-    discord.Activity(name='Terry moaning', type=discord.ActivityType.listening),
-    discord.Activity(name='Bruck sleep', type=discord.ActivityType.watching)
+    discord.Activity(name='Terry coughing', type=discord.ActivityType.listening),
+    discord.Activity(name='Bruck sleeps', type=discord.ActivityType.watching)
 ]
 
 if dimsecret.debug:
@@ -110,6 +109,11 @@ async def on_ready():
             logger.debug('Changed activity')
             await bot.change_presence(activity=choice(activities))
             await asyncio.sleep(300)
+
+
+@bot.event
+async def on_disconnect():
+    bot.missile.new = True
 
 
 @bot.event
