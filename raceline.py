@@ -38,6 +38,10 @@ class Raceline(commands.Cog):
                 self.data = json.load(f)
             await self.raceline_task(url)
 
+    @commands.Cog.listener()
+    async def on_disconnect(self):
+        self.new = True
+
     async def raceline_task(self, url: dict):
         while True:
             resultless_futures = []
