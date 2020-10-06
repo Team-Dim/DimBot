@@ -62,13 +62,8 @@ class Echo(commands.Cog):
     @quote.command()
     @commands.check(vireg.is_rainbow)
     async def exe(self, ctx):
-        await ctx.send('SQL statement?')
-
-        def check(m):
-            return m.author.id == ctx.author.id and m.channel == ctx.channel
-
-        msg = await self.bot.wait_for('message', check=check)
-        self.cursor.execute(msg.content)
+        msg = await self.bot.missile.ask_msg(ctx, 'SQL statement?')
+        self.cursor.execute(msg)
         self.db.commit()
         await ctx.send('Done')
 
@@ -82,14 +77,9 @@ class Echo(commands.Cog):
         if exists:
             await ctx.send(f'This quote duplicates with #{exists[0]}')
         else:
-            await ctx.send('Quoter?')
-
-            def check(m):
-                return m.author.id == ctx.author.id and m.channel == ctx.channel
-
-            msg = await self.bot.wait_for('message', timeout=10, check=check)
-            if msg:
-                self.cursor.execute("INSERT INTO quotes VALUES (?, ?, ?)", (args, msg.content, ctx.author.id))
+            quoter = await self.bot.missile.ask_msg(ctx, 'Quoter?')
+            if quoter:
+                self.cursor.execute("INSERT INTO quotes VALUES (?, ?, ?)", (args, quoter, ctx.author.id))
                 self.db.commit()
                 await ctx.send(f"Added quote #{self.cursor.lastrowid}")
 

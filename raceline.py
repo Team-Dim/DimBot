@@ -30,7 +30,6 @@ class Raceline(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         self.logger.debug('on_ready')
-        await self.bot.missile.newsfeed.send('Ready')  # Just test why Raceline sometimes stop after few days
         if self.new:
             self.new = False
             with open('urls.json', 'r') as f:
@@ -42,7 +41,6 @@ class Raceline(commands.Cog):
     @commands.Cog.listener()
     async def on_disconnect(self):
         self.new = True
-        await self.bot.missile.newsfeed.send('Disconnected')  # Just test why Raceline sometimes stop after few days
 
     async def raceline_task(self, url: dict):
         while True:
