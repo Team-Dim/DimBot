@@ -1,7 +1,5 @@
 import asyncio
-import glob
 import platform
-from os import listdir
 from random import choice
 
 import boto3
@@ -12,7 +10,6 @@ import beural
 import dimsecret
 import echo
 import raceline
-import skybow
 import tribe
 from bruckserver import vireg, pythania
 from missile import Missile
@@ -23,7 +20,7 @@ bot = commands.Bot(command_prefix='d.')
 bot.missile = Missile(bot)
 
 nickname = "DimBot"
-version = 'v0.6.3.5'
+version = 'v0.6.4'
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='Lokeon', type=discord.ActivityType.listening),
@@ -44,12 +41,14 @@ else:
     announcement_ch = 425703064733876225
 
 logger = bot.missile.get_logger('DimBot')
+with open('.git/HEAD', 'r') as f:
+    branch = f.readline().split('/')[-1]
 
 
 @bot.command(aliases=['ver', 'verinfo'])
 async def info(ctx):
     await ctx.send(
-        f'Guild count: **{len(bot.guilds)}**. Debug mode: **{dimsecret.debug}**\n'
+        f'Guild count: **{len(bot.guilds)}** | Debug mode: **{dimsecret.debug}** | Branch: **{branch}**\n'
         f'This bot is coded with the programming language Python `{platform.python_version()}`\n'
         f'It interacts with Discord via discord.py `{discord.__version__}`, '
         f'Amazon Web Services via boto3 `{boto3.__version__}`.\n'
@@ -65,28 +64,6 @@ async def info(ctx):
         f'**Project Beural** `{beural.__version__}` : Chat bot for answering BBM questions\n'
         '**Project Skybow**: *Confidential*'
     )
-
-
-@bot.group()
-async def link(ctx):
-    pass
-
-
-@link.command()
-async def forge(ctx):
-    msg = await bot.missile.ask_msg(ctx, 'Reply `Minecraft version-Forge version`')
-    await ctx.send(f'https://files.minecraftforge.net/maven/net/minecraftforge/forge/{msg}/forge-{msg}-installer.jar')
-
-
-@link.command()
-async def galacticraft(ctx):
-    mc = await bot.missile.ask_msg(ctx, 'Minecraft version?')
-    ga = await bot.missile.ask_msg(ctx, 'Galacticraft version?')
-    mc_ver = mc.rsplit(',', 1)[0]
-    ga_build = ga.rsplit('.', 1)[1]
-    await ctx.send(f'https://micdoodle8.com/new-builds/GC-{mc_ver}/{ga_build}/GalacticraftCore-{mc}-{ga}.jar\n'
-                   f'https://micdoodle8.com/new-builds/GC-{mc_ver}/{ga_build}/Galacticraft-Planet-{mc}-{ga}.jar\n'
-                   f'https://micdoodle8.com/new-builds/GC-{mc_ver}/{ga_build}/MicdoodleCore-{mc}-{ga}.jar')
 
 
 def is_debug(ctx):
@@ -122,47 +99,6 @@ async def on_disconnect():
 async def on_command_error(ctx, error):
     if isinstance(error, commands.errors.BadArgument):
         await ctx.send('Bad argument.')
-
-
-@bot.command()
-@commands.check(is_debug)
-async def play(ctx, name: str):
-    if name == 'list':
-        content = ''
-        for fname in listdir('D:\\Music'):
-            content += f'{fname}\n'
-        await ctx.send(content)
-    else:
-        try:
-            file = next(glob.iglob(f'D:\\Music\\*{glob.escape(name)}*'))
-            client = await ctx.author.voice.channel.connect()
-            name = file.split('\\')[2]
-            await ctx.send(f'Now playing `{name}`')
-            client.play(discord.FFmpegPCMAudio(source=file,
-                                               executable='D:\\GitHub.Tyrrrz\\ffmpeg.exe'))
-            await asyncio.sleep(skybow.get_audio_length(file))
-            while bot.missile.loop:
-                client.play(discord.FFmpegPCMAudio(source=file,
-                                                   executable='D:\\GitHub.Tyrrrz\\ffmpeg.exe'))
-                await asyncio.sleep(skybow.get_audio_length(file))
-            await client.disconnect()
-        except StopIteration:
-            await ctx.send('No song found!')
-
-
-@bot.command()
-async def loop(ctx):
-    bot.missile.loop = not bot.missile.loop
-    await ctx.send(f'Bot loop: **{bot.missile.loop}**')
-
-
-# Eggy requested this command
-@bot.command()
-async def hug(ctx):
-    gif = choice(['https://tenor.com/view/milk-and-mocha-bear-couple-line-hug-cant-breathe-gif-12687187',
-                  'https://tenor.com/view/hugs-hug-ghost-hug-gif-4451998',
-                  'https://tenor.com/view/true-love-hug-miss-you-everyday-always-love-you-running-hug-gif-5534958'])
-    await ctx.send(f'{gif}\nHug {ctx.author.mention}')
 
 
 bot.add_cog(raceline.Raceline(bot))

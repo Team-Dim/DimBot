@@ -2,5 +2,4 @@ beautifulsoup4
 feedparser
 discord.py>=1.3.4
 boto3
-mutagen
 aiohttp>=3.6 # Pythania requires at least 3.6
