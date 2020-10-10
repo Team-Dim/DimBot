@@ -5,7 +5,7 @@ from aiohttp import web
 __version__ = '1.2.1'
 
 
-class Pythania:
+class Albon:
     def __init__(self, logger):
         self._channels = []
         self.logger = logger

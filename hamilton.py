@@ -4,11 +4,11 @@ from discord.ext.commands import Cog
 __version__ = '1.3'
 
 
-class Tribe(Cog):
+class Hamilton(Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.logger = bot.missile.get_logger('Tribe')
+        self.logger = bot.missile.get_logger('Hamilton')
         self.invites = []
         self.bbm_role = None
 

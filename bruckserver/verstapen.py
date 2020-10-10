@@ -2,7 +2,7 @@ import boto3
 from discord.ext import commands
 
 import dimsecret
-from bruckserver.pythania import Pythania
+from bruckserver.albon import Albon
 from missile import Missile
 
 
@@ -13,13 +13,13 @@ def is_rainbow(ctx):
 __version__ = '1.3'
 
 
-class Vireg(commands.Cog):
+class Verstapen(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
         self.logger = bot.missile.get_logger('Vireg')
         self.http_not_started = True
-        self.pythania = Pythania(bot.missile.get_logger('Pythania'))
+        self.albon = Albon(bot.missile.get_logger('Albon'))
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -53,9 +53,9 @@ class Vireg(commands.Cog):
             f'in {region_id} **"{region_name}"**. IP address: **{instance.public_ip_address}** ',
             delimiter=' '
         )
-        self.pythania.add_channel(ctx.channel)
+        self.albon.add_channel(ctx.channel)
         if self.http_not_started:
-            await self.pythania.run_server()
+            await self.albon.run_server()
             self.http_not_started = False
 
     @commands.command()

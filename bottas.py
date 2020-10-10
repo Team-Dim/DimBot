@@ -6,10 +6,10 @@ from discord.ext import commands
 
 __version__ = '1.0.4'
 
-from bruckserver import vireg
+from bruckserver import verstapen
 
 
-class Echo(commands.Cog):
+class Bottas(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
@@ -60,7 +60,7 @@ class Echo(commands.Cog):
         await ctx.send(content)
 
     @quote.command()
-    @commands.check(vireg.is_rainbow)
+    @commands.check(verstapen.is_rainbow)
     async def exe(self, ctx):
         msg = await self.bot.missile.ask_msg(ctx, 'SQL statement?')
         self.cursor.execute(msg)

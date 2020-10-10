@@ -15,11 +15,11 @@ __version__ = '4.0.2'
 from dimsecret import debug, youtube
 
 
-class Raceline(commands.Cog):
+class Ricciardo(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.logger = bot.missile.get_logger('Raceline')
+        self.logger = bot.missile.get_logger('Ricciardo')
         self.new = True
         self.pool = ThreadPoolExecutor()
         self.data = dict()

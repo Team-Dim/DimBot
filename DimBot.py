@@ -6,12 +6,12 @@ import boto3
 import discord
 from discord.ext import commands
 
-import beural
+import norris
 import dimsecret
-import echo
-import raceline
-import tribe
-from bruckserver import vireg, pythania
+import bottas
+import ricciardo
+import hamilton
+from bruckserver import verstapen, albon
 from missile import Missile
 
 # NEA: Create more tables for db, create custom polymorphism
@@ -54,15 +54,12 @@ async def info(ctx):
         f'Amazon Web Services via boto3 `{boto3.__version__}`.\n'
         'Bot source code: https://github.com/TCLRainbow/DimBot\n\n'
         'This bot has the following modules:\n'
-        f'**Project Raceline** `{raceline.__version__}`: Subscribe to multiple RSS feed and send them to discord channels.\n'
-        f'**Project Echo** `{echo.__version__}`: Add or search quotes through a SQL database.\n'
-        f'**Project Tribe** `{tribe.__version__}`: Adds additional feature per role\n'
-        '**Project Brighten**: *Confidential*\n'
-        '**Project Blin**: *Confidential*\n'
-        f'**Project Vireg** `{vireg.__version__}`: Connects to AWS and manage a minecraft server instance.\n'
-        f'**Project Pythania** `{pythania.__version__}`: HTTP server sub-project used by `Vireg`.\n'
-        f'**Project Beural** `{beural.__version__}` : Chat bot for answering BBM questions\n'
-        '**Project Skybow**: *Confidential*'
+        f'**Project Ricciardo** `{ricciardo.__version__}`: Subscribe to multiple RSS feed and send them to discord channels.\n'
+        f'**Project Bottas** `{bottas.__version__}`: Add or search quotes through a SQL database.\n'
+        f'**Project Hamilton** `{hamilton.__version__}`: Adds additional feature per role\n'
+        f'**Project Verstapen** `{verstapen.__version__}`: Connects to AWS and manage a minecraft server instance.\n'
+        f'**Project Albon** `{albon.__version__}`: HTTP server sub-project used by `Vireg`.\n'
+        f'**Project Norris** `{norris.__version__}` : Chat bot for answering BBM questions\n'
     )
 
 
@@ -101,9 +98,9 @@ async def on_command_error(ctx, error):
         await ctx.send('Bad argument.')
 
 
-bot.add_cog(raceline.Raceline(bot))
-bot.add_cog(tribe.Tribe(bot))
-bot.add_cog(vireg.Vireg(bot))
-bot.add_cog(echo.Echo(bot))
-bot.add_cog(beural.Beural(bot))
+bot.add_cog(ricciardo.Ricciardo(bot))
+bot.add_cog(hamilton.Hamilton(bot))
+bot.add_cog(verstapen.Verstapen(bot))
+bot.add_cog(bottas.Bottas(bot))
+bot.add_cog(norris.Norris(bot))
 bot.run(dimsecret.discord)
