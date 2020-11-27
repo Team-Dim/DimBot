@@ -72,6 +72,9 @@ class Bottas(commands.Cog):
         if '<@' in args:
             await ctx.send("You can't mention others in quote message!")
             return
+        if '\n' in args:
+            await ctx.send("The quote should be only one line!")
+            return
         self.cursor.execute("SELECT ROWID FROM quotes WHERE msg = ?", (args, ))
         exists = self.cursor.fetchone()
         if exists:
