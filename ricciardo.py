@@ -116,7 +116,7 @@ class Ricciardo(commands.Cog):
     async def async_yt(self):
         self.logger.info('Checking YT')
         async with aiohttp.ClientSession() as session:
-            async with session.get('https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=UCTuGoJ-MoQuSYVgtmJTa3-w&maxResults=10&order=date&type=video&key=' + youtube) as response:
+            async with session.get('https://www.googleapis.com/youtube/v3/search?part=id&channelId=UCTuGoJ-MoQuSYVgtmJTa3-w&maxResults=1&order=date&key=' + youtube) as response:
                 json_response = await response.json()
         if self.data['YT'] != json_response['items'][0]['id']['videoId']:
             self.logger.debug('New YT video detected')
