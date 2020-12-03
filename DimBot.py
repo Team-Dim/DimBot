@@ -22,7 +22,7 @@ bot = commands.Bot(command_prefix='d.', intents=intent)
 bot.missile = Missile(bot)
 
 nickname = "DimBot"
-version = 'v0.6.6'
+version = 'v0.6.7'
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='Lokeon', type=discord.ActivityType.listening),

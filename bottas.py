@@ -6,7 +6,7 @@ from discord.ext import commands
 
 __version__ = '1.0.4'
 
-from bruckserver import verstapen
+from missile import Missile
 
 
 class Bottas(commands.Cog):
@@ -60,12 +60,16 @@ class Bottas(commands.Cog):
         await ctx.send(content)
 
     @quote.command()
-    @commands.check(verstapen.is_rainbow)
+    @commands.check(Missile.is_rainbow)
     async def exe(self, ctx):
         msg = await self.bot.missile.ask_msg(ctx, 'SQL statement?')
-        self.cursor.execute(msg)
-        self.db.commit()
-        await ctx.send('Done')
+        try:
+            self.cursor.execute(msg)
+            await ctx.send(self.cursor.fetchall())
+            self.db.commit()
+            await ctx.send('SQL statement successfully executed.')
+        except sqlite3.Error as e:
+            await ctx.send(f"**{e.__class__.__name__}**: {e}")
 
     @quote.command(aliases=['a'])
     async def add(self, ctx, *, args):
