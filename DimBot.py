@@ -16,11 +16,13 @@ from missile import Missile
 
 # NEA: Create more tables for db, create custom polymorphism
 
-bot = commands.Bot(command_prefix='d.')
+intent = discord.Intents.none()
+intent.guilds = intent.members = intent.messages = True
+bot = commands.Bot(command_prefix='d.', intents=intent)
 bot.missile = Missile(bot)
 
 nickname = "DimBot"
-version = 'v0.6.5'
+version = 'v0.6.6'
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='Lokeon', type=discord.ActivityType.listening),

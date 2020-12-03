@@ -10,7 +10,7 @@ import feedparser
 from bs4 import BeautifulSoup
 from discord.ext import commands
 
-__version__ = '4.0.2'
+__version__ = '4.0.3'
 
 from dimsecret import debug, youtube
 
@@ -116,9 +116,12 @@ class Ricciardo(commands.Cog):
     async def async_yt(self):
         self.logger.info('Checking YT')
         async with aiohttp.ClientSession() as session:
-            async with session.get('https://www.googleapis.com/youtube/v3/search?part=id&channelId=UCTuGoJ-MoQuSYVgtmJTa3-w&maxResults=1&order=date&key=' + youtube) as response:
-                json_response = await response.json()
-        if self.data['YT'] != json_response['items'][0]['id']['videoId']:
-            self.logger.debug('New YT video detected')
-            asyncio.run_coroutine_threadsafe(self.bot.missile.announcement.send("http://youtube.com/watch?v=" + json_response['items'][0]['id']['videoId']), self.bot.loop)
-        self.data['YT'] = json_response['items'][0]['id']['videoId']
+            async with session.get('https://www.googleapis.com/youtube/v3/activities?part=snippet,contentDetails&channelId=UCTuGoJ-MoQuSYVgtmJTa3-w&maxResults=1&key=' + youtube) as response:
+                activities = await response.json()
+                if activities['items'][0]['snippet']['type'] == 'upload':
+                    video_id = activities['items'][0]['contentDetails']['upload']['videoId']
+                    if self.data['YT'] != video_id:
+                        self.logger.debug('New YT video detected')
+                        asyncio.run_coroutine_threadsafe(self.bot.missile.announcement.send(
+                            "http://youtube.com/watch?v=" + video_id), self.bot.loop)
+                        self.data['YT'] = video_id
