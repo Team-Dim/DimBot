@@ -45,6 +45,10 @@ class Missile:
     def is_rainbow(ctx):
         return ctx.author.id == 264756129916125184
 
+    @staticmethod
+    def is_owner(ctx):
+        return ctx.author == ctx.guild.owner
+
     async def ask_msg(self, ctx, msg: str, timeout: int = 10) -> str:
         await ctx.send(msg)
         reply = await self.bot.wait_for('message', timeout=timeout, check=self.check_same_author_and_channel(ctx))

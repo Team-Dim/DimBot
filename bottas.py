@@ -4,7 +4,7 @@ import sqlite3
 import discord
 from discord.ext import commands
 
-__version__ = '1.0.4'
+__version__ = '1.1'
 
 from missile import Missile
 
@@ -14,11 +14,12 @@ class Bottas(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logger = bot.missile.get_logger('Echo')
-        self.db = sqlite3.connect('DimBot.db')
-        self.cursor = self.db.cursor()
+        self.db: sqlite3.Connection = sqlite3.connect('DimBot.db', check_same_thread=False)
+        self.cursor: sqlite3.Cursor = self.db.cursor()
+        self.cursor.row_factory = sqlite3.Row
 
     def get_quote(self, index: int):
-        self.cursor.execute("SELECT * FROM quotes WHERE ROWID = ?", (index,))
+        self.cursor.execute("SELECT * FROM Quote WHERE ROWID = ?", (index,))
         return self.cursor.fetchone()
 
     @commands.Cog.listener()
@@ -31,7 +32,7 @@ class Bottas(commands.Cog):
 
     @quote.command(aliases=['i'])
     async def index(self, ctx, index: int = 0):
-        self.cursor.execute("SELECT COUNT(msg) FROM quotes")
+        self.cursor.execute("SELECT COUNT(msg) FROM Quote")
         count = self.cursor.fetchone()[0]
         content = ''
         if index < 1 or index > count:
@@ -43,7 +44,7 @@ class Bottas(commands.Cog):
 
     @quote.command(aliases=['q'])
     async def quoter(self, ctx, *, quoter):
-        self.cursor.execute("SELECT ROWID, msg FROM quotes WHERE quoter = ?", (quoter,))
+        self.cursor.execute("SELECT ROWID, msg FROM Quote WHERE quoter = ?", (quoter,))
         quotes = self.cursor.fetchall()
         content = f"The following are **{quoter}**'s quotes:\n"
         for quote in quotes:
@@ -52,7 +53,7 @@ class Bottas(commands.Cog):
 
     @quote.command(aliases=['u'])
     async def uploader(self, ctx, user: discord.User):
-        self.cursor.execute("SELECT ROWID, msg, quoter FROM quotes WHERE uid = ?", (user.id,))
+        self.cursor.execute("SELECT ROWID, msg, quoter FROM Quote WHERE uid = ?", (user.id,))
         quotes = self.cursor.fetchall()
         content = f"The following are quotes uploaded by **{user}**:\n"
         for quote in quotes:
@@ -79,14 +80,14 @@ class Bottas(commands.Cog):
         if '\n' in args:
             await ctx.send("The quote should be only one line!")
             return
-        self.cursor.execute("SELECT ROWID FROM quotes WHERE msg = ?", (args, ))
+        self.cursor.execute("SELECT ROWID FROM Quote WHERE msg = ?", (args,))
         exists = self.cursor.fetchone()
         if exists:
             await ctx.send(f'This quote duplicates with #{exists[0]}')
         else:
             quoter = await self.bot.missile.ask_msg(ctx, 'Quoter?')
             if quoter:
-                self.cursor.execute("INSERT INTO quotes VALUES (?, ?, ?)", (args, quoter, ctx.author.id))
+                self.cursor.execute("INSERT INTO Quote VALUES (?, ?, ?)", (args, quoter, ctx.author.id))
                 self.db.commit()
                 await ctx.send(f"Added quote #{self.cursor.lastrowid}")
 
@@ -95,7 +96,7 @@ class Bottas(commands.Cog):
         quote = self.get_quote(index)
         if quote:
             if quote[2] == ctx.author.id:
-                self.cursor.execute("DELETE FROM quotes WHERE ROWID = ?", (index,))
+                self.cursor.execute("DELETE FROM Quote WHERE ROWID = ?", (index,))
                 self.db.commit()
                 await ctx.send("Deleted quote.")
             else:

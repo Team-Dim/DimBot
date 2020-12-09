@@ -1,4 +1,5 @@
 import asyncio
+import atexit
 import platform
 from random import choice
 
@@ -6,11 +7,11 @@ import boto3
 import discord
 from discord.ext import commands
 
-import norris
-import dimsecret
 import bottas
-import ricciardo
+import dimsecret
 import hamilton
+import norris
+import ricciardo
 from bruckserver import verstapen, albon
 from missile import Missile
 
@@ -20,9 +21,10 @@ intent = discord.Intents.none()
 intent.guilds = intent.members = intent.messages = True
 bot = commands.Bot(command_prefix='d.', intents=intent)
 bot.missile = Missile(bot)
+bot.echo = bottas.Bottas(bot)
 
 nickname = "DimBot"
-version = 'v0.6.7'
+version = 'v0.6.8'
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='Lokeon', type=discord.ActivityType.listening),
@@ -100,9 +102,22 @@ async def on_command_error(ctx, error):
         await ctx.send('Bad argument.')
 
 
+@bot.command()
+@commands.check(Missile.is_rainbow)
+async def exit(ctx):
+    import builtins
+    builtins.exit()
+
+
+def exit_handler():
+    bot.echo.db.commit()
+    print('Exiting')
+
+
+atexit.register(exit_handler)
 bot.add_cog(ricciardo.Ricciardo(bot))
 bot.add_cog(hamilton.Hamilton(bot))
 bot.add_cog(verstapen.Verstapen(bot))
-bot.add_cog(bottas.Bottas(bot))
+bot.add_cog(bot.echo)
 bot.add_cog(norris.Norris(bot))
 bot.run(dimsecret.discord)
