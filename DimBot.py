@@ -24,7 +24,7 @@ bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
 
 nickname = "DimBot"
-version = 'v0.6.8'
+version = 'v0.6.8.1'
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='Lokeon', type=discord.ActivityType.listening),

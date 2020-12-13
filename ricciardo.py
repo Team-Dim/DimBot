@@ -145,7 +145,11 @@ class Ricciardo(commands.Cog):
                                               (ch.id, url)).fetchone()[0]
         if result:
             await ctx.send(f'{ch.mention} has already subscribed to this URL!')
-        else:
-            self.bot.echo.cursor.execute("INSERT INTO RssSub VALUES (?, ?, ?)", (ch.id, url, footer))
-            self.bot.echo.db.commit()
-            await ctx.send('Subscribed!')
+            return
+        result = self.bot.echo.cursor.execute("SELECT EXISTS(SELECT 1 FROM RssData WHERE url = ?)",
+                                              (url, )).fetchone()[0]
+        if not result:
+            self.bot.echo.cursor.execute("INSERT INTO RssData VALUES (?, '')", (url,))
+        self.bot.echo.cursor.execute("INSERT INTO RssSub VALUES (?, ?, ?)", (ch.id, url, footer))
+        self.bot.echo.db.commit()
+        await ctx.send('Subscribed!')

@@ -65,8 +65,8 @@ class Bottas(commands.Cog):
     async def exe(self, ctx):
         msg = await self.bot.missile.ask_msg(ctx, 'SQL statement?')
         try:
-            self.cursor.execute(msg)
-            await ctx.send(self.cursor.fetchall())
+            data = self.db.execute(msg).fetchall()
+            await ctx.send(data)
             self.db.commit()
             await ctx.send('SQL statement successfully executed.')
         except sqlite3.Error as e:
