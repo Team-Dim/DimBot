@@ -22,7 +22,7 @@ class Missile:
         self.loop = False
         self.new = True  # For DimBot change activity loop
 
-    def get_logger(self, name: str):
+    def get_logger(self, name: str) -> logging.Logger:
         logger = logging.getLogger(name)
         logger.setLevel(self.lvl)
         ch = logging.StreamHandler()
@@ -42,11 +42,11 @@ class Missile:
         return lambda msg: msg.author.id == ctx.author.id and msg.channel == ctx.channel
 
     @staticmethod
-    def is_rainbow(ctx):
+    def is_rainbow(ctx) -> bool:
         return ctx.author.id == 264756129916125184
 
     @staticmethod
-    def is_owner(ctx):
+    def is_owner(ctx) -> bool:
         return ctx.author == ctx.guild.owner
 
     async def ask_msg(self, ctx, msg: str, timeout: int = 10) -> str:

@@ -24,16 +24,20 @@ bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
 
 nickname = "DimBot"
-version = 'v0.6.8.1'
+version = 'v0.6.8.2'
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
+    discord.Activity(name='YOASOBI :heart:', type=discord.ActivityType.listening),
+    discord.Activity(name='Sam yawning', type=discord.ActivityType.listening),
     discord.Activity(name='Lokeon', type=discord.ActivityType.listening),
     discord.Activity(name='Ricizus screaming', type=discord.ActivityType.listening),
     discord.Activity(name='Rainbow codes', type=discord.ActivityType.watching),
+    discord.Activity(name='Matt plays R6', type=discord.ActivityType.watching),
     discord.Activity(name='Rainbow laughs', type=discord.ActivityType.watching),
     discord.Activity(name='comics', type=discord.ActivityType.watching),
     discord.Activity(name='Terry coughing', type=discord.ActivityType.listening),
-    discord.Activity(name='Bruck sleeps', type=discord.ActivityType.watching)
+    discord.Activity(name='Bruck sleeps', type=discord.ActivityType.watching),
+    discord.Activity(name='Try not to crash', type=discord.ActivityType.competing)
 ]
 
 if dimsecret.debug:
