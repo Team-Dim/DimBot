@@ -3,6 +3,7 @@ import concurrent
 import json
 from concurrent.futures.thread import ThreadPoolExecutor
 from random import randint
+from time import mktime
 
 import aiohttp
 import discord
@@ -48,7 +49,7 @@ class Ricciardo(commands.Cog):
             for index, row in enumerate(rss_data):
                 resultless_futures.append(self.pool.submit(self.rss_process, index + 1, row))
             message = default_msg = '' if debug else '<@&664210105318768661> '
-            bbm_futures = [self.pool.submit(self.bbm_process, addon_id) for addon_id in self.data['BBM'].keys()]
+            bbm_futures = [self.pool.submit(self.bbm_process, addon_id) for addon_id in [274058, 306357, 274326]]
             resultless_futures.append(self.pool.submit(self.yt_process))
             concurrent.futures.wait(resultless_futures)
             concurrent.futures.wait(bbm_futures)
@@ -58,7 +59,7 @@ class Ricciardo(commands.Cog):
                 await self.bot.missile.announcement.send(message)
             self.logger.debug('Synced pool')
             with open('data.json', 'w') as f:
-                json.dump(self.data, f, indent=2, separators=(',', ': '))
+                json.dump(self.data, f)
             self.bot.echo.db.commit()
             await asyncio.sleep(600)
 
@@ -66,6 +67,7 @@ class Ricciardo(commands.Cog):
         asyncio.new_event_loop().run_until_complete(self.async_rss_process(rowid, row))
 
     async def async_rss_process(self, rowid, row):
+        cursor = self.bot.echo.get_cursor()
         async with aiohttp.ClientSession() as session:
             self.logger.info(f"{rowid}: Checking RSS...")
             async with session.get(row['url']) as response:
@@ -73,46 +75,57 @@ class Ricciardo(commands.Cog):
                 text = await response.text()
         self.logger.debug(f"{rowid}: Parsing response...")
         feed = feedparser.parse(text).entries[0]
-        if row['newstitle'] != feed.title and feed.published > row['time']:
+        pubtime = mktime(feed.published_parsed)
+        if row['newstitle'] != feed.title and pubtime > row['time']:
             self.logger.info(f'{rowid}: Detected news: {feed.title}  Old: {row["newstitle"]}')
             content = BeautifulSoup(feed.description, 'html.parser')
-            rss_sub = self.bot.echo.cursor.execute('SELECT rssChID, footer FROM RssSub WHERE url = ?',
-                                                   (row['url'],)).fetchall()
+            rss_sub = cursor.execute('SELECT rssChID, footer FROM RssSub WHERE url = ?',
+                                     (row['url'],)).fetchall()
             emb = discord.Embed(title=feed.title, description=content.get_text(), url=feed.link)
             emb.colour = discord.Colour.from_rgb(randint(0, 255), randint(0, 255), randint(0, 255))
             for row in rss_sub:
                 # TODO: Concurrently dispatch messages. Possibly use PoolExecutor
+                # TODO: Create a class called RSSEmb which subclasses Embed in order to satisfy NEA
                 local_emb = emb.copy()
                 channel = self.bot.get_channel(row['rssChID'])
                 local_emb.set_footer(text=f"{row['footer']} | {feed.published}")
                 asyncio.run_coroutine_threadsafe(channel.send(embed=local_emb), self.bot.loop)
             self.logger.info(f"{rowid}: Sent Discord")
-            self.bot.echo.cursor.execute('UPDATE RssData SET newstitle = ?, time = ? WHERE ROWID = ?',
-                                         (feed.title, feed.published, rowid))
+            cursor.execute('UPDATE RssData SET newstitle = ?, time = ? WHERE ROWID = ?',
+                           (feed.title, pubtime, rowid))
         self.logger.info(f"{rowid}: Done")
 
     def bbm_process(self, addon_id: int):
         return asyncio.new_event_loop().run_until_complete(self.async_bbm_process(addon_id))
 
     async def async_bbm_process(self, addon_id: int):
+        cursor = self.bot.echo.get_cursor()
         message = ''
+        records = cursor.execute('SELECT title FROM BbmData WHERE addonID = ?',
+                                 (addon_id,)).fetchall()
         self.logger.info(f"Checking BBM {addon_id}...")
         async with aiohttp.ClientSession() as session:
             async with session.get(f'https://addons-ecs.forgesvc.net/api/v2/addon/{addon_id}') as response:
                 self.logger.debug(f'Fetching BBM {addon_id}...')
-                json_response = await response.json()
+                addon = await response.json()
             self.logger.debug(f'Parsing BBM {addon_id}...')
-            for i, latest_file in enumerate(json_response['latestFiles']):
-                if latest_file['displayName'] not in self.data['BBM'][addon_id]:
-                    async with session.get(
-                            f"https://addons-ecs.forgesvc.net/api/v2/addon/{addon_id}/file/{latest_file['id']}/changelog") as response:
-                        change_log = await response.text()
-                    change_log = BeautifulSoup(change_log, 'html.parser')
-                    game_version = None if len(latest_file['gameVersion']) == 0 else latest_file['gameVersion'][0]
-                    message += f"An update of **{json_response['name']}** is now available!\n" \
-                               f"__**{latest_file['displayName']}** for **{game_version}**__\n" \
-                               f"{change_log.get_text()}\n\n"
-                self.data['BBM'][addon_id][i] = latest_file['displayName']
+            new = addon['latestFiles'].copy()
+            for latest_file in addon['latestFiles']:
+                for rec in records:
+                    if latest_file['displayName'] == rec[0]:
+                        records.remove(rec)
+                        new.remove(latest_file)
+                        break
+            for i, latest_file in enumerate(new):
+                async with session.get(
+                        f"https://addons-ecs.forgesvc.net/api/v2/addon/{addon_id}/file/{latest_file['id']}/changelog") as response:
+                    change_log = await response.text()
+                change_log = BeautifulSoup(change_log, 'html.parser')
+                game_version = latest_file['gameVersion'][0] if latest_file['gameVersion'] else None
+                message += f"An update of **{addon['name']}** is now available!\n" \
+                           f"__**{latest_file['displayName']}** for **{game_version}**__\n" \
+                           f"{change_log.get_text()}\n\n"
+                cursor.execute('UPDATE BbmData SET title = ? WHERE title = ?', (latest_file['displayName'], records[i][0]))
         return message
 
     def yt_process(self):

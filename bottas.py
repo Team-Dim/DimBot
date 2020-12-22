@@ -13,10 +13,15 @@ class Bottas(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.logger = bot.missile.get_logger('Echo')
-        self.db: sqlite3.Connection = sqlite3.connect('DimBot.db', check_same_thread=False)
-        self.cursor: sqlite3.Cursor = self.db.cursor()
-        self.cursor.row_factory = sqlite3.Row
+        self.logger = bot.missile.get_logger('Bottas')
+        self.db: sqlite3.Connection = sqlite3.connect('DimBot.db', check_same_thread=False,
+                                                      detect_types=sqlite3.PARSE_DECLTYPES)
+        self.cursor: sqlite3.Cursor = self.get_cursor()
+
+    def get_cursor(self) -> sqlite3.Cursor:
+        cursor = self.db.cursor()
+        cursor.row_factory = sqlite3.Row
+        return cursor
 
     def get_quote(self, index: int):
         self.cursor.execute("SELECT * FROM Quote WHERE ROWID = ?", (index,))
@@ -28,7 +33,8 @@ class Bottas(commands.Cog):
 
     @commands.group(invoke_without_command=True)
     async def quote(self, ctx):
-        await ctx.send("Wiki for interacting with quote database: https://github.com/TCLRainbow/DimBot/wiki/Project-Echo")
+        await ctx.send(
+            "Wiki for interacting with quote database: https://github.com/TCLRainbow/DimBot/wiki/Project-Echo")
 
     @quote.command(aliases=['i'])
     async def index(self, ctx, index: int = 0):

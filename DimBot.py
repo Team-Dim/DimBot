@@ -24,7 +24,7 @@ bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
 
 nickname = "DimBot"
-version = 'v0.6.8.2'
+version = 'v0.6.9'
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI :heart:', type=discord.ActivityType.listening),
@@ -62,8 +62,8 @@ async def info(ctx):
         f'Amazon Web Services via boto3 `{boto3.__version__}`.\n'
         'Bot source code: https://github.com/TCLRainbow/DimBot\n\n'
         'This bot has the following modules:\n'
-        f'**Project Ricciardo** `{ricciardo.__version__}`: Subscribe to multiple RSS feed and send them to discord channels.\n'
-        f'**Project Bottas** `{bottas.__version__}`: Add or search quotes through a SQL database.\n'
+        f'**Project Ricciardo** `{ricciardo.__version__}`: Relaying RSS to discord channels.\n'
+        f'**Project Bottas** `{bottas.__version__}`: Add or search quotes through a SQLite database.\n'
         f'**Project Hamilton** `{hamilton.__version__}`: Adds additional feature per role\n'
         f'**Project Verstapen** `{verstapen.__version__}`: Connects to AWS and manage a minecraft server instance.\n'
         f'**Project Albon** `{albon.__version__}`: HTTP server sub-project used by `Vireg`.\n'
