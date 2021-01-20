@@ -16,7 +16,6 @@ class Missile:
             self.lvl = logging.INFO
         self.guild = None
         self.bottyland = None
-        self.newsfeed = None
         self.announcement = None
         self.logs = None
         self.loop = False

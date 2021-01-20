@@ -1,9 +1,7 @@
 import asyncio
 import atexit
-import platform
 from random import choice
 
-import boto3
 import discord
 from discord.ext import commands
 
@@ -22,12 +20,10 @@ intent.guilds = intent.members = intent.messages = True
 bot = commands.Bot(command_prefix='d.', intents=intent)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-
-nickname = "DimBot"
-version = 'v0.6.9'
+nickname = "DimBot | 0.6.9.1"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
-    discord.Activity(name='YOASOBI :heart:', type=discord.ActivityType.listening),
+    discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
     discord.Activity(name='Sam yawning', type=discord.ActivityType.listening),
     discord.Activity(name='Lokeon', type=discord.ActivityType.listening),
     discord.Activity(name='Ricizus screaming', type=discord.ActivityType.listening),
@@ -39,15 +35,6 @@ activities = [
     discord.Activity(name='Bruck sleeps', type=discord.ActivityType.watching),
     discord.Activity(name='Try not to crash', type=discord.ActivityType.competing)
 ]
-
-if dimsecret.debug:
-    nickname += f' [{version}]'
-    news_ch = announcement_ch = 372386868236386307
-else:
-    nickname += f' {{{version}}}'
-    news_ch = 581699408870113310
-    announcement_ch = 425703064733876225
-
 logger = bot.missile.get_logger('DimBot')
 with open('.git/HEAD', 'r') as f:
     branch = f.readline().split('/')[-1]
@@ -55,11 +42,13 @@ with open('.git/HEAD', 'r') as f:
 
 @bot.command(aliases=['ver', 'verinfo'])
 async def info(ctx):
+    from platform import python_version
+    from boto3 import __version__ as boto3ver
     await ctx.send(
         f'Guild count: **{len(bot.guilds)}** | Debug mode: **{dimsecret.debug}** | Branch: **{branch}**\n'
-        f'This bot is coded with the programming language Python `{platform.python_version()}`\n'
+        f'This bot is coded with the programming language Python `{python_version()}`\n'
         f'It interacts with Discord via discord.py `{discord.__version__}`, '
-        f'Amazon Web Services via boto3 `{boto3.__version__}`.\n'
+        f'Amazon Web Services via boto3 `{boto3ver}`.\n'
         'Bot source code: https://github.com/TCLRainbow/DimBot\n\n'
         'This bot has the following modules:\n'
         f'**Project Ricciardo** `{ricciardo.__version__}`: Relaying RSS to discord channels.\n'
@@ -80,8 +69,12 @@ async def on_ready():
     bot.missile.guild = bot.get_guild(285366651312930817)
     bot.missile.bottyland = bot.get_channel(372386868236386307)
     bot.missile.bruck_ch = bot.get_channel(688948118712090644)
-    bot.missile.newsfeed = bot.get_channel(news_ch)
-    bot.missile.announcement = bot.get_channel(announcement_ch)
+    if dimsecret.debug:
+        bot.missile.announcement = bot.missile.bottyland
+        status = discord.Status.idle
+    else:
+        bot.missile.announcement = bot.get_channel(425703064733876225)
+        status = discord.Status.online
     bot.missile.logs = bot.get_channel(384636771805298689)
     logger.info(f'Guild count: {len(bot.guilds)}')
     for guild in bot.guilds:
@@ -91,7 +84,7 @@ async def on_ready():
         bot.missile.new = False
         while True:
             logger.debug('Changed activity')
-            await bot.change_presence(activity=choice(activities))
+            await bot.change_presence(status=status, activity=choice(activities))
             await asyncio.sleep(300)
 
 
@@ -110,12 +103,13 @@ async def on_command_error(ctx, error):
 @commands.check(Missile.is_rainbow)
 async def exit(ctx):
     import builtins
+    await bot.change_presence(status=discord.Status.dnd)
+    await ctx.send(':dizzy_face:')
     builtins.exit()
 
 
 def exit_handler():
     bot.echo.db.commit()
-    print('Exiting')
 
 
 atexit.register(exit_handler)

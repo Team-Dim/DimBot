@@ -13,6 +13,8 @@ from discord.ext import commands
 
 __version__ = '4.1'
 
+from memory_profiler import profile
+
 from dimsecret import debug, youtube
 from missile import Missile
 
@@ -24,9 +26,10 @@ class Ricciardo(commands.Cog):
         self.logger = bot.missile.get_logger('Ricciardo')
         self.new = True
         self.pool = ThreadPoolExecutor()
+        self.loop = self.bot.loop
         self.data = dict()
         if debug:  # Debug system uses Windows while production server uses Linux
-            asyncio.set_event_loop_policy(
+            asyncio.set_event_loop_policy(  # 3 change to check os in future
                 asyncio.WindowsSelectorEventLoopPolicy())  # https://github.com/aio-libs/aiohttp/issues/4324
 
     @commands.Cog.listener()
@@ -36,32 +39,54 @@ class Ricciardo(commands.Cog):
             self.new = False
             with open('data.json', 'r') as f:
                 self.data = json.load(f)
-            await self.raceline_task()
+            while True:
+                await self.raceline_task_new()
+                await asyncio.sleep(15)
 
     @commands.Cog.listener()
     async def on_disconnect(self):
         self.new = True
 
+    @profile
     async def raceline_task(self):
-        while True:
-            rss_data = self.bot.echo.cursor.execute('SELECT * FROM RssData').fetchall()
-            resultless_futures = []
-            for index, row in enumerate(rss_data):
-                resultless_futures.append(self.pool.submit(self.rss_process, index + 1, row))
-            message = default_msg = '' if debug else '<@&664210105318768661> '
-            bbm_futures = [self.pool.submit(self.bbm_process, addon_id) for addon_id in [274058, 306357, 274326]]
-            resultless_futures.append(self.pool.submit(self.yt_process))
-            concurrent.futures.wait(resultless_futures)
-            concurrent.futures.wait(bbm_futures)
-            for future in bbm_futures:
-                message += future.result()
-            if message != default_msg:
-                await self.bot.missile.announcement.send(message)
-            self.logger.debug('Synced pool')
-            with open('data.json', 'w') as f:
-                json.dump(self.data, f)
-            self.bot.echo.db.commit()
-            await asyncio.sleep(600)
+        rss_data = self.bot.echo.cursor.execute('SELECT * FROM RssData').fetchall()
+        resultless_futures = []
+        for index, row in enumerate(rss_data):
+            resultless_futures.append(self.pool.submit(self.rss_process, index + 1, row))
+        message = default_msg = '' if debug else '<@&664210105318768661> '
+        bbm_futures = [self.pool.submit(self.bbm_process, addon_id) for addon_id in [274058, 306357, 274326]]
+        resultless_futures.append(self.pool.submit(self.yt_process))
+        concurrent.futures.wait(resultless_futures)
+        concurrent.futures.wait(bbm_futures)
+        for future in bbm_futures:
+            message += future.result()
+        if message != default_msg:
+            await self.bot.missile.announcement.send(message)
+        self.logger.debug('Synced pool')
+        with open('data.json', 'w') as f:
+            json.dump(self.data, f)
+        self.bot.echo.db.commit()
+
+    @profile
+    async def raceline_task_new(self):
+        rss_data = self.bot.echo.cursor.execute('SELECT * FROM RssData').fetchall()
+        resultless_futures = []
+        for index, row in enumerate(rss_data):
+            resultless_futures.append(
+                self.loop.create_task(self.async_rss_process(index + 1, row), name=f'RSS{index + 1}'))
+        message = default_msg = '' if debug else '<@&664210105318768661> '
+        bbm_futures = [self.loop.create_task(self.async_bbm_process(addon_id), name=f'BBM{addon_id}') for addon_id in
+                       [274058, 306357, 274326]]
+        resultless_futures.append(self.loop.create_task(self.async_yt(), name='YT'))
+        await asyncio.wait(resultless_futures + bbm_futures)
+        for future in bbm_futures:
+            message += future.result()
+        if message != default_msg:
+            await self.bot.missile.announcement.send(message)
+        self.logger.debug('Synced pool')
+        with open('data.json', 'w') as f:
+            json.dump(self.data, f)
+        self.bot.echo.db.commit()
 
     def rss_process(self, rowid, row):
         asyncio.new_event_loop().run_until_complete(self.async_rss_process(rowid, row))
@@ -125,7 +150,8 @@ class Ricciardo(commands.Cog):
                 message += f"An update of **{addon['name']}** is now available!\n" \
                            f"__**{latest_file['displayName']}** for **{game_version}**__\n" \
                            f"{change_log.get_text()}\n\n"
-                cursor.execute('UPDATE BbmData SET title = ? WHERE title = ?', (latest_file['displayName'], records[i][0]))
+                cursor.execute('UPDATE BbmData SET title = ? WHERE title = ?',
+                               (latest_file['displayName'], records[i][0]))
         return message
 
     def yt_process(self):
@@ -160,7 +186,11 @@ class Ricciardo(commands.Cog):
         result = self.bot.echo.cursor.execute("SELECT EXISTS(SELECT 1 FROM RssData WHERE url = ?)",
                                               (url,)).fetchone()[0]
         if not result:
-            self.bot.echo.cursor.execute("INSERT INTO RssData VALUES (?, '')", (url,))
+            self.bot.echo.cursor.execute("INSERT INTO RssData VALUES (?, '', 0)", (url,))
         self.bot.echo.cursor.execute("INSERT INTO RssSub VALUES (?, ?, ?)", (ch.id, url, footer))
         self.bot.echo.db.commit()
         await ctx.send('Subscribed!')
+
+    @commands.group()
+    async def bbm(self, invoke_without_command=True):
+        pass
