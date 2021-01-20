@@ -73,11 +73,10 @@ class Ricciardo(commands.Cog):
         resultless_futures = []
         for index, row in enumerate(rss_data):
             resultless_futures.append(
-                self.loop.create_task(self.async_rss_process(index + 1, row), name=f'RSS{index + 1}'))
+                self.loop.create_task(self.async_rss_process(index + 1, row)))
         message = default_msg = '' if debug else '<@&664210105318768661> '
-        bbm_futures = [self.loop.create_task(self.async_bbm_process(addon_id), name=f'BBM{addon_id}') for addon_id in
-                       [274058, 306357, 274326]]
-        resultless_futures.append(self.loop.create_task(self.async_yt(), name='YT'))
+        bbm_futures = [self.loop.create_task(self.async_bbm_process(addon_id)) for addon_id in [274058, 306357, 274326]]
+        resultless_futures.append(self.loop.create_task(self.async_yt()))
         await asyncio.wait(resultless_futures + bbm_futures)
         for future in bbm_futures:
             message += future.result()

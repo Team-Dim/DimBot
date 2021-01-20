@@ -3,4 +3,3 @@ feedparser
 discord.py>=1.5
 boto3
 aiohttp>=3.7.3 # Raceline GSMArena somehow needs 3.7
-memory_profiler
