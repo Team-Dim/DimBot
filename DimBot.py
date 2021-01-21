@@ -20,7 +20,7 @@ intent.guilds = intent.members = intent.messages = True
 bot = commands.Bot(command_prefix='d.', intents=intent)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = "DimBot | 0.6.9.1"
+nickname = "DimBot | 0.6.10"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),

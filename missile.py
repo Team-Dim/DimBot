@@ -27,7 +27,8 @@ class Missile:
         ch = logging.StreamHandler()
         ch.setLevel(self.lvl)
         preformat = f'[{logger.name}]'
-        ch.setFormatter(logging.Formatter(fmt=preformat + ' [%(threadName)s/%(levelname)s] [%(asctime)s] %(message)s',
+        # [%(threadName)s/%(levelname)s] = [MainThread/INFO]
+        ch.setFormatter(logging.Formatter(fmt=preformat + ' %(levelname)s [%(asctime)s] %(message)s',
                                           datefmt='%H:%M:%S'))
         logger.addHandler(ch)
         return logger

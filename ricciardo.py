@@ -1,5 +1,4 @@
 import asyncio
-import concurrent
 import json
 from concurrent.futures.thread import ThreadPoolExecutor
 from random import randint
@@ -11,9 +10,7 @@ import feedparser
 from bs4 import BeautifulSoup
 from discord.ext import commands
 
-__version__ = '4.1'
-
-from memory_profiler import profile
+__version__ = '4.2'
 
 from dimsecret import debug, youtube
 from missile import Missile
@@ -26,10 +23,10 @@ class Ricciardo(commands.Cog):
         self.logger = bot.missile.get_logger('Ricciardo')
         self.new = True
         self.pool = ThreadPoolExecutor()
-        self.loop = self.bot.loop
-        self.data = dict()
+        self.session = aiohttp.ClientSession()
+        self.data = {}
         if debug:  # Debug system uses Windows while production server uses Linux
-            asyncio.set_event_loop_policy(  # 3 change to check os in future
+            asyncio.set_event_loop_policy(  # change to check os in future
                 asyncio.WindowsSelectorEventLoopPolicy())  # https://github.com/aio-libs/aiohttp/issues/4324
 
     @commands.Cog.listener()
@@ -40,63 +37,38 @@ class Ricciardo(commands.Cog):
             with open('data.json', 'r') as f:
                 self.data = json.load(f)
             while True:
-                await self.raceline_task_new()
-                await asyncio.sleep(15)
+                await self.raceline_task()
+                await asyncio.sleep(600)
 
     @commands.Cog.listener()
     async def on_disconnect(self):
         self.new = True
 
-    @profile
     async def raceline_task(self):
         rss_data = self.bot.echo.cursor.execute('SELECT * FROM RssData').fetchall()
         resultless_futures = []
         for index, row in enumerate(rss_data):
-            resultless_futures.append(self.pool.submit(self.rss_process, index + 1, row))
+            resultless_futures.append(self.bot.loop.create_task(self.rss_process(index + 1, row)))
         message = default_msg = '' if debug else '<@&664210105318768661> '
-        bbm_futures = [self.pool.submit(self.bbm_process, addon_id) for addon_id in [274058, 306357, 274326]]
-        resultless_futures.append(self.pool.submit(self.yt_process))
-        concurrent.futures.wait(resultless_futures)
-        concurrent.futures.wait(bbm_futures)
+        bbm_futures = [self.bot.loop.create_task(self.bbm_process(addon_id)) for addon_id in [274058, 306357, 274326]]
+        resultless_futures.append(self.bot.loop.create_task(self.yt()))
+        await asyncio.wait(bbm_futures)
         for future in bbm_futures:
             message += future.result()
         if message != default_msg:
             await self.bot.missile.announcement.send(message)
+        await asyncio.wait(resultless_futures)
         self.logger.debug('Synced pool')
         with open('data.json', 'w') as f:
             json.dump(self.data, f)
         self.bot.echo.db.commit()
 
-    @profile
-    async def raceline_task_new(self):
-        rss_data = self.bot.echo.cursor.execute('SELECT * FROM RssData').fetchall()
-        resultless_futures = []
-        for index, row in enumerate(rss_data):
-            resultless_futures.append(
-                self.loop.create_task(self.async_rss_process(index + 1, row)))
-        message = default_msg = '' if debug else '<@&664210105318768661> '
-        bbm_futures = [self.loop.create_task(self.async_bbm_process(addon_id)) for addon_id in [274058, 306357, 274326]]
-        resultless_futures.append(self.loop.create_task(self.async_yt()))
-        await asyncio.wait(resultless_futures + bbm_futures)
-        for future in bbm_futures:
-            message += future.result()
-        if message != default_msg:
-            await self.bot.missile.announcement.send(message)
-        self.logger.debug('Synced pool')
-        with open('data.json', 'w') as f:
-            json.dump(self.data, f)
-        self.bot.echo.db.commit()
-
-    def rss_process(self, rowid, row):
-        asyncio.new_event_loop().run_until_complete(self.async_rss_process(rowid, row))
-
-    async def async_rss_process(self, rowid, row):
+    async def rss_process(self, rowid, row):
         cursor = self.bot.echo.get_cursor()
-        async with aiohttp.ClientSession() as session:
-            self.logger.info(f"{rowid}: Checking RSS...")
-            async with session.get(row['url']) as response:
-                self.logger.debug(f"{rowid}: Fetching response...")
-                text = await response.text()
+        self.logger.info(f"{rowid}: Checking RSS...")
+        async with self.session.get(row['url']) as response:
+            self.logger.debug(f"{rowid}: Fetching response...")
+            text = await response.text()
         self.logger.debug(f"{rowid}: Parsing response...")
         feed = feedparser.parse(text).entries[0]
         pubtime = mktime(feed.published_parsed)
@@ -108,67 +80,59 @@ class Ricciardo(commands.Cog):
             emb = discord.Embed(title=feed.title, description=content.get_text(), url=feed.link)
             emb.colour = discord.Colour.from_rgb(randint(0, 255), randint(0, 255), randint(0, 255))
             for row in rss_sub:
-                # TODO: Concurrently dispatch messages. Possibly use PoolExecutor
                 # TODO: Create a class called RSSEmb which subclasses Embed in order to satisfy NEA
                 local_emb = emb.copy()
                 channel = self.bot.get_channel(row['rssChID'])
                 local_emb.set_footer(text=f"{row['footer']} | {feed.published}")
-                asyncio.run_coroutine_threadsafe(channel.send(embed=local_emb), self.bot.loop)
+                await channel.send(embed=local_emb)
             self.logger.info(f"{rowid}: Sent Discord")
             cursor.execute('UPDATE RssData SET newstitle = ?, time = ? WHERE ROWID = ?',
                            (feed.title, pubtime, rowid))
         self.logger.info(f"{rowid}: Done")
 
-    def bbm_process(self, addon_id: int):
-        return asyncio.new_event_loop().run_until_complete(self.async_bbm_process(addon_id))
-
-    async def async_bbm_process(self, addon_id: int):
+    async def bbm_process(self, addon_id: int):
         cursor = self.bot.echo.get_cursor()
         message = ''
         records = cursor.execute('SELECT title FROM BbmData WHERE addonID = ?',
                                  (addon_id,)).fetchall()
         self.logger.info(f"Checking BBM {addon_id}...")
-        async with aiohttp.ClientSession() as session:
-            async with session.get(f'https://addons-ecs.forgesvc.net/api/v2/addon/{addon_id}') as response:
-                self.logger.debug(f'Fetching BBM {addon_id}...')
-                addon = await response.json()
-            self.logger.debug(f'Parsing BBM {addon_id}...')
-            new = addon['latestFiles'].copy()
-            for latest_file in addon['latestFiles']:
-                for rec in records:
-                    if latest_file['displayName'] == rec[0]:
-                        records.remove(rec)
-                        new.remove(latest_file)
-                        break
-            for i, latest_file in enumerate(new):
-                async with session.get(
-                        f"https://addons-ecs.forgesvc.net/api/v2/addon/{addon_id}/file/{latest_file['id']}/changelog") as response:
-                    change_log = await response.text()
-                change_log = BeautifulSoup(change_log, 'html.parser')
-                game_version = latest_file['gameVersion'][0] if latest_file['gameVersion'] else None
-                message += f"An update of **{addon['name']}** is now available!\n" \
-                           f"__**{latest_file['displayName']}** for **{game_version}**__\n" \
-                           f"{change_log.get_text()}\n\n"
-                cursor.execute('UPDATE BbmData SET title = ? WHERE title = ?',
-                               (latest_file['displayName'], records[i][0]))
+        async with self.session.get(f'https://addons-ecs.forgesvc.net/api/v2/addon/{addon_id}') as response:
+            self.logger.debug(f'Fetching BBM {addon_id}...')
+            addon = await response.json()
+        self.logger.debug(f'Parsing BBM {addon_id}...')
+        new = addon['latestFiles'].copy()
+        for latest_file in addon['latestFiles']:
+            for rec in records:
+                if latest_file['displayName'] == rec[0]:
+                    records.remove(rec)
+                    new.remove(latest_file)
+                    break
+        for i, latest_file in enumerate(new):
+            async with self.session.get(
+                    f"https://addons-ecs.forgesvc.net/api/v2/addon/{addon_id}/file/{latest_file['id']}/changelog") \
+                    as response:
+                change_log = await response.text()
+            change_log = BeautifulSoup(change_log, 'html.parser')
+            game_version = latest_file['gameVersion'][0] if latest_file['gameVersion'] else None
+            message += f"An update of **{addon['name']}** is now available!\n" \
+                       f"__**{latest_file['displayName']}** for **{game_version}**__\n" \
+                       f"{change_log.get_text()}\n\n"
+            cursor.execute('UPDATE BbmData SET title = ? WHERE title = ?',
+                           (latest_file['displayName'], records[i][0]))
         return message
 
-    def yt_process(self):
-        asyncio.new_event_loop().run_until_complete(self.async_yt())
-
-    async def async_yt(self):
+    async def yt(self):
         self.logger.info('Checking YT')
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                    'https://www.googleapis.com/youtube/v3/activities?part=snippet,contentDetails&channelId=UCTuGoJ-MoQuSYVgtmJTa3-w&maxResults=1&key=' + youtube) as response:
-                activities = await response.json()
-                if activities['items'][0]['snippet']['type'] == 'upload':
-                    video_id = activities['items'][0]['contentDetails']['upload']['videoId']
-                    if self.data['YT'] != video_id:
-                        self.logger.debug('New YT video detected')
-                        asyncio.run_coroutine_threadsafe(self.bot.missile.announcement.send(
-                            "http://youtube.com/watch?v=" + video_id), self.bot.loop)
-                        self.data['YT'] = video_id
+        async with self.session.get('https://www.googleapis.com/youtube/v3/activities?part=snippet,'
+                                    'contentDetails&channelId=UCTuGoJ-MoQuSYVgtmJTa3-w&maxResults=1&key=' + youtube) \
+                as response:
+            activities = await response.json()
+            if activities['items'][0]['snippet']['type'] == 'upload':
+                video_id = activities['items'][0]['contentDetails']['upload']['videoId']
+                if self.data['YT'] != video_id:
+                    self.logger.debug('New YT video detected')
+                    await self.bot.missile.announcement.send("http://youtube.com/watch?v=" + video_id)
+                    self.data['YT'] = video_id
 
     @commands.group()
     async def rss(self, invoke_without_command=True):
