@@ -1,6 +1,5 @@
 import asyncio
 import json
-from concurrent.futures.thread import ThreadPoolExecutor
 from random import randint
 from time import mktime
 
@@ -10,7 +9,9 @@ import feedparser
 from bs4 import BeautifulSoup
 from discord.ext import commands
 
-__version__ = '4.2'
+__version__ = '4.2.1'
+
+from discord.ext.commands import Context
 
 from dimsecret import debug, youtube
 from missile import Missile
@@ -22,8 +23,8 @@ class Ricciardo(commands.Cog):
         self.bot = bot
         self.logger = bot.missile.get_logger('Ricciardo')
         self.new = True
-        self.pool = ThreadPoolExecutor()
         self.session = aiohttp.ClientSession()
+        self.addon_ids = [274058, 306357, 274326]
         self.data = {}
         if debug:  # Debug system uses Windows while production server uses Linux
             asyncio.set_event_loop_policy(  # change to check os in future
@@ -45,19 +46,27 @@ class Ricciardo(commands.Cog):
         self.new = True
 
     async def raceline_task(self):
+        bbm = {}
+        for addon_id in self.addon_ids:
+            bbm[addon_id] = self.bot.loop.create_task(self.bbm_process(addon_id))
         rss_data = self.bot.echo.cursor.execute('SELECT * FROM RssData').fetchall()
         resultless_futures = []
         for index, row in enumerate(rss_data):
             resultless_futures.append(self.bot.loop.create_task(self.rss_process(index + 1, row)))
-        message = default_msg = '' if debug else '<@&664210105318768661> '
-        bbm_futures = [self.bot.loop.create_task(self.bbm_process(addon_id)) for addon_id in [274058, 306357, 274326]]
         resultless_futures.append(self.bot.loop.create_task(self.yt()))
-        await asyncio.wait(bbm_futures)
-        for future in bbm_futures:
-            message += future.result()
-        if message != default_msg:
-            await self.bot.missile.announcement.send(message)
+        bbm_role = self.bot.echo.cursor.execute('SELECT * FROM BbmRole').fetchall()
         await asyncio.wait(resultless_futures)
+        for row in bbm_role:
+            bbm_addon = self.bot.echo.cursor.execute('SELECT addonID FROM BbmAddon WHERE bbmChID = ?',
+                                                     (row[0],)).fetchall()
+            default_msg = ''
+            if not debug and row['roleID']:
+                default_msg = f"<@&{row['roleID']}>"
+            msg = default_msg
+            for addon in bbm_addon:
+                msg += bbm[addon[0]].result()
+            if msg != default_msg:
+                await self.bot.get_channel(row[0]).send(default_msg)
         self.logger.debug('Synced pool')
         with open('data.json', 'w') as f:
             json.dump(self.data, f)
@@ -140,7 +149,10 @@ class Ricciardo(commands.Cog):
 
     @rss.command(aliases=['s', 'sub'])
     @commands.check(Missile.is_owner)
-    async def subscribe(self, ctx, ch: discord.TextChannel, url: str, *, footer: str):
+    async def subscribe(self, ctx, ch: discord.TextChannel, url: str, *, footer: str = ''):
+        if ctx.guild != ch.guild:
+            await ctx.send('The channel must be in this server!')
+            return
         result = self.bot.echo.cursor.execute("SELECT EXISTS(SELECT 1 FROM RssSub WHERE rssChID = ? AND url = ?)",
                                               (ch.id, url)).fetchone()[0]
         if result:
@@ -157,3 +169,32 @@ class Ricciardo(commands.Cog):
     @commands.group()
     async def bbm(self, invoke_without_command=True):
         pass
+
+    @bbm.command(aliases=['s', 'sub'])
+    @commands.check(Missile.is_owner)
+    async def subscribe(self, ctx: Context, ch: discord.TextChannel, addon: int, role: int = None):
+        if ctx.guild != ch.guild:
+            await ctx.send('The channel must be in this server!')
+            return
+        if addon not in self.addon_ids:
+            await ctx.send('the addon ID must be one of the following: 274058, 306357, 274326')
+            return
+        result = self.bot.echo.cursor.execute("SELECT EXISTS(SELECT 1 FROM BbmAddon WHERE bbmChID = ? AND addonID = ?)",
+                                              (ch.id, addon)).fetchone()[0]
+        if result:
+            await ctx.send(f'{ch.mention} has already subscribed to this addon!')
+            return
+        result = self.bot.echo.cursor.execute('SELECT EXISTS(SELECT 1 FROM BbmRole WHERE bbmChID = ?)', (ch.id,)).fetchone()[0]
+        if not result:
+            self.bot.echo.cursor.execute('INSERT INTO BbmRole VALUES (?, ?)', (ch.id, role))
+        self.bot.echo.cursor.execute("INSERT INTO BbmAddon VALUES (?, ?)", (ch.id, addon))
+        self.bot.echo.db.commit()
+        await ctx.send('Subscribed!')
+
+    @bbm.command(aliases=['r'])
+    @commands.check(Missile.is_owner)
+    async def role(self, ctx: Context, role: int = None):
+        self.bot.echo.cursor.execute('UPDATE BbmRole SET roleID = ? WHERE bbmChID = ?', (role, ctx.channel.id))
+        self.bot.echo.db.commit()
+        await ctx.send('Updated!')
+

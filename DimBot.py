@@ -13,14 +13,12 @@ import ricciardo
 from bruckserver import verstapen, albon
 from missile import Missile
 
-# NEA: Create more tables for db, create custom polymorphism
-
 intent = discord.Intents.none()
 intent.guilds = intent.members = intent.messages = True
 bot = commands.Bot(command_prefix='d.', intents=intent)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = "DimBot | 0.6.10"
+nickname = "DimBot | 0.6.11"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
