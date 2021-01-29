@@ -5,6 +5,7 @@ from random import choice
 import discord
 from discord.ext import commands
 
+import bitbay
 import bottas
 import dimsecret
 import hamilton
@@ -18,7 +19,7 @@ intent.guilds = intent.members = intent.messages = True
 bot = commands.Bot(command_prefix='d.', intents=intent)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = "DimBot | 0.6.11"
+nickname = "DimBot | 0.6.12"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -54,7 +55,8 @@ async def info(ctx):
         f'**Project Hamilton** `{hamilton.__version__}`: Adds additional feature per role\n'
         f'**Project Verstapen** `{verstapen.__version__}`: Connects to AWS and manage a minecraft server instance.\n'
         f'**Project Albon** `{albon.__version__}`: HTTP server sub-project used by `Vireg`.\n'
-        f'**Project Norris** `{norris.__version__}` : Chat bot for answering BBM questions\n'
+        f'**Project Norris** `{norris.__version__}`: Chat bot for answering BBM questions\n'
+        f'**Project BitBay** `{bitbay.__version__}`: Utilities for 128BB'
     )
 
 
@@ -116,4 +118,5 @@ bot.add_cog(hamilton.Hamilton(bot))
 bot.add_cog(verstapen.Verstapen(bot))
 bot.add_cog(bot.echo)
 bot.add_cog(norris.Norris(bot))
+bot.add_cog(bitbay.BitBay(bot))
 bot.run(dimsecret.discord)
