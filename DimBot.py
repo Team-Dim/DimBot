@@ -19,7 +19,7 @@ intent.guilds = intent.members = intent.messages = True
 bot = commands.Bot(command_prefix='d.', intents=intent)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = "DimBot | 0.6.12"
+nickname = "DimBot | 0.6.12.1"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -97,6 +97,8 @@ async def on_disconnect():
 async def on_command_error(ctx, error):
     if isinstance(error, commands.errors.BadArgument):
         await ctx.send('Bad argument.')
+    if dimsecret.debug:
+        raise error
 
 
 @bot.command()

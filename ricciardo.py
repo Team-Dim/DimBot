@@ -143,20 +143,20 @@ class Ricciardo(commands.Cog):
                     await self.bot.missile.announcement.send("http://youtube.com/watch?v=" + video_id)
                     self.data['YT'] = video_id
 
-    @commands.group()
-    async def rss(self, invoke_without_command=True):
+    @commands.group(invoke_without_command=True)
+    async def rss(self):
         pass
 
-    @rss.command(aliases=['s', 'sub'])
+    @rss.command(name='subscribe', aliases=['s', 'sub'])
     @commands.check(Missile.is_owner)
-    async def subscribe(self, ctx, ch: discord.TextChannel, url: str, *, footer: str = ''):
+    async def rss_subscribe(self, ctx, ch: discord.TextChannel, url: str, *, footer: str = ''):
         if ctx.guild != ch.guild:
             await ctx.send('The channel must be in this server!')
             return
         result = self.bot.echo.cursor.execute("SELECT EXISTS(SELECT 1 FROM RssSub WHERE rssChID = ? AND url = ?)",
                                               (ch.id, url)).fetchone()[0]
         if result:
-            await ctx.send(f'{ch.mention} has already subscribed to this URL!')
+            await ctx.send(ch.mention + ' has already subscribed to this URL!')
             return
         result = self.bot.echo.cursor.execute("SELECT EXISTS(SELECT 1 FROM RssData WHERE url = ?)",
                                               (url,)).fetchone()[0]
@@ -166,13 +166,13 @@ class Ricciardo(commands.Cog):
         self.bot.echo.db.commit()
         await ctx.send('Subscribed!')
 
-    @commands.group()
-    async def bbm(self, invoke_without_command=True):
+    @commands.group(invoke_without_command=True)
+    async def bbm(self):
         pass
 
-    @bbm.command(aliases=['s', 'sub'])
+    @bbm.command(name='subscribe', aliases=['s', 'sub'])
     @commands.check(Missile.is_owner)
-    async def subscribe(self, ctx: Context, ch: discord.TextChannel, addon: int, role: int = None):
+    async def bbm_subscribe(self, ctx: Context, ch: discord.TextChannel, addon: int, role: int = None):
         if ctx.guild != ch.guild:
             await ctx.send('The channel must be in this server!')
             return
