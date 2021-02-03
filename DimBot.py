@@ -16,10 +16,10 @@ from missile import Missile
 
 intent = discord.Intents.none()
 intent.guilds = intent.members = intent.messages = True
-bot = commands.Bot(command_prefix='d.', intents=intent)
+bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=intent)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = "DimBot | 0.6.12.1"
+nickname = "DimBot | 0.6.13"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -71,10 +71,8 @@ async def on_ready():
     bot.missile.bruck_ch = bot.get_channel(688948118712090644)
     if dimsecret.debug:
         bot.missile.announcement = bot.missile.bottyland
-        status = discord.Status.idle
     else:
         bot.missile.announcement = bot.get_channel(425703064733876225)
-        status = discord.Status.online
     bot.missile.logs = bot.get_channel(384636771805298689)
     logger.info(f'Guild count: {len(bot.guilds)}')
     for guild in bot.guilds:
@@ -84,7 +82,7 @@ async def on_ready():
         bot.missile.new = False
         while True:
             logger.debug('Changed activity')
-            await bot.change_presence(status=status, activity=choice(activities))
+            await bot.change_presence(activity=choice(activities))
             await asyncio.sleep(300)
 
 
@@ -95,8 +93,17 @@ async def on_disconnect():
 
 @bot.event
 async def on_command_error(ctx, error):
-    if isinstance(error, commands.errors.BadArgument):
-        await ctx.send('Bad argument.')
+    if isinstance(error, commands.errors.CommandNotFound):
+        await ctx.send('Stoopid. That is not a command.')
+        return
+    if isinstance(error, commands.errors.ChannelNotFound):
+        await ctx.send("Invalid channel. Maybe you've tagged the wrong one?")
+        return
+    elif isinstance(error, commands.errors.RoleNotFound):
+        await ctx.send("Invalid role. Maybe you've tagged the wrong one?")
+        return
+    elif isinstance(error, commands.errors.BadArgument):
+        await ctx.send('Bad argument, usually a bot error.')
     if dimsecret.debug:
         raise error
 

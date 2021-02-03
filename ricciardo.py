@@ -9,7 +9,7 @@ import feedparser
 from bs4 import BeautifulSoup
 from discord.ext import commands
 
-__version__ = '4.2.1'
+__version__ = '4.3'
 
 from discord.ext.commands import Context
 
@@ -60,13 +60,13 @@ class Ricciardo(commands.Cog):
             bbm_addon = self.bot.echo.cursor.execute('SELECT addonID FROM BbmAddon WHERE bbmChID = ?',
                                                      (row[0],)).fetchall()
             default_msg = ''
-            if not debug and row['roleID']:
-                default_msg = f"<@&{row['roleID']}>"
+            if row['roleID']:
+                default_msg = f"<@&{row['roleID']}>\n"
             msg = default_msg
             for addon in bbm_addon:
                 msg += bbm[addon[0]].result()
             if msg != default_msg:
-                await self.bot.get_channel(row[0]).send(default_msg)
+                await self.bot.get_channel(row[0]).send(msg)
         self.logger.debug('Synced pool')
         with open('data.json', 'w') as f:
             json.dump(self.data, f)
@@ -86,7 +86,8 @@ class Ricciardo(commands.Cog):
             content = BeautifulSoup(feed.description, 'html.parser')
             rss_sub = cursor.execute('SELECT rssChID, footer FROM RssSub WHERE url = ?',
                                      (row['url'],)).fetchall()
-            emb = discord.Embed(title=feed.title, description=content.get_text(), url=feed.link)
+            description = (content.get_text()[:497] + '...') if len(content.get_text()) > 500 else content.get_text()
+            emb = discord.Embed(title=feed.title, description=description, url=feed.link)
             emb.colour = discord.Colour.from_rgb(randint(0, 255), randint(0, 255), randint(0, 255))
             for row in rss_sub:
                 # TODO: Create a class called RSSEmb which subclasses Embed in order to satisfy NEA
@@ -150,9 +151,16 @@ class Ricciardo(commands.Cog):
     @rss.command(name='subscribe', aliases=['s', 'sub'])
     @commands.check(Missile.is_owner)
     async def rss_subscribe(self, ctx, ch: discord.TextChannel, url: str, *, footer: str = ''):
-        if ctx.guild != ch.guild:
-            await ctx.send('The channel must be in this server!')
+        from aiohttp import ClientConnectorError
+        try:
+            async with self.session.get(url) as resp:
+                text = await resp.text()
+            if not feedparser.parse(text).entries:
+                raise ValueError
+        except ClientConnectorError or ValueError:
+            await ctx.send('The host does not seem to send RSS feeds.')
             return
+
         result = self.bot.echo.cursor.execute("SELECT EXISTS(SELECT 1 FROM RssSub WHERE rssChID = ? AND url = ?)",
                                               (ch.id, url)).fetchone()[0]
         if result:
@@ -172,10 +180,7 @@ class Ricciardo(commands.Cog):
 
     @bbm.command(name='subscribe', aliases=['s', 'sub'])
     @commands.check(Missile.is_owner)
-    async def bbm_subscribe(self, ctx: Context, ch: discord.TextChannel, addon: int, role: int = None):
-        if ctx.guild != ch.guild:
-            await ctx.send('The channel must be in this server!')
-            return
+    async def bbm_subscribe(self, ctx: Context, ch: discord.TextChannel, addon: int, role: discord.Role = None):
         if addon not in self.addon_ids:
             await ctx.send('the addon ID must be one of the following: 274058, 306357, 274326')
             return
@@ -186,6 +191,7 @@ class Ricciardo(commands.Cog):
             return
         result = self.bot.echo.cursor.execute('SELECT EXISTS(SELECT 1 FROM BbmRole WHERE bbmChID = ?)', (ch.id,)).fetchone()[0]
         if not result:
+            role = role.id if role else None
             self.bot.echo.cursor.execute('INSERT INTO BbmRole VALUES (?, ?)', (ch.id, role))
         self.bot.echo.cursor.execute("INSERT INTO BbmAddon VALUES (?, ?)", (ch.id, addon))
         self.bot.echo.db.commit()
@@ -193,7 +199,8 @@ class Ricciardo(commands.Cog):
 
     @bbm.command(aliases=['r'])
     @commands.check(Missile.is_owner)
-    async def role(self, ctx: Context, role: int = None):
+    async def role(self, ctx: Context, role: discord.Role = None):
+        role = role.id if role else None
         self.bot.echo.cursor.execute('UPDATE BbmRole SET roleID = ? WHERE bbmChID = ?', (role, ctx.channel.id))
         self.bot.echo.db.commit()
         await ctx.send('Updated!')

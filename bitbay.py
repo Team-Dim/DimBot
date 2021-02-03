@@ -13,8 +13,10 @@ class BitBay(Cog):
         self.bot: discord.Client = bot
 
     @command(aliases=['enc'])
-    async def encode(self, ctx: Context, url: str):
+    async def encode(self, ctx: Context, *, url: str):
         await ctx.message.delete()
+        if not url.lower().startswith('http'):
+            url = ctx.author.mention + ': ' + url
         b: bytes = url.encode()
         encoded: bytes = base64.b64encode(b)
         await ctx.send(encoded.decode())
