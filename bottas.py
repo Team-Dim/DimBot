@@ -93,6 +93,12 @@ class Bottas(commands.Cog):
         else:
             quoter = await self.bot.missile.ask_msg(ctx, 'Quoter?')
             if quoter:
+                if '<@' in quoter:
+                    await ctx.send("You can't mention others in quote message!")
+                    return
+                if '\n' in quoter:
+                    await ctx.send("The quote should be only one line!")
+                    return
                 self.cursor.execute("INSERT INTO Quote VALUES (?, ?, ?)", (args, quoter, ctx.author.id))
                 self.db.commit()
                 await ctx.send(f"Added quote #{self.cursor.lastrowid}")

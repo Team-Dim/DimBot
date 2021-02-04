@@ -19,7 +19,7 @@ intent.guilds = intent.members = intent.messages = True
 bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=intent)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = "DimBot | 0.6.13"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.6.14"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -32,7 +32,8 @@ activities = [
     discord.Activity(name='comics', type=discord.ActivityType.watching),
     discord.Activity(name='Terry coughing', type=discord.ActivityType.listening),
     discord.Activity(name='Bruck sleeps', type=discord.ActivityType.watching),
-    discord.Activity(name='Try not to crash', type=discord.ActivityType.competing)
+    discord.Activity(name='Try not to crash', type=discord.ActivityType.competing),
+    discord.Activity(name='Muzen train', type=discord.ActivityType.watching)
 ]
 logger = bot.missile.get_logger('DimBot')
 with open('.git/HEAD', 'r') as f:
@@ -44,8 +45,8 @@ async def info(ctx):
     from platform import python_version
     from boto3 import __version__ as boto3ver
     await ctx.send(
-        f'Guild count: **{len(bot.guilds)}** | Debug mode: **{dimsecret.debug}** | Branch: **{branch}**\n'
-        f'This bot is coded with the programming language Python `{python_version()}`\n'
+        f'Guild count: **{len(bot.guilds)}** | Branch: **{branch}**\n'
+        f'This bot is running on Python `{python_version()}`\n'
         f'It interacts with Discord via discord.py `{discord.__version__}`, '
         f'Amazon Web Services via boto3 `{boto3ver}`.\n'
         'Bot source code: https://github.com/TCLRainbow/DimBot\n\n'
@@ -54,9 +55,10 @@ async def info(ctx):
         f'**Project Bottas** `{bottas.__version__}`: Add or search quotes through a SQLite database.\n'
         f'**Project Hamilton** `{hamilton.__version__}`: Adds additional feature per role\n'
         f'**Project Verstapen** `{verstapen.__version__}`: Connects to AWS and manage a minecraft server instance.\n'
-        f'**Project Albon** `{albon.__version__}`: HTTP server sub-project used by `Vireg`.\n'
+        f'**Project Albon** `{albon.__version__}`: HTTP server sub-project used by `Verstapen`.\n'
         f'**Project Norris** `{norris.__version__}`: Chat bot for answering BBM questions\n'
-        f'**Project BitBay** `{bitbay.__version__}`: Utilities for 128BB'
+        f'**Project BitBay** `{bitbay.__version__}`: Utilities for 128BB\n\n'
+        f'Devblog: Instagram @techdim\nDiscord server: `6PjhjCD`'
     )
 
 
@@ -70,7 +72,7 @@ async def on_ready():
     bot.missile.bottyland = bot.get_channel(372386868236386307)
     bot.missile.bruck_ch = bot.get_channel(688948118712090644)
     if dimsecret.debug:
-        bot.missile.announcement = bot.missile.bottyland
+        bot.missile.announcement = bot.missile.bottyland  # In debug mode, rss.yt should send in bottyland
     else:
         bot.missile.announcement = bot.get_channel(425703064733876225)
     bot.missile.logs = bot.get_channel(384636771805298689)
@@ -96,14 +98,17 @@ async def on_command_error(ctx, error):
     if isinstance(error, commands.errors.CommandNotFound):
         await ctx.send('Stoopid. That is not a command.')
         return
+    if isinstance(error, commands.errors.MissingRequiredArgument) or isinstance(error, commands.errors.MissingAnyRole):
+        await ctx.send(str(error))
+        return
     if isinstance(error, commands.errors.ChannelNotFound):
         await ctx.send("Invalid channel. Maybe you've tagged the wrong one?")
         return
-    elif isinstance(error, commands.errors.RoleNotFound):
+    if isinstance(error, commands.errors.RoleNotFound):
         await ctx.send("Invalid role. Maybe you've tagged the wrong one?")
         return
-    elif isinstance(error, commands.errors.BadArgument):
-        await ctx.send('Bad argument, usually a bot error.')
+    if isinstance(error, commands.errors.BadArgument):
+        await ctx.send('Bad arguments.')
     if dimsecret.debug:
         raise error
 

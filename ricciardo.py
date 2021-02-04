@@ -35,8 +35,6 @@ class Ricciardo(commands.Cog):
         self.logger.debug('on_ready')
         if self.new:
             self.new = False
-            with open('data.json', 'r') as f:
-                self.data = json.load(f)
             while True:
                 await self.raceline_task()
                 await asyncio.sleep(600)
@@ -46,16 +44,18 @@ class Ricciardo(commands.Cog):
         self.new = True
 
     async def raceline_task(self):
-        bbm = {}
+        bbm_futures = {}
         for addon_id in self.addon_ids:
-            bbm[addon_id] = self.bot.loop.create_task(self.bbm_process(addon_id))
-        rss_data = self.bot.echo.cursor.execute('SELECT * FROM RssData').fetchall()
+            bbm_futures[addon_id] = self.bot.loop.create_task(self.bbm_process(addon_id))
         resultless_futures = []
+        rss_data = self.bot.echo.cursor.execute('SELECT * FROM RssData').fetchall()
         for index, row in enumerate(rss_data):
             resultless_futures.append(self.bot.loop.create_task(self.rss_process(index + 1, row)))
-        resultless_futures.append(self.bot.loop.create_task(self.yt()))
+        yt_data = self.bot.echo.cursor.execute('SELECT * FROM YtData').fetchall()
+        for row in yt_data:
+            resultless_futures.append(self.bot.loop.create_task(self.yt(row)))
         bbm_role = self.bot.echo.cursor.execute('SELECT * FROM BbmRole').fetchall()
-        await asyncio.wait(resultless_futures)
+        await asyncio.wait(bbm_futures.values())
         for row in bbm_role:
             bbm_addon = self.bot.echo.cursor.execute('SELECT addonID FROM BbmAddon WHERE bbmChID = ?',
                                                      (row[0],)).fetchall()
@@ -64,12 +64,11 @@ class Ricciardo(commands.Cog):
                 default_msg = f"<@&{row['roleID']}>\n"
             msg = default_msg
             for addon in bbm_addon:
-                msg += bbm[addon[0]].result()
+                msg += bbm_futures[addon[0]].result()
             if msg != default_msg:
                 await self.bot.get_channel(row[0]).send(msg)
-        self.logger.debug('Synced pool')
-        with open('data.json', 'w') as f:
-            json.dump(self.data, f)
+        await asyncio.wait(resultless_futures)
+        self.logger.debug('Synced')
         self.bot.echo.db.commit()
 
     async def rss_process(self, rowid, row):
@@ -131,18 +130,21 @@ class Ricciardo(commands.Cog):
                            (latest_file['displayName'], records[i][0]))
         return message
 
-    async def yt(self):
-        self.logger.info('Checking YT')
+    async def yt(self, row):
+        self.logger.info(f"Checking YouTube channel ID {row['channelID']}")
         async with self.session.get('https://www.googleapis.com/youtube/v3/activities?part=snippet,'
-                                    'contentDetails&channelId=UCTuGoJ-MoQuSYVgtmJTa3-w&maxResults=1&key=' + youtube) \
+                                    f"contentDetails&channelId={row['channelID']}&maxResults=1&key={youtube}") \
                 as response:
             activities = await response.json()
             if activities['items'][0]['snippet']['type'] == 'upload':
                 video_id = activities['items'][0]['contentDetails']['upload']['videoId']
-                if self.data['YT'] != video_id:
-                    self.logger.debug('New YT video detected')
-                    await self.bot.missile.announcement.send("http://youtube.com/watch?v=" + video_id)
-                    self.data['YT'] = video_id
+                if row['videoID'] != video_id:
+                    self.logger.debug('New YT video detected for channel ID ' + row['channelID'])
+                    yt_sub = self.bot.echo.cursor.execute('SELECT ytChID from YtSub WHERE channelID = ?', (row['channelID'],)).fetchall()
+                    for sub in yt_sub:
+                        ch = self.bot.get_channel(sub[0])
+                        await ch.send("http://youtube.com/watch?v=" + video_id)
+                    self.bot.echo.cursor.execute('UPDATE YtData SET videoID = ? WHERE channelID = ?', (video_id, row['channelID']))
 
     @commands.group(invoke_without_command=True)
     async def rss(self):
@@ -151,13 +153,15 @@ class Ricciardo(commands.Cog):
     @rss.command(name='subscribe', aliases=['s', 'sub'])
     @commands.check(Missile.is_owner)
     async def rss_subscribe(self, ctx, ch: discord.TextChannel, url: str, *, footer: str = ''):
-        from aiohttp import ClientConnectorError
+        # noinspection PyBroadException
+        # Above comment suppresses Exception Too Broad for PyCharm.
+        # Don't see why we have to check for specific exceptions
         try:
             async with self.session.get(url) as resp:
                 text = await resp.text()
             if not feedparser.parse(text).entries:
-                raise ValueError
-        except ClientConnectorError or ValueError:
+                raise Exception
+        except Exception:
             await ctx.send('The host does not seem to send RSS feeds.')
             return
 
