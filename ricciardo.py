@@ -37,6 +37,7 @@ class Ricciardo(commands.Cog):
             self.new = False
             while True:
                 await self.raceline_task()
+                self.bot.echo.db.commit()
                 await asyncio.sleep(600)
 
     @commands.Cog.listener()
@@ -69,7 +70,6 @@ class Ricciardo(commands.Cog):
                 await self.bot.get_channel(row[0]).send(msg)
         await asyncio.wait(resultless_futures)
         self.logger.debug('Synced')
-        self.bot.echo.db.commit()
 
     async def rss_process(self, rowid, row):
         cursor = self.bot.echo.get_cursor()
@@ -151,7 +151,7 @@ class Ricciardo(commands.Cog):
         pass
 
     @rss.command(name='subscribe', aliases=['s', 'sub'])
-    @commands.check(Missile.is_owner)
+    @Missile.is_owner()
     async def rss_subscribe(self, ctx, ch: discord.TextChannel, url: str, *, footer: str = ''):
         # noinspection PyBroadException
         # Above comment suppresses Exception Too Broad for PyCharm.
@@ -175,7 +175,6 @@ class Ricciardo(commands.Cog):
         if not result:
             self.bot.echo.cursor.execute("INSERT INTO RssData VALUES (?, '', 0)", (url,))
         self.bot.echo.cursor.execute("INSERT INTO RssSub VALUES (?, ?, ?)", (ch.id, url, footer))
-        self.bot.echo.db.commit()
         await ctx.send('Subscribed!')
 
     @commands.group(invoke_without_command=True)
@@ -183,7 +182,7 @@ class Ricciardo(commands.Cog):
         pass
 
     @bbm.command(name='subscribe', aliases=['s', 'sub'])
-    @commands.check(Missile.is_owner)
+    @Missile.is_owner()
     async def bbm_subscribe(self, ctx: Context, ch: discord.TextChannel, addon: int, role: discord.Role = None):
         if addon not in self.addon_ids:
             await ctx.send('the addon ID must be one of the following: 274058, 306357, 274326')
@@ -198,14 +197,12 @@ class Ricciardo(commands.Cog):
             role = role.id if role else None
             self.bot.echo.cursor.execute('INSERT INTO BbmRole VALUES (?, ?)', (ch.id, role))
         self.bot.echo.cursor.execute("INSERT INTO BbmAddon VALUES (?, ?)", (ch.id, addon))
-        self.bot.echo.db.commit()
         await ctx.send('Subscribed!')
 
     @bbm.command(aliases=['r'])
-    @commands.check(Missile.is_owner)
+    @Missile.is_owner()
     async def role(self, ctx: Context, role: discord.Role = None):
         role = role.id if role else None
         self.bot.echo.cursor.execute('UPDATE BbmRole SET roleID = ? WHERE bbmChID = ?', (role, ctx.channel.id))
-        self.bot.echo.db.commit()
         await ctx.send('Updated!')
 

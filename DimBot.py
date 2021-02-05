@@ -1,5 +1,4 @@
 import asyncio
-import atexit
 from random import choice
 
 import discord
@@ -19,7 +18,7 @@ intent.guilds = intent.members = intent.messages = True
 bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=intent)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.6.14"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.6.15"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -58,8 +57,16 @@ async def info(ctx):
         f'**Project Albon** `{albon.__version__}`: HTTP server sub-project used by `Verstapen`.\n'
         f'**Project Norris** `{norris.__version__}`: Chat bot for answering BBM questions\n'
         f'**Project BitBay** `{bitbay.__version__}`: Utilities for 128BB\n\n'
-        f'Devblog: Instagram @techdim\nDiscord server: `6PjhjCD`'
+        f'Devblog: Instagram @techdim\nDiscord server: `6PjhjCD`\n'
+        'You guys see my sister Nezuko? I need to save her! Donate me! '
+        '<https://streamlabs.com/pythonic_rainbow/tip>'
     )
+
+
+@bot.command()
+async def sponsor(ctx):
+    await ctx.send('You guys see my sister Nezuko? I need to save her! Donate me! '
+                   '<https://streamlabs.com/pythonic_rainbow/tip>')
 
 
 def is_debug(ctx):
@@ -109,24 +116,19 @@ async def on_command_error(ctx, error):
         return
     if isinstance(error, commands.errors.BadArgument):
         await ctx.send('Bad arguments.')
+    elif isinstance(error, commands.errors.CheckFailure):
+        return
     if dimsecret.debug:
         raise error
 
 
 @bot.command()
-@commands.check(Missile.is_rainbow)
+@Missile.is_rainbow()
 async def exit(ctx):
-    import builtins
-    await bot.change_presence(status=discord.Status.dnd)
-    await ctx.send(':dizzy_face:')
-    builtins.exit()
-
-
-def exit_handler():
     bot.echo.db.commit()
+    await ctx.send(':dizzy_face:')
+    await bot.logout()
 
-
-atexit.register(exit_handler)
 bot.add_cog(ricciardo.Ricciardo(bot))
 bot.add_cog(hamilton.Hamilton(bot))
 bot.add_cog(verstapen.Verstapen(bot))

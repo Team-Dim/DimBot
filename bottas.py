@@ -67,16 +67,21 @@ class Bottas(commands.Cog):
         await ctx.send(content)
 
     @quote.command()
-    @commands.check(Missile.is_rainbow)
+    @Missile.is_rainbow()
     async def exe(self, ctx):
         msg = await self.bot.missile.ask_msg(ctx, 'SQL statement?')
         try:
             data = self.db.execute(msg).fetchall()
             await ctx.send(data)
-            self.db.commit()
             await ctx.send('SQL statement successfully executed.')
         except sqlite3.Error as e:
             await ctx.send(f"**{e.__class__.__name__}**: {e}")
+
+    @quote.command()
+    @Missile.is_rainbow()
+    async def save(self, ctx):
+        self.db.commit()
+        await ctx.send('Saved')
 
     @quote.command(aliases=['a'])
     async def add(self, ctx, *, args):
