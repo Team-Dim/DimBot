@@ -55,14 +55,14 @@ class Verstapen(commands.Cog):
             self.http_not_started = False
 
     @commands.command()
-    @commands.check(Missile.is_rainbow)
+    @Missile.is_rainbow()
     async def eu(self, ctx):
         await self.boot_instance(ctx, dimsecret.eu_instance_id, 'eu-north-1')
 
     @commands.command()
     async def start(self, ctx):
         # Remove this check when Lokeon has finished rewriting.
-        if not Missile.is_rainbow(ctx):
+        if not self.bot.is_owner():
             await ctx.send(':construction: Sorry, this feature is currently not available, please ask ChingDim in Discord to help you!')
             return
         if dimsecret.debug:

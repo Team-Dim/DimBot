@@ -16,9 +16,10 @@ from missile import Missile
 intent = discord.Intents.none()
 intent.guilds = intent.members = intent.messages = True
 bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=intent)
+bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.6.15"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.6.15.1"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -116,7 +117,7 @@ async def on_command_error(ctx, error):
         return
     if isinstance(error, commands.errors.BadArgument):
         await ctx.send('Bad arguments.')
-    elif isinstance(error, commands.errors.CheckFailure):
+    elif isinstance(error, commands.errors.CheckFailure) or isinstance(error, asyncio.exceptions.TimeoutError):
         return
     if dimsecret.debug:
         raise error

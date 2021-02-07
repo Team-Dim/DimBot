@@ -42,6 +42,7 @@ class Missile:
         return lambda msg: msg.author.id == ctx.author.id and msg.channel == ctx.channel
 
     @staticmethod
+    # similar to @commands.is_owner()
     def is_rainbow():
         async def check(ctx):
             rainbow = ctx.author.id == 264756129916125184
@@ -56,7 +57,7 @@ class Missile:
             if ctx.guild:
                 owner = ctx.author == ctx.guild.owner
                 if not owner:
-                    await ctx.send("I guess you are not this server's pog champ. Bruh.")
+                    await ctx.send("I guess you are not this server's pogchamp. Bruh.")
                 return owner
             else:
                 await ctx.send('This command must be called in a server.')
