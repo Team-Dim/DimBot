@@ -32,13 +32,13 @@ class BitBay(Cog):
 
     @command(aliases=['dec'])
     async def decode(self, ctx: Context, content: str):
-        b: bytes = content.encode()
         import binascii
         try:
+            b: bytes = content.encode()
             decoded: bytes = base64.b64decode(b)
             await ctx.author.send(decoded.decode())
             await ctx.message.add_reaction('✅')
-        except UnicodeDecodeError or binascii.Error:
+        except (UnicodeDecodeError, binascii.Error):
             await ctx.send('Malformed base64 string.')
 
     @command()
