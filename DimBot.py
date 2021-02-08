@@ -117,10 +117,9 @@ async def on_command_error(ctx, error):
         return
     if isinstance(error, commands.errors.BadArgument):
         await ctx.send('Bad arguments.')
-    elif isinstance(error, commands.errors.CheckFailure) or isinstance(error, asyncio.exceptions.TimeoutError):
+    elif isinstance(error, commands.errors.CheckFailure) or isinstance(error, asyncio.TimeoutError):
         return
-    if dimsecret.debug:
-        raise error
+    raise error
 
 
 @bot.command()
@@ -131,7 +130,7 @@ async def exit(ctx):
     await bot.logout()
 
 bot.add_cog(ricciardo.Ricciardo(bot))
-bot.add_cog(hamilton.Hamilton(bot))
+# bot.add_cog(hamilton.Hamilton(bot))
 bot.add_cog(verstapen.Verstapen(bot))
 bot.add_cog(bot.echo)
 bot.add_cog(norris.Norris(bot))

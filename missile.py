@@ -52,7 +52,7 @@ class Missile:
         return commands.check(check)
 
     @staticmethod
-    def is_owner():
+    def must_guild_owner():
         async def check(ctx):
             if ctx.guild:
                 owner = ctx.author == ctx.guild.owner

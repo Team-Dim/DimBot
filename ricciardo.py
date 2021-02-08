@@ -151,7 +151,7 @@ class Ricciardo(commands.Cog):
         pass
 
     @rss.command(name='subscribe', aliases=['s', 'sub'])
-    @Missile.is_owner()
+    @Missile.must_guild_owner()
     async def rss_subscribe(self, ctx, ch: discord.TextChannel, url: str, *, footer: str = ''):
         # noinspection PyBroadException
         # Above comment suppresses Exception Too Broad for PyCharm.
@@ -182,7 +182,7 @@ class Ricciardo(commands.Cog):
         pass
 
     @bbm.command(name='subscribe', aliases=['s', 'sub'])
-    @Missile.is_owner()
+    @Missile.must_guild_owner()
     async def bbm_subscribe(self, ctx: Context, ch: discord.TextChannel, addon: int, role: discord.Role = None):
         if addon not in self.addon_ids:
             await ctx.send('the addon ID must be one of the following: 274058, 306357, 274326')
@@ -200,7 +200,7 @@ class Ricciardo(commands.Cog):
         await ctx.send('Subscribed!')
 
     @bbm.command(aliases=['r'])
-    @Missile.is_owner()
+    @Missile.must_guild_owner()
     async def role(self, ctx: Context, role: discord.Role = None):
         role = role.id if role else None
         self.bot.echo.cursor.execute('UPDATE BbmRole SET roleID = ? WHERE bbmChID = ?', (role, ctx.channel.id))

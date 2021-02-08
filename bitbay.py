@@ -2,7 +2,7 @@ import base64
 
 import discord
 
-__version__ = '1.1'
+__version__ = '1.1.1'
 
 from discord.ext.commands import Cog, Context, command, has_any_role
 
@@ -22,7 +22,8 @@ class BitBay(Cog):
 
     @command(aliases=['enc'])
     async def encode(self, ctx: Context, *, url: str):
-        await ctx.message.delete()
+        if isinstance(ctx.channel, discord.TextChannel):
+            await ctx.message.delete()
         if url.lower().startswith('http'):
             await ctx.send(f'<https://codebeautify.org/base64-decode?input={convert(url)}>')
         else:
@@ -32,9 +33,13 @@ class BitBay(Cog):
     @command(aliases=['dec'])
     async def decode(self, ctx: Context, content: str):
         b: bytes = content.encode()
-        decoded: bytes = base64.b64decode(b)
-        await ctx.author.send(decoded.decode())
-        await ctx.message.add_reaction('✅')
+        import binascii
+        try:
+            decoded: bytes = base64.b64decode(b)
+            await ctx.author.send(decoded.decode())
+            await ctx.message.add_reaction('✅')
+        except UnicodeDecodeError or binascii.Error:
+            await ctx.send('Malformed base64 string.')
 
     @command()
     @has_any_role(702889819570831572, 720319730883362816)
