@@ -213,6 +213,7 @@ class Ricciardo(commands.Cog):
         pass
 
     @yt.command(aliases=['s'])
+    @Missile.must_guild_owner()
     async def subscribe(self, ctx: Context, ch: str):
         # TODO: Simplify code here, also check whether already subscribed
         try:
