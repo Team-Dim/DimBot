@@ -1,5 +1,6 @@
 import asyncio
 import json
+import re
 from random import randint
 from time import mktime
 
@@ -140,11 +141,13 @@ class Ricciardo(commands.Cog):
                 video_id = activities['items'][0]['contentDetails']['upload']['videoId']
                 if row['videoID'] != video_id:
                     self.logger.debug('New YT video detected for channel ID ' + row['channelID'])
-                    yt_sub = self.bot.echo.cursor.execute('SELECT ytChID from YtSub WHERE channelID = ?', (row['channelID'],)).fetchall()
+                    yt_sub = self.bot.echo.cursor.execute('SELECT ytChID from YtSub WHERE channelID = ?',
+                                                          (row['channelID'],)).fetchall()
                     for sub in yt_sub:
                         ch = self.bot.get_channel(sub[0])
                         await ch.send("http://youtube.com/watch?v=" + video_id)
-                    self.bot.echo.cursor.execute('UPDATE YtData SET videoID = ? WHERE channelID = ?', (video_id, row['channelID']))
+                    self.bot.echo.cursor.execute('UPDATE YtData SET videoID = ? WHERE channelID = ?',
+                                                 (video_id, row['channelID']))
 
     @commands.group(invoke_without_command=True)
     async def rss(self):
@@ -183,20 +186,19 @@ class Ricciardo(commands.Cog):
 
     @bbm.command(name='subscribe', aliases=['s', 'sub'])
     @Missile.must_guild_owner()
-    async def bbm_subscribe(self, ctx: Context, ch: discord.TextChannel, addon: int, role: discord.Role = None):
+    async def bbm_subscribe(self, ctx: Context, addon: int, role: discord.Role = None):
         if addon not in self.addon_ids:
             await ctx.send('the addon ID must be one of the following: 274058, 306357, 274326')
             return
-        result = self.bot.echo.cursor.execute("SELECT EXISTS(SELECT 1 FROM BbmAddon WHERE bbmChID = ? AND addonID = ?)",
-                                              (ch.id, addon)).fetchone()[0]
-        if result:
-            await ctx.send(f'{ch.mention} has already subscribed to this addon!')
+        if self.bot.echo.cursor.execute("SELECT EXISTS(SELECT 1 FROM BbmAddon WHERE bbmChID = ? AND addonID = ?)",
+                                              (ctx.channel.id, addon)).fetchone()[0]:
+            await ctx.send(f'{ctx.channel.mention} has already subscribed to this addon!')
             return
-        result = self.bot.echo.cursor.execute('SELECT EXISTS(SELECT 1 FROM BbmRole WHERE bbmChID = ?)', (ch.id,)).fetchone()[0]
-        if not result:
+        if not self.bot.echo.cursor.execute('SELECT EXISTS(SELECT 1 FROM BbmRole WHERE bbmChID = ?)',
+                                            (ctx.channel.id,)).fetchone()[0]:
             role = role.id if role else None
-            self.bot.echo.cursor.execute('INSERT INTO BbmRole VALUES (?, ?)', (ch.id, role))
-        self.bot.echo.cursor.execute("INSERT INTO BbmAddon VALUES (?, ?)", (ch.id, addon))
+            self.bot.echo.cursor.execute('INSERT INTO BbmRole VALUES (?, ?)', (ctx.channel.id, role))
+        self.bot.echo.cursor.execute("INSERT INTO BbmAddon VALUES (?, ?)", (ctx.channel.id, addon))
         await ctx.send('Subscribed!')
 
     @bbm.command(aliases=['r'])
@@ -206,3 +208,39 @@ class Ricciardo(commands.Cog):
         self.bot.echo.cursor.execute('UPDATE BbmRole SET roleID = ? WHERE bbmChID = ?', (role, ctx.channel.id))
         await ctx.send('Updated!')
 
+    @commands.group(invoke_without_command=True)
+    async def yt(self, ctx):
+        pass
+
+    @yt.command(aliases=['s'])
+    async def subscribe(self, ctx: Context, ch: str):
+        # TODO: Simplify code here, also check whether already subscribed
+        try:
+            if not re.search("^((https?://)?(www\\.)?youtube\\.com/)(user|channel)", ch):
+                raise ValueError
+            obj = ch.split('youtube.com/')[1].split('/')
+            base = 'https://www.googleapis.com/youtube/v3/channels?part=id&fields=items/id&'
+            if obj[0] == 'user':
+                async with self.session.get(f'{base}forUsername={obj[1]}&key={youtube}') as r:
+                    j: dict = await r.json()
+                if not j:
+                    raise ValueError
+                ch = j['items'][0]['id']
+                if not self.bot.echo.cursor.execute('SELECT EXISTS(SELECT 1 FROM YtData WHERE channelID = ?)',
+                                                    (ch,)).fetchone()[0]:
+                    self.bot.echo.cursor.execute("INSERT INTO YtData VALUES (?, '')", (ch,))
+            elif obj[1].startswith('UC'):
+                ch = obj[1]
+                if not self.bot.echo.cursor.execute('SELECT EXISTS(SELECT 1 FROM YtData WHERE channelID = ?)',
+                                                    (ch,)).fetchone()[0]:
+                    async with self.session.get(f'{base}id={obj[1]}&key={youtube}') as r:
+                        j: dict = await r.json()
+                    if not j:
+                        raise ValueError
+                    self.bot.echo.cursor.execute("INSERT INTO YtData VALUES (?, '')", (ch,))
+            else:
+                raise ValueError
+            self.bot.echo.cursor.execute("INSERT INTO YtSub VALUES (?, ?)", (ctx.channel.id, ch))
+            await ctx.send(f'Subscribed to YouTube channel ID **{ch}**')
+        except ValueError:
+            await ctx.send('Invalid YouTube channel link.')

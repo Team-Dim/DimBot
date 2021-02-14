@@ -1,4 +1,5 @@
 import asyncio
+import json
 from random import choice
 
 import discord
@@ -19,7 +20,7 @@ bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=int
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.6.15.3"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.6.16"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -38,6 +39,11 @@ activities = [
 logger = bot.missile.get_logger('DimBot')
 with open('.git/HEAD', 'r') as f:
     branch = f.readline().split('/')[-1]
+with open('yo.json') as f:
+    yo: list = json.load(f)
+
+sponsor_txt = 'You guys see my brother Tanjiro? I need to save him! Donate me! ' \
+              '<https://streamlabs.com/pythonic_rainbow/tip> '
 
 
 @bot.command(aliases=['ver', 'verinfo'])
@@ -58,16 +64,13 @@ async def info(ctx):
         f'**Project Albon** `{albon.__version__}`: HTTP server sub-project used by `Verstapen`.\n'
         f'**Project Norris** `{norris.__version__}`: Chat bot for answering BBM questions\n'
         f'**Project BitBay** `{bitbay.__version__}`: Utilities for 128BB\n\n'
-        f'Devblog: Instagram @techdim\nDiscord server: `6PjhjCD`\n'
-        'You guys see my sister Nezuko? I need to save her! Donate me! '
-        '<https://streamlabs.com/pythonic_rainbow/tip>'
+        f'Devblog: Instagram @techdim\nDiscord server: `6PjhjCD`\n{sponsor_txt}'
     )
 
 
 @bot.command()
 async def sponsor(ctx):
-    await ctx.send('You guys see my sister Nezuko? I need to save her! Donate me! '
-                   '<https://streamlabs.com/pythonic_rainbow/tip>')
+    await ctx.send(sponsor_txt)
 
 
 def is_debug(ctx):
@@ -122,12 +125,31 @@ async def on_command_error(ctx, error):
     raise error
 
 
+@bot.event
+async def on_message(msg: discord.Message):
+    if msg.author.id in yo:
+        await msg.add_reaction('❤')
+    await bot.process_commands(msg)
+
+
 @bot.command()
 @Missile.is_rainbow()
 async def exit(ctx):
     bot.echo.db.commit()
+    with open('yo.json', 'w') as f:
+        json.dump(yo, f)
     await ctx.send(':dizzy_face:')
     await bot.logout()
+
+
+@bot.command()
+async def love(ctx):
+    if ctx.author.id not in yo:
+        yo.append(ctx.author.id)
+        await ctx.send('I love you too! :heart:')
+    else:
+        yo.remove(ctx.author.id)
+        await ctx.send('I mean you are single but :ok_hand:')
 
 bot.add_cog(ricciardo.Ricciardo(bot))
 # bot.add_cog(hamilton.Hamilton(bot))
