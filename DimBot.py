@@ -19,7 +19,7 @@ bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=int
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.6.17"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.6.17.1"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -38,8 +38,6 @@ activities = [
 logger = bot.missile.get_logger('DimBot')
 with open('.git/HEAD', 'r') as f:
     branch = f.readline().split('/')[-1]
-with open('yo.json') as f:
-    yo: list = json.load(f)
 
 sponsor_txt = 'You guys see my brother Tanjiro? I need to save him! Donate me! ' \
               '<https://streamlabs.com/pythonic_rainbow/tip> '
@@ -124,31 +122,13 @@ async def on_command_error(ctx, error):
     raise error
 
 
-@bot.event
-async def on_message(msg: discord.Message):
-    if msg.author.id in yo:
-        await msg.add_reaction('❤')
-    await bot.process_commands(msg)
-
-
 @bot.command()
 @Missile.is_rainbow()
 async def exit(ctx):
     bot.echo.db.commit()
-    with open('yo.json', 'w') as f:
-        json.dump(yo, f)
     await ctx.send(':dizzy_face:')
     await bot.logout()
 
-
-@bot.command()
-async def love(ctx):
-    if ctx.author.id not in yo:
-        yo.append(ctx.author.id)
-        await ctx.send('I love you too! :heart:')
-    else:
-        yo.remove(ctx.author.id)
-        await ctx.send('I mean you are single but :ok_hand:')
 
 bot.add_cog(ricciardo.Ricciardo(bot))
 # bot.add_cog(hamilton.Hamilton(bot))
