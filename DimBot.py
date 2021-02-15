@@ -18,7 +18,7 @@ bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=int
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.6.18"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.6.18.1"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -101,18 +101,20 @@ async def on_disconnect():
 
 
 @bot.event
-async def on_message_delete(msg):
-    bot.missile.snipe = msg
+async def on_message_delete(msg: discord.Message):
+    content = msg.content if msg.content else msg.embeds[0].description
+    bot.missile.snipe = discord.Embed(title=msg.author.display_name, description=content)
+    bot.missile.snipe.set_author(name=msg.guild.name, icon_url=msg.author.avatar_url)
+    bot.missile.snipe.set_thumbnail(url=msg.guild.icon_url)
+    colour = msg.embeds[0].colour if msg.embeds else discord.Colour.from_rgb(
+        randint(0, 255), randint(0, 255), randint(0, 255))
+    bot.missile.snipe.colour = colour
 
 
 @bot.command()
 async def snipe(ctx):
     if bot.missile.snipe:
-        emb = discord.Embed(title=bot.missile.snipe.author.display_name, description=bot.missile.snipe.content)
-        emb.set_author(name=bot.missile.snipe.guild.name, icon_url=bot.missile.snipe.author.avatar_url)
-        emb.set_thumbnail(url=bot.missile.snipe.guild.icon_url)
-        emb.colour = discord.Colour.from_rgb(randint(0, 255), randint(0, 255), randint(0, 255))
-        await ctx.send(embed=emb)
+        await ctx.send(embed=bot.missile.snipe)
 
 
 @bot.event

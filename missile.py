@@ -8,19 +8,21 @@ import dimsecret
 
 class Missile:
 
+    # noinspection PyTypeChecker
+    # TODO: ^ Remove when wait_for_ready() port finishes
     def __init__(self, bot: commands.Bot):
-        self.bot = bot
+        self.bot: commands.Bot = bot
         if dimsecret.debug:
             self.lvl = logging.DEBUG
         else:
             self.lvl = logging.INFO
         self.guild = None
-        self.bottyland = None
-        self.announcement = None
-        self.logs = None
+        self.bottyland: discord.TextChannel = None
+        self.announcement: discord.TextChannel = None
+        self.logs: discord.TextChannel = None
         self.loop = False
         self.new = True  # For DimBot change activity loop
-        self.snipe: discord.Message = None
+        self.snipe: discord.Embed = None
 
     def get_logger(self, name: str) -> logging.Logger:
         logger = logging.getLogger(name)
