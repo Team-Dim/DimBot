@@ -20,6 +20,7 @@ class Missile:
         self.logs = None
         self.loop = False
         self.new = True  # For DimBot change activity loop
+        self.snipe: discord.Message = None
 
     def get_logger(self, name: str) -> logging.Logger:
         logger = logging.getLogger(name)

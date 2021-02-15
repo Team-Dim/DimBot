@@ -1,6 +1,5 @@
 import asyncio
-import json
-from random import choice
+from random import choice, randint
 
 import discord
 from discord.ext import commands
@@ -19,7 +18,7 @@ bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=int
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.6.17.1"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.6.18"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -99,6 +98,21 @@ async def on_ready():
 @bot.event
 async def on_disconnect():
     bot.missile.new = True
+
+
+@bot.event
+async def on_message_delete(msg):
+    bot.missile.snipe = msg
+
+
+@bot.command()
+async def snipe(ctx):
+    if bot.missile.snipe:
+        emb = discord.Embed(title=bot.missile.snipe.author.display_name, description=bot.missile.snipe.content)
+        emb.set_author(name=bot.missile.snipe.guild.name, icon_url=bot.missile.snipe.author.avatar_url)
+        emb.set_thumbnail(url=bot.missile.snipe.guild.icon_url)
+        emb.colour = discord.Colour.from_rgb(randint(0, 255), randint(0, 255), randint(0, 255))
+        await ctx.send(embed=emb)
 
 
 @bot.event
