@@ -52,16 +52,14 @@ class Missile:
         return commands.check(check)
 
     @staticmethod
-    def must_guild_owner():
+    def is_channel_owner():
         async def check(ctx):
             if ctx.guild:
                 owner = ctx.author == ctx.guild.owner
                 if not owner:
                     await ctx.send("I guess you are not this server's pogchamp. Bruh.")
                 return owner
-            else:
-                await ctx.send('This command must be called in a server.')
-                return False
+            return True
         return commands.check(check)
 
     async def ask_msg(self, ctx, msg: str, timeout: int = 10) -> str:

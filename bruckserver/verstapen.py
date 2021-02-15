@@ -62,7 +62,7 @@ class Verstapen(commands.Cog):
     @commands.command()
     async def start(self, ctx):
         # Remove this check when Lokeon has finished rewriting.
-        if not self.bot.must_guild_owner():
+        if not self.bot.is_channel_owner():
             await ctx.send(':construction: Sorry, this feature is currently not available, please ask ChingDim in Discord to help you!')
             return
         if dimsecret.debug:

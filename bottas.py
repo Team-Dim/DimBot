@@ -14,6 +14,7 @@ class Bottas(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logger = bot.missile.get_logger('Bottas')
+        # TODO: Disable PARSE_DECLTYPES in the future.
         self.db: sqlite3.Connection = sqlite3.connect('DimBot.db', check_same_thread=False,
                                                       detect_types=sqlite3.PARSE_DECLTYPES)
         self.cursor: sqlite3.Cursor = self.get_cursor()
@@ -26,6 +27,13 @@ class Bottas(commands.Cog):
     def get_quote(self, index: int):
         self.cursor.execute("SELECT * FROM Quote WHERE ROWID = ?", (index,))
         return self.cursor.fetchone()
+
+    # TODO: Use this function for Ricciardo
+    def exists(self, table: str, args: dict) -> bool:
+        base = f'SELECT EXISTS(SELECT 1 FROM {table} WHERE'
+        for f in args.keys():
+            base += f' {f}=? AND'
+        return self.cursor.execute(base[:-3], args.values()).fetchone()[0]
 
     @commands.Cog.listener()
     async def on_ready(self):

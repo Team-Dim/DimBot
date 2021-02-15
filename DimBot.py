@@ -9,7 +9,6 @@ import bitbay
 import bottas
 import dimsecret
 import hamilton
-import norris
 import ricciardo
 from bruckserver import verstapen, albon
 from missile import Missile
@@ -20,7 +19,7 @@ bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=int
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.6.16"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.6.17"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -57,12 +56,12 @@ async def info(ctx):
         f'Amazon Web Services via boto3 `{boto3ver}`.\n'
         'Bot source code: https://github.com/TCLRainbow/DimBot\n\n'
         'This bot has the following modules:\n'
-        f'**Project Ricciardo** `{ricciardo.__version__}`: Relaying RSS to discord channels.\n'
+        f'**Project Ricciardo** `{ricciardo.__version__}`: Relaying RSS, BBM and YouTube feeds to discord channels.\n'
         f'**Project Bottas** `{bottas.__version__}`: Add or search quotes through a SQLite database.\n'
         f'**Project Hamilton** `{hamilton.__version__}`: Adds additional feature per role\n'
         f'**Project Verstapen** `{verstapen.__version__}`: Connects to AWS and manage a minecraft server instance.\n'
         f'**Project Albon** `{albon.__version__}`: HTTP server sub-project used by `Verstapen`.\n'
-        f'**Project Norris** `{norris.__version__}`: Chat bot for answering BBM questions\n'
+        'Project Norris** `0`: Chat bot for answering BBM questions.\n'
         f'**Project BitBay** `{bitbay.__version__}`: Utilities for 128BB\n\n'
         f'Devblog: Instagram @techdim\nDiscord server: `6PjhjCD`\n{sponsor_txt}'
     )
@@ -155,6 +154,5 @@ bot.add_cog(ricciardo.Ricciardo(bot))
 # bot.add_cog(hamilton.Hamilton(bot))
 bot.add_cog(verstapen.Verstapen(bot))
 bot.add_cog(bot.echo)
-bot.add_cog(norris.Norris(bot))
 bot.add_cog(bitbay.BitBay(bot))
 bot.run(dimsecret.discord)
