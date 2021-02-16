@@ -18,7 +18,7 @@ bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=int
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.6.19"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.6.19.1"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -58,7 +58,7 @@ async def info(ctx):
         f'**Project Hamilton** `{hamilton.__version__}`: Adds additional feature per role\n'
         f'**Project Verstapen** `{verstapen.__version__}`: Connects to AWS and manage a minecraft server instance.\n'
         f'**Project Albon** `{albon.__version__}`: HTTP server sub-project used by `Verstapen`.\n'
-        'Project Norris** `0`: Chat bot for answering BBM questions.\n'
+        '**Project Norris** `0`: Chat bot for answering BBM questions.\n'
         f'**Project BitBay** `{bitbay.__version__}`: Utilities for 128BB\n\n'
         f'Devblog: Instagram @techdim\nDiscord server: `6PjhjCD`\n{sponsor_txt}'
     )
@@ -113,6 +113,12 @@ async def on_message_delete(msg: discord.Message):
         randint(0, 255), randint(0, 255), randint(0, 255))
     bot.missile.snipe.colour = colour
 
+
+@bot.event
+async def on_message_edit(before: discord.Message, after: discord.Message):
+    if before.mentions and not after.mentions:
+        victims = ', '.join([mention.mention for mention in before.mentions])
+        await before.channel.send(f'Detected ghost ping: From {before.author.mention} to {victims}')
 
 
 @bot.command()

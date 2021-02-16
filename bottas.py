@@ -14,7 +14,7 @@ class Bottas(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logger = bot.missile.get_logger('Bottas')
-        # TODO: Disable PARSE_DECLTYPES in the future.
+        # TODO: Disable PARSE_DECLTYPES in the future. Need to modify Ricciardo
         self.db: sqlite3.Connection = sqlite3.connect('DimBot.db', check_same_thread=False,
                                                       detect_types=sqlite3.PARSE_DECLTYPES)
         self.cursor: sqlite3.Cursor = self.get_cursor()
@@ -28,7 +28,7 @@ class Bottas(commands.Cog):
         self.cursor.execute("SELECT * FROM Quote WHERE ROWID = ?", (index,))
         return self.cursor.fetchone()
 
-    # TODO: Use this function for Ricciardo
+    # TODO: Use this function for Ricciardo after NEA
     def exists(self, table: str, args: dict) -> bool:
         base = f'SELECT EXISTS(SELECT 1 FROM {table} WHERE'
         for f in args.keys():
