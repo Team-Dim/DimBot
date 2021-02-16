@@ -18,7 +18,7 @@ bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=int
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.6.18.1"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.6.19"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -102,6 +102,9 @@ async def on_disconnect():
 
 @bot.event
 async def on_message_delete(msg: discord.Message):
+    if msg.mentions:
+        victims = ', '.join([mention.mention for mention in msg.mentions])
+        await msg.channel.send(f'Detected ghost ping: From {msg.author.mention} to {victims}')
     content = msg.content if msg.content else msg.embeds[0].description
     bot.missile.snipe = discord.Embed(title=msg.author.display_name, description=content)
     bot.missile.snipe.set_author(name=msg.guild.name, icon_url=msg.author.avatar_url)
@@ -109,6 +112,7 @@ async def on_message_delete(msg: discord.Message):
     colour = msg.embeds[0].colour if msg.embeds else discord.Colour.from_rgb(
         randint(0, 255), randint(0, 255), randint(0, 255))
     bot.missile.snipe.colour = colour
+
 
 
 @bot.command()
