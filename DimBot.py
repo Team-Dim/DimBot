@@ -19,7 +19,7 @@ bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=int
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.6.19.3"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.6.19.4"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -104,7 +104,11 @@ async def on_disconnect():
 @bot.event
 async def on_message_delete(msg: discord.Message):
     if msg.author == msg.guild.me and re.search('has (delet|edit)ed a ping', msg.content):
-        await msg.channel.send(msg.content.split('\n')[0] + "\n*You tried to mute me but you can't hide*")
+        base = msg.clean_content.split('\n')[0]
+        if msg.guild.me.permissions_in(msg.channel).view_audit_log:
+            async for audit in msg.guild.audit_logs(limit=1, action=discord.AuditLogAction.message_delete):
+                base += f"\n*{audit.user.mention} You tried to mute me but you can't hide*"
+        await msg.channel.send(base)
         return
     if msg.guild and msg.id in bot.missile.ghost_pings.keys():
         for m in bot.missile.ghost_pings[msg.id]:
