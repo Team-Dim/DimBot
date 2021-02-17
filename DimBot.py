@@ -1,4 +1,5 @@
 import asyncio
+import re
 from random import choice, randint
 
 import discord
@@ -18,7 +19,7 @@ bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=int
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.6.19.2"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.6.19.3"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -102,6 +103,9 @@ async def on_disconnect():
 
 @bot.event
 async def on_message_delete(msg: discord.Message):
+    if msg.author == msg.guild.me and re.search('has (delet|edit)ed a ping', msg.content):
+        await msg.channel.send(msg.content.split('\n')[0] + "\n*You tried to mute me but you can't hide*")
+        return
     if msg.guild and msg.id in bot.missile.ghost_pings.keys():
         for m in bot.missile.ghost_pings[msg.id]:
             await m.send(f'{msg.author.mention} pinged you in **{msg.guild.name}** and deleted it.')
@@ -133,7 +137,7 @@ async def on_message_edit(before: discord.Message, after: discord.Message):
                 await m.send(f'{before.author.mention} pinged you in **{before.guild.name}** and deleted it.')
                 bot.missile.ghost_pings[before.id].remove(m)
         if has_removed:
-            await before.channel.send(before.author.mention + ' removed a ping from a message')
+            await before.channel.send(before.author.mention + ' has removed a ping from a message')
         if not bot.missile.ghost_pings[before.id]:
             bot.missile.ghost_pings.pop(before.id)
 
