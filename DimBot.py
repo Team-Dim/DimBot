@@ -18,7 +18,7 @@ bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=int
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.6.19.1"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.6.19.2"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -102,10 +102,17 @@ async def on_disconnect():
 
 @bot.event
 async def on_message_delete(msg: discord.Message):
-    if msg.mentions:
-        victims = ', '.join([mention.mention for mention in msg.mentions])
-        await msg.channel.send(f'Detected ghost ping: From {msg.author.mention} to {victims}')
-    content = msg.content if msg.content else msg.embeds[0].description
+    if msg.guild and msg.id in bot.missile.ghost_pings.keys():
+        for m in bot.missile.ghost_pings[msg.id]:
+            await m.send(f'{msg.author.mention} pinged you in **{msg.guild.name}** and deleted it.')
+        await msg.channel.send(msg.author.mention + ' has deleted a ping')
+        bot.missile.ghost_pings.pop(msg.id)
+    elif msg.guild and msg.mentions and not msg.edited_at:
+        for m in msg.mentions:
+            if not m.bot:
+                await m.send(f'{msg.author.mention} pinged you in **{msg.guild.name}** and deleted it.')
+        await msg.channel.send(msg.author.mention + ' has deleted a ping')
+    content = msg.content if msg.content else msg.embeds[0].title
     bot.missile.snipe = discord.Embed(title=msg.author.display_name, description=content)
     bot.missile.snipe.set_author(name=msg.guild.name, icon_url=msg.author.avatar_url)
     bot.missile.snipe.set_thumbnail(url=msg.guild.icon_url)
@@ -116,9 +123,19 @@ async def on_message_delete(msg: discord.Message):
 
 @bot.event
 async def on_message_edit(before: discord.Message, after: discord.Message):
-    if before.mentions and not after.mentions:
-        victims = ', '.join([mention.mention for mention in before.mentions])
-        await before.channel.send(f'Detected ghost ping: From {before.author.mention} to {victims}')
+    if before.guild and not before.edited_at and before.mentions:
+        bot.missile.ghost_pings[before.id] = [m for m in before.mentions if not m.bot]
+    if before.guild and before.id in bot.missile.ghost_pings.keys():
+        has_removed = False
+        for m in bot.missile.ghost_pings[before.id]:
+            if m not in after.mentions:
+                has_removed = True
+                await m.send(f'{before.author.mention} pinged you in **{before.guild.name}** and deleted it.')
+                bot.missile.ghost_pings[before.id].remove(m)
+        if has_removed:
+            await before.channel.send(before.author.mention + ' removed a ping from a message')
+        if not bot.missile.ghost_pings[before.id]:
+            bot.missile.ghost_pings.pop(before.id)
 
 
 @bot.command()
