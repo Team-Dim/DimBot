@@ -54,7 +54,7 @@ class Ricciardo(commands.Cog):
             resultless_futures.append(self.bot.loop.create_task(self.rss_process(index + 1, row)))
         yt_data = self.bot.echo.cursor.execute('SELECT * FROM YtData').fetchall()
         for row in yt_data:
-            resultless_futures.append(self.bot.loop.create_task(self.yt(row)))
+            resultless_futures.append(self.bot.loop.create_task(self.yt_process(row)))
         bbm_role = self.bot.echo.cursor.execute('SELECT * FROM BbmRole').fetchall()
         await asyncio.wait(bbm_futures.values())
         for row in bbm_role:
@@ -130,7 +130,7 @@ class Ricciardo(commands.Cog):
                            (latest_file['displayName'], records[i][0]))
         return message
 
-    async def yt(self, row):
+    async def yt_process(self, row):
         self.logger.info(f"Checking YouTube channel ID {row['channelID']}")
         async with self.session.get('https://www.googleapis.com/youtube/v3/activities?part=snippet,'
                                     f"contentDetails&channelId={row['channelID']}&maxResults=1&key={youtube}") \

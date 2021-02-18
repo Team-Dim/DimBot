@@ -70,6 +70,14 @@ class BitBay(Cog):
                                            colour=Missile.random_rgb()))
 
     @command()
+    async def pplen(self, ctx: Context, user: discord.User = None):
+        user = user if user else ctx.author
+        if user.id not in self.organs.keys():
+            await ctx.send('No pp found.')
+        else:
+            await ctx.send('pp size: ' + str(self.organs[user.id]))
+
+    @command()
     @Missile.is_rainbow()
     async def ppmax(self, ctx: Context):
         self.organs[ctx.author.id] = 55
