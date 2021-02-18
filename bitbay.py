@@ -30,6 +30,11 @@ class BitBay(Cog):
         self.bot: discord.Client = bot
         self.organs: dict = {}
 
+    def get_size(self, uid: int) -> int:
+        if uid not in self.organs.keys():
+            return 0
+        return self.organs[uid]
+
     @command(aliases=['enc'])
     async def encode(self, ctx: Context, *, url: str):
         if isinstance(ctx.channel, discord.TextChannel):
@@ -78,6 +83,12 @@ class BitBay(Cog):
             await ctx.send('pp size: ' + str(self.organs[user.id]))
 
     @command()
+    async def ppslap(self, ctx: Context, user: discord.User):
+        emb = discord.Embed(description=draw_pp(self.get_size(ctx.author.id)))
+        emb.set_thumbnail(url=user.avatar_url)
+        await ctx.send(embed=emb)
+
+    @command()
     @Missile.is_rainbow()
     async def ppmax(self, ctx: Context):
         self.organs[ctx.author.id] = 55
@@ -86,12 +97,8 @@ class BitBay(Cog):
 
     @command(aliases=['sf'])
     async def swordfight(self, ctx: Context, user: discord.User):
-        def get_size(uid: int) -> int:
-            if uid not in self.organs.keys():
-                return 0
-            return self.organs[uid]
-        me = get_size(ctx.author.id)
-        him = get_size(user.id)
+        me = self.get_size(ctx.author.id)
+        him = self.get_size(user.id)
         if me > him:
             title = "VICTORY"
         elif me == him:

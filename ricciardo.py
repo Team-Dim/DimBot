@@ -182,11 +182,16 @@ class Ricciardo(commands.Cog):
     @rss.command(name='unsubscribe', aliases=['u', 'unsub'])
     @Missile.is_channel_owner()
     async def rss_unsubscribe(self, ctx: Context, url: str):
-        self.bot.echo.cursor.execute('DELETE FROM RssSub WHERE rssChID = ? AND url = ?', (ctx.channel.id, url))
-        exist = self.bot.echo.cursor.execute('SELECT EXISTS(SELECT 1 FROM RssSub WHERE url = ?)', (url,)).fetchone()[0]
-        if not exist:
-            self.bot.echo.cursor.execute('DELETE FROM RssData WHERE url = ?', (url,))
-        await ctx.send('Unsubscribed.')
+        count = self.bot.echo.cursor.execute('DELETE FROM RssSub WHERE rssChID = ? AND url = ?',
+                                             (ctx.channel.id, url)).rowcount
+        if count:
+            exist = \
+                self.bot.echo.cursor.execute('SELECT EXISTS(SELECT 1 FROM RssSub WHERE url = ?)', (url,)).fetchone()[0]
+            if not exist:
+                self.bot.echo.cursor.execute('DELETE FROM RssData WHERE url = ?', (url,))
+            await ctx.send('Unsubscribed.')
+        else:
+            await ctx.send("This channel hasn't subscribed to this URL.")
 
     @commands.group(invoke_without_command=True)
     async def bbm(self, ctx):
@@ -212,12 +217,16 @@ class Ricciardo(commands.Cog):
     @bbm.command(name='unsubscribe', aliases=['u', 'unsub'])
     @Missile.is_channel_owner()
     async def bbm_unsubscribe(self, ctx: Context, addon: int):
-        self.bot.echo.cursor.execute('DELETE FROM BbmAddon WHERE bbmChID = ? AND addonID = ?', (ctx.channel.id, addon))
-        exist = self.bot.echo.cursor.execute('SELECT EXISTS(SELECT 1 FROM BbmAddon WHERE bbmChID = ?)',
-                                             (ctx.channel.id,)).fetchone()[0]
-        if not exist:
-            self.bot.echo.cursor.execute('DELETE FROM BbmRole WHERE bbmChID = ?', (ctx.channel.id,))
-        await ctx.send('Unsubscribed.')
+        count = self.bot.echo.cursor.execute('DELETE FROM BbmAddon WHERE bbmChID = ? AND addonID = ?',
+                                             (ctx.channel.id, addon)).rowcount
+        if count:
+            exist = self.bot.echo.cursor.execute('SELECT EXISTS(SELECT 1 FROM BbmAddon WHERE bbmChID = ?)',
+                                                 (ctx.channel.id,)).fetchone()[0]
+            if not exist:
+                self.bot.echo.cursor.execute('DELETE FROM BbmRole WHERE bbmChID = ?', (ctx.channel.id,))
+            await ctx.send('Unsubscribed.')
+        else:
+            await ctx.send("This channel hasn't subscribed to this addon.")
 
     @bbm.command(aliases=['r'])
     @Missile.is_channel_owner()
@@ -283,11 +292,15 @@ class Ricciardo(commands.Cog):
             if obj[0] == 'user':
                 ch = await self.get_channel_id('forUsername=' + obj[1])
 
-            self.bot.echo.cursor.execute('DELETE FROM YtSub WHERE ytChID = ? AND channelID = ?', (ctx.channel.id, ch))
-            exists = self.bot.echo.cursor.execute('SELECT EXISTS(SELECT 1 FROM YtSub WHERE channelID  = ?)',
-                                                  (ch,)).fetchone()[0]
-            if not exists:
-                self.bot.echo.cursor.execute('DELETE FROM YtData WHERE channelID = ?', (ch,))
-            await ctx.send('Unsubscribed.')
+            count = self.bot.echo.cursor.execute('DELETE FROM YtSub WHERE ytChID = ? AND channelID = ?',
+                                                 (ctx.channel.id, ch)).rowcount
+            if count:
+                exists = self.bot.echo.cursor.execute('SELECT EXISTS(SELECT 1 FROM YtSub WHERE channelID  = ?)',
+                                                      (ch,)).fetchone()[0]
+                if not exists:
+                    self.bot.echo.cursor.execute('DELETE FROM YtData WHERE channelID = ?', (ch,))
+                await ctx.send('Unsubscribed.')
+            else:
+                await ctx.send("This channel hasn't subscribed to this YouTube channel/user.")
         except ValueError:
             await ctx.send('Invalid YouTube channel/user link.')
