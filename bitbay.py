@@ -54,8 +54,9 @@ class BitBay(Cog):
             await self.bot.get_channel(702714661912707072).send(msg)
 
     @command()
-    async def pp(self, ctx: Context, user: discord.User):
-        size = randint(0, 15)
+    async def pp(self, ctx: Context, user: discord.User = None):
+        user = user if user else ctx.author
+        size = randint(0, 69)
         self.organs[user.id] = size
         await ctx.send(embed=discord.Embed(title=user.display_name + "'s penis",
                                            description=f'8{"="*size}D',
