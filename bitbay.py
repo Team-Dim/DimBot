@@ -8,12 +8,20 @@ __version__ = '1.1.1'
 from discord.ext.commands import Cog, Context, command, has_any_role
 
 from dimsecret import debug
+from missile import Missile
 
 
 def convert(text: str):
     b: bytes = text.encode()
     encoded: bytes = base64.b64encode(b)
     return encoded.decode()
+
+
+def draw_pp(size: int) -> str:
+    description = f'8{"=" * size}D'
+    if size == 55:
+        description += '\n**MAX POWER**'
+    return description
 
 
 class BitBay(Cog):
@@ -56,12 +64,17 @@ class BitBay(Cog):
     @command()
     async def pp(self, ctx: Context, user: discord.User = None):
         user = user if user else ctx.author
-        size = randint(0, 69)
+        size = randint(0, 55)
         self.organs[user.id] = size
-        await ctx.send(embed=discord.Embed(title=user.display_name + "'s penis",
-                                           description=f'8{"="*size}D',
-                                           colour=discord.Colour.from_rgb(randint(0, 255), randint(0, 255),
-                                                                          randint(0, 255))))
+        await ctx.send(embed=discord.Embed(title=user.display_name + "'s penis", description=draw_pp(size),
+                                           colour=Missile.random_rgb()))
+
+    @command()
+    @Missile.is_rainbow()
+    async def ppmax(self, ctx: Context):
+        self.organs[ctx.author.id] = 55
+        await ctx.send(embed=discord.Embed(title=ctx.author.display_name + "'s penis", description=draw_pp(55),
+                                           colour=Missile.random_rgb()))
 
     @command(aliases=['sf'])
     async def swordfight(self, ctx: Context, user: discord.User):
@@ -76,8 +89,7 @@ class BitBay(Cog):
         elif me == him:
             title = "TIE"
         else:
-            title = "LOSE"
-        await ctx.send(embed=discord.Embed(title=title, description=f"{ctx.author.name}'s penis:\n8{'='*me}D\n"
-                                                                    f"{user.name}'s penis:\n8{'='*him}D",
-                                           colour=discord.Colour.from_rgb(randint(0, 255), randint(0, 255),
-                                                                          randint(0, 255))))
+            title = "LOST"
+        await ctx.send(embed=discord.Embed(title=title, description=f"{ctx.author.name}'s penis:\n{draw_pp(me)}\n"
+                                                                    f"{user.name}'s penis:\n{draw_pp(him)}",
+                                           colour=Missile.random_rgb()))

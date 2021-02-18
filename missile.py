@@ -1,4 +1,5 @@
 import logging
+from random import randint
 
 import discord
 from discord.ext import commands
@@ -44,6 +45,10 @@ class Missile:
     @staticmethod
     def check_same_author_and_channel(ctx):
         return lambda msg: msg.author.id == ctx.author.id and msg.channel == ctx.channel
+
+    @staticmethod
+    def random_rgb():
+        return discord.Colour.from_rgb(randint(0, 255), randint(0, 255), randint(0, 255))
 
     @staticmethod
     # similar to @commands.is_owner()
