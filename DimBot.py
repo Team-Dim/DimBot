@@ -18,7 +18,7 @@ bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=int
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.1"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -102,10 +102,8 @@ async def on_disconnect():
 
 @bot.event
 async def on_message_delete(msg: discord.Message):
-    if msg.guild.me.permissions_in(msg.channel).view_audit_log:
-        audit = await msg.guild.audit_logs(limit=1, action=discord.AuditLogAction.message_delete)[0]
-        if audit.user != msg.author:
-            return
+    if msg.author == msg.guild.me:
+        return
     if msg.guild and msg.id in bot.missile.ghost_pings.keys():
         for m in bot.missile.ghost_pings[msg.id]:
             await m.send(f'{msg.author.mention} pinged you in **{msg.guild.name}** and deleted it.')
@@ -120,9 +118,7 @@ async def on_message_delete(msg: discord.Message):
     bot.missile.snipe = discord.Embed(title=msg.author.display_name, description=content)
     bot.missile.snipe.set_author(name=msg.guild.name, icon_url=msg.author.avatar_url)
     bot.missile.snipe.set_thumbnail(url=msg.guild.icon_url)
-    colour = msg.embeds[0].colour if msg.embeds else discord.Colour.from_rgb(
-        randint(0, 255), randint(0, 255), randint(0, 255))
-    bot.missile.snipe.colour = colour
+    bot.missile.snipe.colour = msg.embeds[0].colour if msg.embeds else Missile.random_rgb()
 
 
 @bot.event

@@ -3,12 +3,14 @@ from random import randint
 
 import discord
 
-__version__ = '1.1.1'
+__version__ = '1.2'
 
-from discord.ext.commands import Cog, Context, command, has_any_role
+from discord.ext.commands import Cog, Context, command, has_any_role, group
 
 from dimsecret import debug
 from missile import Missile
+
+max_pp_size = 44
 
 
 def convert(text: str):
@@ -19,7 +21,7 @@ def convert(text: str):
 
 def draw_pp(size: int) -> str:
     description = f'8{"=" * size}D'
-    if size == 55:
+    if size == max_pp_size:
         description += '\n**MAX POWER**'
     return description
 
@@ -31,9 +33,9 @@ class BitBay(Cog):
         self.organs: dict = {}
 
     def get_size(self, uid: int) -> int:
-        if uid not in self.organs.keys():
-            return 0
-        return self.organs[uid]
+        if uid in self.organs.keys():
+            return self.organs[uid]
+        return 0
 
     @command(aliases=['enc'])
     async def encode(self, ctx: Context, *, url: str):
@@ -66,36 +68,36 @@ class BitBay(Cog):
         else:
             await self.bot.get_channel(702714661912707072).send(msg)
 
-    @command()
+    @group(invoke_without_command=True)
     async def pp(self, ctx: Context, user: discord.User = None):
         user = user if user else ctx.author
-        size = randint(0, 55)
+        size = randint(0, max_pp_size)
         self.organs[user.id] = size
         await ctx.send(embed=discord.Embed(title=user.display_name + "'s penis", description=draw_pp(size),
                                            colour=Missile.random_rgb()))
 
-    @command()
-    async def pplen(self, ctx: Context, user: discord.User = None):
+    @pp.command()
+    async def size(self, ctx: Context, user: discord.User = None):
         user = user if user else ctx.author
-        if user.id not in self.organs.keys():
-            await ctx.send('No pp found.')
-        else:
+        if user.id in self.organs.keys():
             await ctx.send('pp size: ' + str(self.organs[user.id]))
+        else:
+            await ctx.send('No pp found.')
 
-    @command()
-    async def ppslap(self, ctx: Context, user: discord.User):
-        emb = discord.Embed(description=draw_pp(self.get_size(ctx.author.id)))
+    @pp.command()
+    async def slap(self, ctx: Context, user: discord.User):
+        emb = discord.Embed(description=draw_pp(self.get_size(ctx.author.id)), colour=Missile.random_rgb())
         emb.set_thumbnail(url=user.avatar_url)
         await ctx.send(embed=emb)
 
-    @command()
+    @pp.command()
     @Missile.is_rainbow()
-    async def ppmax(self, ctx: Context):
-        self.organs[ctx.author.id] = 55
-        await ctx.send(embed=discord.Embed(title=ctx.author.display_name + "'s penis", description=draw_pp(55),
+    async def max(self, ctx: Context):
+        self.organs[ctx.author.id] = max_pp_size
+        await ctx.send(embed=discord.Embed(title=ctx.author.display_name + "'s penis", description=draw_pp(max_pp_size),
                                            colour=Missile.random_rgb()))
 
-    @command(aliases=['sf'])
+    @pp.command(aliases=['sf'])
     async def swordfight(self, ctx: Context, user: discord.User):
         me = self.get_size(ctx.author.id)
         him = self.get_size(user.id)
