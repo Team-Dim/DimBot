@@ -97,6 +97,12 @@ class BitBay(Cog):
         await ctx.send(embed=discord.Embed(title=ctx.author.display_name + "'s penis", description=draw_pp(max_pp_size),
                                            colour=Missile.random_rgb()))
 
+    @pp.command()
+    async def min(self, ctx: Context):
+        self.organs[ctx.author.id] = 0
+        await ctx.send(embed=discord.Embed(title=ctx.author.display_name + "'s penis", description='8D',
+                                           colour=Missile.random_rgb()))
+
     @pp.command(aliases=['sf'])
     async def swordfight(self, ctx: Context, user: discord.User):
         me = self.get_size(ctx.author.id)
