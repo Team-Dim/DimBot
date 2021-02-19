@@ -70,6 +70,9 @@ class BitBay(Cog):
 
     @group(invoke_without_command=True)
     async def pp(self, ctx: Context, user: discord.User = None):
+        """
+        Wiki for the d.pp commands: https://github.com/TCLRainbow/DimBot/wiki/pp
+        """
         user = user if user else ctx.author
         size = randint(0, max_pp_size)
         self.organs[user.id] = size

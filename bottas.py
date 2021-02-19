@@ -41,8 +41,10 @@ class Bottas(commands.Cog):
 
     @commands.group(invoke_without_command=True)
     async def quote(self, ctx):
-        await ctx.send(
-            "Wiki for interacting with quote database: https://github.com/TCLRainbow/DimBot/wiki/Project-Echo")
+        """
+        Wiki for interacting with quote database: https://github.com/TCLRainbow/DimBot/wiki/Project-Echo
+        """
+        pass
 
     @quote.command(aliases=['i'])
     async def index(self, ctx, index: int = 0):
