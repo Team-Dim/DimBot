@@ -10,10 +10,10 @@ from discord.ext.commands import Cog, Context, command, has_any_role, group
 from dimsecret import debug
 from missile import Missile
 
-max_pp_size = 44
+max_pp_size = 27
 
 
-def convert(text: str):
+def convert(text: str) -> str:
     b: bytes = text.encode()
     encoded: bytes = base64.b64encode(b)
     return encoded.decode()
@@ -94,7 +94,7 @@ class BitBay(Cog):
         await ctx.send(embed=emb)
 
     @pp.command()
-    @Missile.is_rainbow()
+    @Missile.is_rainbow_cmd_check()
     async def max(self, ctx: Context):
         self.organs[ctx.author.id] = max_pp_size
         await ctx.send(embed=discord.Embed(title=ctx.author.display_name + "'s penis", description=draw_pp(max_pp_size),

@@ -4,7 +4,7 @@ import sqlite3
 import discord
 from discord.ext import commands
 
-__version__ = '1.1'
+__version__ = '1.2'
 
 from missile import Missile
 
@@ -76,9 +76,9 @@ class Bottas(commands.Cog):
         await ctx.send(content)
 
     @quote.command()
-    @Missile.is_rainbow()
+    @Missile.is_rainbow_cmd_check()
     async def exe(self, ctx):
-        msg = await self.bot.missile.ask_msg(ctx, 'SQL statement?')
+        msg = await self.bot.missile.ask_msg(ctx, 'SQL statement?', timeout=30)
         try:
             data = self.db.execute(msg).fetchall()
             await ctx.send(data)
@@ -87,7 +87,7 @@ class Bottas(commands.Cog):
             await ctx.send(f"**{e.__class__.__name__}**: {e}")
 
     @quote.command()
-    @Missile.is_rainbow()
+    @Missile.is_rainbow_cmd_check()
     async def save(self, ctx):
         self.db.commit()
         await ctx.send('Saved')
@@ -114,16 +114,14 @@ class Bottas(commands.Cog):
                     await ctx.send("The quote should be only one line!")
                     return
                 self.cursor.execute("INSERT INTO Quote VALUES (?, ?, ?)", (args, quoter, ctx.author.id))
-                self.db.commit()
                 await ctx.send(f"Added quote #{self.cursor.lastrowid}")
 
     @quote.command(aliases=['d', 'del'])
     async def delete(self, ctx, index: int):
         quote = self.get_quote(index)
         if quote:
-            if quote[2] == ctx.author.id:
+            if quote[2] == ctx.author.id or Missile.is_rainbow(ctx):
                 self.cursor.execute("DELETE FROM Quote WHERE ROWID = ?", (index,))
-                self.db.commit()
                 await ctx.send("Deleted quote.")
             else:
                 await ctx.send("You must be the quote uploader to delete the quote!")

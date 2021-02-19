@@ -1,5 +1,5 @@
 import asyncio
-from random import choice, randint
+from random import choice
 
 import discord
 from discord.ext import commands
@@ -18,7 +18,7 @@ bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=int
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.2.1"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.3"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -166,7 +166,7 @@ async def on_command_error(ctx, error):
 
 
 @bot.command()
-@Missile.is_rainbow()
+@Missile.is_rainbow_cmd_check()
 async def exit(ctx):
     bot.echo.db.commit()
     await ctx.send(':dizzy_face:')

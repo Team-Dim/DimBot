@@ -6,7 +6,7 @@ from bruckserver.albon import Albon
 from missile import Missile
 
 
-__version__ = '1.3'
+__version__ = '1.3.1'
 
 
 class Verstapen(commands.Cog):
@@ -55,16 +55,11 @@ class Verstapen(commands.Cog):
             self.http_not_started = False
 
     @commands.command()
-    @Missile.is_rainbow()
-    async def eu(self, ctx):
-        await self.boot_instance(ctx, dimsecret.eu_instance_id, 'eu-north-1')
-
-    @commands.command()
+    @Missile.is_rainbow_cmd_check(':construction: Sorry, this feature is currently not available, please ask Dim '
+                                  'in Discord to help you!')
     async def start(self, ctx):
         # Remove this check when Lokeon has finished rewriting.
-        if not self.bot.is_channel_owner():
-            await ctx.send(':construction: Sorry, this feature is currently not available, please ask ChingDim in Discord to help you!')
-            return
         if dimsecret.debug:
-            await ctx.send('⚠DimBot is currently in **DEBUG** mode. I cannot receive messages from Lokeon, also things may not work as expected!⚠\n')
+            await ctx.send('⚠DimBot is currently in **DEBUG** mode.'
+                           ' I cannot receive messages from Lokeon, also things may not work as expected!⚠\n')
         await self.boot_instance(ctx, dimsecret.bruck_instance_id, 'ap-southeast-1')

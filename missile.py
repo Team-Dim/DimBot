@@ -51,17 +51,21 @@ class Missile:
         return discord.Colour.from_rgb(randint(0, 255), randint(0, 255), randint(0, 255))
 
     @staticmethod
+    def is_rainbow(ctx):
+        return ctx.author.id == 264756129916125184
+
+    @staticmethod
     # similar to @commands.is_owner()
-    def is_rainbow():
+    def is_rainbow_cmd_check(msg: str = 'I guess you are not my little pog champ :3'):
         async def check(ctx):
-            rainbow = ctx.author.id == 264756129916125184
+            rainbow = Missile.is_rainbow(ctx)
             if not rainbow:
-                await ctx.send('I guess you are not my little pog champ :3')
+                await ctx.send(msg)
             return rainbow
         return commands.check(check)
 
     @staticmethod
-    def is_channel_owner():
+    def is_channel_owner_cmd_check():
         async def check(ctx):
             if ctx.guild:
                 owner = ctx.author == ctx.guild.owner

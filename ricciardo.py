@@ -153,7 +153,7 @@ class Ricciardo(commands.Cog):
         pass
 
     @rss.command(name='subscribe', aliases=['s', 'sub'])
-    @Missile.is_channel_owner()
+    @Missile.is_channel_owner_cmd_check()
     async def rss_subscribe(self, ctx: Context, url: str, *, footer: str = ''):
         # noinspection PyBroadException
         # Above comment suppresses Exception Too Broad for PyCharm.
@@ -180,7 +180,7 @@ class Ricciardo(commands.Cog):
         await ctx.send('Subscribed!')
 
     @rss.command(name='unsubscribe', aliases=['u', 'unsub'])
-    @Missile.is_channel_owner()
+    @Missile.is_channel_owner_cmd_check()
     async def rss_unsubscribe(self, ctx: Context, url: str):
         count = self.bot.echo.cursor.execute('DELETE FROM RssSub WHERE rssChID = ? AND url = ?',
                                              (ctx.channel.id, url)).rowcount
@@ -198,7 +198,7 @@ class Ricciardo(commands.Cog):
         pass
 
     @bbm.command(name='subscribe', aliases=['s', 'sub'])
-    @Missile.is_channel_owner()
+    @Missile.is_channel_owner_cmd_check()
     async def bbm_subscribe(self, ctx: Context, addon: int, role: discord.Role = None):
         if addon not in self.addon_ids:
             await ctx.send('The addon ID must be one of the following: 274058, 306357, 274326')
@@ -215,7 +215,7 @@ class Ricciardo(commands.Cog):
         await ctx.send('Subscribed!')
 
     @bbm.command(name='unsubscribe', aliases=['u', 'unsub'])
-    @Missile.is_channel_owner()
+    @Missile.is_channel_owner_cmd_check()
     async def bbm_unsubscribe(self, ctx: Context, addon: int):
         count = self.bot.echo.cursor.execute('DELETE FROM BbmAddon WHERE bbmChID = ? AND addonID = ?',
                                              (ctx.channel.id, addon)).rowcount
@@ -229,7 +229,7 @@ class Ricciardo(commands.Cog):
             await ctx.send("This channel hasn't subscribed to this addon.")
 
     @bbm.command(aliases=['r'])
-    @Missile.is_channel_owner()
+    @Missile.is_channel_owner_cmd_check()
     async def role(self, ctx: Context, role: discord.Role = None):
         role = role.id if role else None
         self.bot.echo.cursor.execute('UPDATE BbmRole SET roleID = ? WHERE bbmChID = ?', (role, ctx.channel.id))
@@ -248,7 +248,7 @@ class Ricciardo(commands.Cog):
             raise ValueError
 
     @yt.command(name='subscribe', aliases=['s', 'sub'])
-    @Missile.is_channel_owner()
+    @Missile.is_channel_owner_cmd_check()
     async def yt_subscribe(self, ctx: Context, ch: str):
         def already_sub(txt: int, yt: str):
             return self.bot.echo.cursor.execute('SELECT EXISTS(SELECT 1 FROM YtSub WHERE ytChID = ? AND channelID = ?)',
@@ -282,7 +282,7 @@ class Ricciardo(commands.Cog):
             await ctx.send('Invalid YouTube channel/user link.')
 
     @yt.command(name='unsubscribe', aliases=['u', 'unsub'])
-    @Missile.is_channel_owner()
+    @Missile.is_channel_owner_cmd_check()
     async def yt_unsubscribe(self, ctx: Context, ch: str):
         try:
             if not re.search(r"^((https?://)?(www\.)?youtube\.com/)(user/.+|channel/UC.+)", ch):
