@@ -1,4 +1,5 @@
 import logging
+import re
 from random import randint
 
 import discord
@@ -74,6 +75,10 @@ class Missile:
                 return owner
             return True
         return commands.check(check)
+
+    @staticmethod
+    def regex_is_url(url: str):
+        return re.search(r"[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&/=]*)", url)
 
     async def ask_msg(self, ctx, msg: str, timeout: int = 10) -> str:
         await ctx.send(msg)

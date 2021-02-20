@@ -3,7 +3,7 @@ from random import randint
 
 import discord
 
-__version__ = '1.2'
+__version__ = '1.2.1'
 
 from discord.ext.commands import Cog, Context, command, has_any_role, group
 
@@ -20,6 +20,8 @@ def convert(text: str) -> str:
 
 
 def draw_pp(size: int) -> str:
+    if size == -1:
+        return "No pp found. Have you set it up by d.pp?"
     description = f'8{"=" * size}D'
     if size == max_pp_size:
         description += '\n**MAX POWER**'
@@ -35,13 +37,13 @@ class BitBay(Cog):
     def get_size(self, uid: int) -> int:
         if uid in self.organs.keys():
             return self.organs[uid]
-        return 0
+        return -1
 
     @command(aliases=['enc'])
     async def encode(self, ctx: Context, *, url: str):
         if isinstance(ctx.channel, discord.TextChannel):
             await ctx.message.delete()
-        if url.lower().startswith('http'):
+        if Missile.regex_is_url(url):
             await ctx.send(f'<https://codebeautify.org/base64-decode?input={convert(url)}>')
         else:
             url = ctx.author.mention + ': ' + url
@@ -89,9 +91,13 @@ class BitBay(Cog):
 
     @pp.command()
     async def slap(self, ctx: Context, user: discord.User):
-        emb = discord.Embed(description=draw_pp(self.get_size(ctx.author.id)), colour=Missile.random_rgb())
-        emb.set_thumbnail(url=user.avatar_url)
-        await ctx.send(embed=emb)
+        size = self.get_size(ctx.author.id)
+        if size == -1:
+            await ctx.send("You don't have a pp yet. Please send d.pp")
+        else:
+            emb = discord.Embed(description=draw_pp(self.get_size(ctx.author.id)), colour=Missile.random_rgb())
+            emb.set_thumbnail(url=user.avatar_url)
+            await ctx.send(embed=emb)
 
     @pp.command()
     @Missile.is_rainbow_cmd_check()
@@ -105,6 +111,13 @@ class BitBay(Cog):
         self.organs[ctx.author.id] = 0
         await ctx.send(embed=discord.Embed(title=ctx.author.display_name + "'s penis", description='8D',
                                            colour=Missile.random_rgb()))
+
+    @pp.command()
+    async def cut(self, ctx: Context):
+        size = self.get_size(ctx.author.id)
+        self.organs.pop(ctx.author.id)
+        await ctx.send(embed=discord.Embed(title=ctx.author.display_name + "'s penis",
+                                           description=f"8\n{'='*size}D", colour=Missile.random_rgb()))
 
     @pp.command(aliases=['sf'])
     async def swordfight(self, ctx: Context, user: discord.User):
