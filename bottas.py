@@ -48,12 +48,14 @@ class Bottas(commands.Cog):
 
     @quote.command(aliases=['i'])
     async def index(self, ctx, index: int = 0):
-        content = ''
-        count = self.cursor.execute('SELECT COUNT(msg) FROM Quote').fetchone()[0]
-        if index < 1 or index > count:
-            index = random.randint(1, count)
-            content += f'There are **{count}** quotes in the database. This is a random one:\n'
         quote = self.get_quote(index)
+        content = ''
+        if not quote:
+            count = self.cursor.execute('SELECT COUNT(msg) FROM Quote').fetchone()[0]
+            content = f'That quote ID is invalid. There are **{count}** quotes in the database. This is a random one:\n'
+            while not quote:
+                index = random.randint(1, count)
+                quote = self.get_quote(index)
         content += f"Quote #{index}:\n> {quote[0]} - {quote[1]}\n Uploaded by {self.bot.get_user(quote[2])}"
         await ctx.send(content)
 
