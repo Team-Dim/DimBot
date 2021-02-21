@@ -13,12 +13,12 @@ from bruckserver import verstapen, albon
 from missile import Missile
 
 intent = discord.Intents.none()
-intent.guilds = intent.members = intent.messages = True
+intent.guilds = intent.members = intent.messages = intent.reactions = True
 bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=intent)
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.5.1"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.6"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),

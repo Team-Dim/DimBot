@@ -10,12 +10,12 @@ __version__ = '1.2'
 from missile import Missile
 
 
+# TODO: instead of hardcoded queries like execute('DELETE FROM'), use object oriented approaches like table.delete()
 class Bottas(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
         self.logger = bot.missile.get_logger('Bottas')
-        # TODO: Disable PARSE_DECLTYPES in the future. Need to modify Ricciardo
         self.db: sqlite3.Connection = sqlite3.connect('DimBot.db', check_same_thread=False,
                                                       detect_types=sqlite3.PARSE_DECLTYPES)
         self.cursor: sqlite3.Cursor = self.get_cursor()
@@ -81,7 +81,7 @@ class Bottas(commands.Cog):
     async def exe(self, ctx, *, msg: str):
         try:
             tic = datetime.now()
-            rows = self.cursor.execute(msg)
+            rows = self.db.execute(msg)
             result = rows.fetchall()
             toc = datetime.now()
             await ctx.send(f"{result}\n{rows.rowcount} row affected in {(toc - tic).total_seconds()*1000}ms")
@@ -122,9 +122,17 @@ class Bottas(commands.Cog):
     async def delete(self, ctx, index: int):
         quote = self.get_quote(index)
         if quote:
-            if quote[2] == ctx.author.id or Missile.is_rainbow(ctx):
+            if quote['uid'] == ctx.author.id or Missile.is_rainbow(ctx):
+                q = f"> {quote['msg']}\nYou sure you want to delete this? React ✅ to confirm"
+                q = await ctx.send(q)
+                await q.add_reaction('✅')
+
+                def check(reaction, user):
+                    return user == ctx.author and str(reaction.emoji) == '✅'
+
+                await self.bot.wait_for('reaction_add', timeout=10, check=check)
                 self.cursor.execute("DELETE FROM Quote WHERE ROWID = ?", (index,))
-                await ctx.send("Deleted quote.")
+                await ctx.send('Deleted quote.')
             else:
                 await ctx.send("You must be the quote uploader to delete the quote!")
         else:
@@ -139,4 +147,4 @@ class Bottas(commands.Cog):
         self.cursor.execute(f"DELETE FROM RssSub WHERE rssChID IN ({q_marks})", (ch_ids,))
         self.cursor.execute(f"DELETE FROM RssData WHERE url NOT IN (SELECT url FROM RssSub)")
         self.cursor.execute(f"DELETE FROM YtSub WHERE ytChID IN ({q_marks})", (ch_ids,))
-        self.cursor.execute(f"DELETE FROM YtData WHERE channelID NOT IN (SELECT channelID FROM YtSub)")
+        self.cursor.execute("DELETE FROM YtData WHERE channelID NOT IN (SELECT channelID FROM YtSub)")
