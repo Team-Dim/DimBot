@@ -121,7 +121,7 @@ class BitBay(Cog):
             return
         self.organs.pop(ctx.author.id)
         await ctx.send(embed=discord.Embed(title=ctx.author.display_name + "'s penis",
-                                           description=f"8\n{'='*size}D", colour=discord.Colour.red))
+                                           description=f"8\n{'='*size}D", colour=discord.Colour.red()))
 
     @pp.command(aliases=['sf'])
     async def swordfight(self, ctx: Context, user: discord.User):
