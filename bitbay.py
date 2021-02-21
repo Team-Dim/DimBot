@@ -67,8 +67,8 @@ class BitBay(Cog):
               f'<https://codebeautify.org/base64-decode?input={convert(url)}>'
         if debug:
             await ctx.send(msg)
-        else:
-            await self.bot.get_channel(702714661912707072).send(msg)
+            return
+        await self.bot.get_channel(702714661912707072).send(msg)
 
     @group(invoke_without_command=True)
     async def pp(self, ctx: Context, user: discord.User = None):
@@ -84,20 +84,21 @@ class BitBay(Cog):
     @pp.command()
     async def size(self, ctx: Context, user: discord.User = None):
         user = user if user else ctx.author
-        if user.id in self.organs.keys():
-            await ctx.send('pp size: ' + str(self.organs[user.id]))
-        else:
-            await ctx.send('No pp found.')
+        size = self.get_size(user.id)
+        if size == -1:
+            await ctx.send(draw_pp(size))
+            return
+        await ctx.send('pp size: ' + str(size))
 
     @pp.command()
     async def slap(self, ctx: Context, user: discord.User):
         size = self.get_size(ctx.author.id)
         if size == -1:
-            await ctx.send("You don't have a pp yet. Please send d.pp")
-        else:
-            emb = discord.Embed(description=draw_pp(self.get_size(ctx.author.id)), colour=Missile.random_rgb())
-            emb.set_thumbnail(url=user.avatar_url)
-            await ctx.send(embed=emb)
+            await ctx.send(draw_pp(size))
+            return
+        emb = discord.Embed(description=draw_pp(self.get_size(ctx.author.id)), colour=Missile.random_rgb())
+        emb.set_thumbnail(url=user.avatar_url)
+        await ctx.send(embed=emb)
 
     @pp.command()
     @Missile.is_rainbow_cmd_check()
@@ -115,9 +116,12 @@ class BitBay(Cog):
     @pp.command()
     async def cut(self, ctx: Context):
         size = self.get_size(ctx.author.id)
+        if size == -1:
+            await ctx.send(draw_pp(size))
+            return
         self.organs.pop(ctx.author.id)
         await ctx.send(embed=discord.Embed(title=ctx.author.display_name + "'s penis",
-                                           description=f"8\n{'='*size}D", colour=Missile.random_rgb()))
+                                           description=f"8\n{'='*size}D", colour=discord.Colour.red))
 
     @pp.command(aliases=['sf'])
     async def swordfight(self, ctx: Context, user: discord.User):
@@ -129,6 +133,6 @@ class BitBay(Cog):
             title = "TIE"
         else:
             title = "LOST"
-        await ctx.send(embed=discord.Embed(title=title, description=f"{ctx.author.name}'s penis:\n{draw_pp(me)}\n"
-                                                                    f"{user.name}'s penis:\n{draw_pp(him)}",
+        await ctx.send(embed=discord.Embed(title=title, description=f"**{ctx.author.name}'s penis:**\n{draw_pp(me)}\n"
+                                                                    f"**{user.name}'s penis:**\n{draw_pp(him)}",
                                            colour=Missile.random_rgb()))

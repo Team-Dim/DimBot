@@ -1,5 +1,6 @@
 import random
 import sqlite3
+from datetime import datetime
 
 import discord
 from discord.ext import commands
@@ -30,10 +31,8 @@ class Bottas(commands.Cog):
 
     # TODO: Use this function for Ricciardo after NEA
     def exists(self, table: str, args: dict) -> bool:
-        base = f'SELECT EXISTS(SELECT 1 FROM {table} WHERE'
-        for f in args.keys():
-            base += f' {f}=? AND'
-        return self.cursor.execute(base[:-3], args.values()).fetchone()[0]
+        base = f"SELECT EXISTS(SELECT 1 FROM {table} WHERE {' AND '.join([f'{key} = ?' for key in args.keys()])}"
+        return self.cursor.execute(base, args.values()).fetchone()[0]
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -79,12 +78,13 @@ class Bottas(commands.Cog):
 
     @quote.command()
     @Missile.is_rainbow_cmd_check()
-    async def exe(self, ctx):
-        msg = await self.bot.missile.ask_msg(ctx, 'SQL statement?', timeout=30)
+    async def exe(self, ctx, *, msg: str):
         try:
-            data = self.db.execute(msg).fetchall()
-            await ctx.send(data)
-            await ctx.send('SQL statement successfully executed.')
+            tic = datetime.now()
+            rows = self.cursor.execute(msg)
+            result = rows.fetchall()
+            toc = datetime.now()
+            await ctx.send(f"{result}\n{rows.rowcount} row affected in {(toc - tic).total_seconds()*1000}ms")
         except sqlite3.Error as e:
             await ctx.send(f"**{e.__class__.__name__}**: {e}")
 
@@ -129,3 +129,14 @@ class Bottas(commands.Cog):
                 await ctx.send("You must be the quote uploader to delete the quote!")
         else:
             await ctx.send('No quote found!')
+
+    @commands.Cog.listener()
+    async def on_guild_remove(self, guild: discord.Guild):
+        ch_ids = [ch.id for ch in guild.text_channels]
+        q_marks = ','.join(['?']*len(ch_ids))
+        self.cursor.execute(f"DELETE FROM BbmRole WHERE bbmChID IN ({q_marks})", (ch_ids,))
+        self.cursor.execute(f"DELETE FROM BbmAddon WHERE bbmChID IN ({q_marks})", (ch_ids,))
+        self.cursor.execute(f"DELETE FROM RssSub WHERE rssChID IN ({q_marks})", (ch_ids,))
+        self.cursor.execute(f"DELETE FROM RssData WHERE url NOT IN (SELECT url FROM RssSub)")
+        self.cursor.execute(f"DELETE FROM YtSub WHERE ytChID IN ({q_marks})", (ch_ids,))
+        self.cursor.execute(f"DELETE FROM YtData WHERE channelID NOT IN (SELECT channelID FROM YtSub)")
