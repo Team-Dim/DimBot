@@ -1,7 +1,7 @@
 import discord
 from discord.ext.commands import Cog
 
-__version__ = '1.3'
+__version__ = '1.3.1'
 
 
 class Hamilton(Cog):
@@ -42,10 +42,10 @@ class Hamilton(Cog):
 
     @Cog.listener()
     async def on_voice_state_update(self, mem: discord.Member, before, after: discord.VoiceState):
-        if mem.guild == self.bot.missile.guild and after.channel and mem.status == discord.Status.invisible:
+        if mem.guild == self.bot.missile.guild and after.channel and mem.status == discord.Status.offline:
             await mem.send(f"Please don't set your status as invisible while online in {mem.guild.name} :)")
 
     @Cog.listener()
     async def on_typing(self, channel, user, when):
-        if user.status == discord.Status.invisible and channel.type == discord.ChannelType.text:
-            await channel.send(f"Please don't set your status as invisible while online in {user.guild.name} :)")
+        if user.status == discord.Status.offline and channel.type == discord.ChannelType.text:
+            await user.send(f"Please don't set your status as invisible while online in {user.guild.name} :)")
