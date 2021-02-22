@@ -18,7 +18,7 @@ bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=int
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.6"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.7"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -69,10 +69,6 @@ async def sponsor(ctx):
     await ctx.send(sponsor_txt)
 
 
-def is_debug(ctx):
-    return dimsecret.debug
-
-
 @bot.event
 async def on_ready():
     bot.missile.guild = bot.get_guild(285366651312930817)
@@ -106,13 +102,13 @@ async def on_message_delete(msg: discord.Message):
         return
     if msg.guild and msg.id in bot.missile.ghost_pings.keys():
         for m in bot.missile.ghost_pings[msg.id]:
-            await m.send(f'{msg.author.mention} pinged you in **{msg.guild.name}** and deleted it.')
+            await m.send(f'{msg.author.mention} ({msg.author}) pinged you in **{msg.guild.name}** and deleted it.')
         await msg.channel.send(msg.author.mention + ' has deleted a ping')
         bot.missile.ghost_pings.pop(msg.id)
     elif msg.guild and msg.mentions and not msg.edited_at:
         for m in msg.mentions:
             if not m.bot:
-                await m.send(f'{msg.author.mention} pinged you in **{msg.guild.name}** and deleted it.')
+                await m.send(f'{msg.author.mention} ({msg.author}) pinged you in **{msg.guild.name}** and deleted it.')
         await msg.channel.send(msg.author.mention + ' has deleted a ping')
     content = msg.content if msg.content else msg.embeds[0].title
     bot.missile.snipe = discord.Embed(title=msg.author.display_name, description=content)

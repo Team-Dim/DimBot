@@ -50,7 +50,7 @@ class Bottas(commands.Cog):
         quote = self.get_quote(index)
         content = ''
         if not quote:
-            count = self.cursor.execute('SELECT COUNT(msg) FROM Quote').fetchone()[0]
+            count = self.cursor.execute('SELECT MAX(ROWID) FROM Quote').fetchone()[0]
             content = f'That quote ID is invalid. There are **{count}** quotes in the database. This is a random one:\n'
             while not quote:
                 index = random.randint(1, count)
@@ -69,6 +69,7 @@ class Bottas(commands.Cog):
 
     @quote.command(aliases=['u'])
     async def uploader(self, ctx, user: discord.User):
+        user = user if user else ctx.author
         self.cursor.execute("SELECT ROWID, msg, quoter FROM Quote WHERE uid = ?", (user.id,))
         quotes = self.cursor.fetchall()
         content = f"The following are quotes uploaded by **{user}**:\n"
@@ -115,7 +116,13 @@ class Bottas(commands.Cog):
                 if '\n' in quoter:
                     await ctx.send("The quote should be only one line!")
                     return
-                self.cursor.execute("INSERT INTO Quote VALUES (?, ?, ?)", (args, quoter, ctx.author.id))
+                rowid = self.cursor.execute('SELECT id FROM QuoteRowID LIMIT 1').fetchone()
+                if rowid:
+                    self.cursor.execute("INSERT INTO Quote(ROWID, msg, quoter, uid) VALUES (?, ?, ?, ?)",
+                                        (rowid[0], args, quoter, ctx.author.id))
+                    self.cursor.execute("DELETE FROM QuoteRowID WHERE id = ?", (rowid[0], ))
+                else:
+                    self.cursor.execute("INSERT INTO Quote VALUES (?, ?, ?)", (args, quoter, ctx.author.id))
                 await ctx.send(f"Added quote #{self.cursor.lastrowid}")
 
     @quote.command(aliases=['d', 'del'])
@@ -132,6 +139,7 @@ class Bottas(commands.Cog):
 
                 await self.bot.wait_for('reaction_add', timeout=10, check=check)
                 self.cursor.execute("DELETE FROM Quote WHERE ROWID = ?", (index,))
+                self.cursor.execute("INSERT INTO QuoteRowID VALUES (?)", (index,))
                 await ctx.send('Deleted quote.')
             else:
                 await ctx.send("You must be the quote uploader to delete the quote!")

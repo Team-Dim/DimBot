@@ -101,11 +101,14 @@ class BitBay(Cog):
         await ctx.send(embed=emb)
 
     @pp.command()
-    @Missile.is_rainbow_cmd_check()
+    # @Missile.is_rainbow_cmd_check()
     async def max(self, ctx: Context):
-        self.organs[ctx.author.id] = max_pp_size
-        await ctx.send(embed=discord.Embed(title=ctx.author.display_name + "'s penis", description=draw_pp(max_pp_size),
-                                           colour=Missile.random_rgb()))
+        if ctx.author.id == 304853168259465220 or ctx.author.id == 264756129916125184:
+            self.organs[ctx.author.id] = max_pp_size
+            await ctx.send(embed=discord.Embed(title=ctx.author.display_name + "'s penis", description=draw_pp(max_pp_size),
+                                               colour=Missile.random_rgb()))
+        else:
+            await ctx.send('I guess you are not my little pog champ :3')
 
     @pp.command()
     async def min(self, ctx: Context):
