@@ -10,7 +10,6 @@ __version__ = '1.2'
 from missile import Missile
 
 
-# TODO: instead of hardcoded queries like execute('DELETE FROM'), use object oriented approaches like table.delete()
 class Bottas(commands.Cog):
 
     def __init__(self, bot):
@@ -28,11 +27,6 @@ class Bottas(commands.Cog):
     def get_quote(self, index: int):
         self.cursor.execute("SELECT * FROM Quote WHERE ROWID = ?", (index,))
         return self.cursor.fetchone()
-
-    # TODO: Use this function for Ricciardo after NEA
-    def exists(self, table: str, args: dict) -> bool:
-        base = f"SELECT EXISTS(SELECT 1 FROM {table} WHERE {' AND '.join([f'{key} = ?' for key in args.keys()])}"
-        return self.cursor.execute(base, args.values()).fetchone()[0]
 
     @commands.Cog.listener()
     async def on_ready(self):

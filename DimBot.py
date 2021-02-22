@@ -7,7 +7,6 @@ from discord.ext import commands
 import bitbay
 import bottas
 import dimsecret
-import hamilton
 import ricciardo
 from bruckserver import verstapen, albon
 from missile import Missile
@@ -55,7 +54,6 @@ async def info(ctx):
         'This bot has the following modules:\n'
         f'**Project Ricciardo** `{ricciardo.__version__}`: Relaying RSS, BBM and YouTube feeds to discord channels.\n'
         f'**Project Bottas** `{bottas.__version__}`: Add or search quotes through a SQLite database.\n'
-        f'**Project Hamilton** `{hamilton.__version__}`: Adds additional feature per role\n'
         f'**Project Verstapen** `{verstapen.__version__}`: Connects to AWS and manage a minecraft server instance.\n'
         f'**Project Albon** `{albon.__version__}`: HTTP server sub-project used by `Verstapen`.\n'
         '**Project Norris** `0`: Chat bot for answering BBM questions.\n'
@@ -170,7 +168,6 @@ async def exit(ctx):
 
 
 bot.add_cog(ricciardo.Ricciardo(bot))
-# bot.add_cog(hamilton.Hamilton(bot))
 bot.add_cog(verstapen.Verstapen(bot))
 bot.add_cog(bot.echo)
 bot.add_cog(bitbay.BitBay(bot))
