@@ -13,12 +13,12 @@ from bruckserver import verstapen, albon
 from missile import Missile
 
 intent = discord.Intents.none()
-intent.guilds = intent.members = intent.messages = intent.reactions = True
+intent.guilds = intent.members = intent.messages = intent.reactions = intent.voice_states = True
 bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=intent)
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot NEA {'S ' if dimsecret.debug else ''}| 0.7.7.1"
+nickname = f"DimBot NEA {'S ' if dimsecret.debug else ''}| 0.7.8"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -170,7 +170,7 @@ async def exit(ctx):
 
 
 bot.add_cog(ricciardo.Ricciardo(bot))
-# bot.add_cog(hamilton.Hamilton(bot))
+bot.add_cog(hamilton.Hamilton(bot))
 bot.add_cog(verstapen.Verstapen(bot))
 bot.add_cog(bot.echo)
 bot.add_cog(bitbay.BitBay(bot))

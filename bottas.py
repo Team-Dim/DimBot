@@ -5,8 +5,9 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 
-__version__ = '1.2'
+__version__ = '1.3'
 
+from dimsecret import debug
 from missile import Missile
 
 
@@ -16,7 +17,9 @@ class Bottas(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logger = bot.missile.get_logger('Bottas')
-        self.db: sqlite3.Connection = sqlite3.connect('DimBot.db', check_same_thread=False,
+        # TODO: Just use DimBot.db when NEA is finished. Also have to merge DimBot-og.db into DimBot.db and delete og
+        db_name = 'DimBot.db' if debug else 'DimBot-og.db'
+        self.db: sqlite3.Connection = sqlite3.connect(db_name, check_same_thread=False,
                                                       detect_types=sqlite3.PARSE_DECLTYPES)
         self.cursor: sqlite3.Cursor = self.get_cursor()
 
