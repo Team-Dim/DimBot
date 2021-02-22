@@ -18,7 +18,7 @@ bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=int
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.7"
+nickname = f"DimBot NEA {'S ' if dimsecret.debug else ''}| 0.7.7.1"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -98,7 +98,7 @@ async def on_disconnect():
 
 @bot.event
 async def on_message_delete(msg: discord.Message):
-    if msg.author == msg.guild.me or msg.content.startswith('d.'):
+    if msg.author == msg.guild.me or msg.content.startswith(bot.command_prefix):
         return
     if msg.guild and msg.id in bot.missile.ghost_pings.keys():
         for m in bot.missile.ghost_pings[msg.id]:
