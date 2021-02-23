@@ -135,7 +135,7 @@ class BitBay(Cog):
             title = "TIE"
         else:
             title = "LOST"
-        xp = me - him
+        xp = 0 if him == -1 else me - him
         if ctx.author.id not in self.xp:
             self.xp[ctx.author.id] = 0
         self.xp[ctx.author.id] += xp
