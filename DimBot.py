@@ -19,7 +19,7 @@ bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=int
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.9"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.9.1"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -95,6 +95,13 @@ async def on_ready():
 @bot.event
 async def on_disconnect():
     bot.missile.new = True
+
+
+@bot.event
+async def on_message(msg: discord.Message):
+    if (bot.get_user(264756129916125184) in msg.mentions or bot.get_user(411413713057218571) in msg.mentions)\
+            and not msg.author.bot:
+        await msg.reply("這個使用者被習主席狙擊了。")
 
 
 @bot.event
