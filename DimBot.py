@@ -19,7 +19,7 @@ bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=int
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.9.1"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.10"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -98,13 +98,6 @@ async def on_disconnect():
 
 
 @bot.event
-async def on_message(msg: discord.Message):
-    if (bot.get_user(264756129916125184) in msg.mentions or bot.get_user(411413713057218571) in msg.mentions)\
-            and not msg.author.bot:
-        await msg.reply("這個使用者被習主席狙擊了。")
-
-
-@bot.event
 async def on_message_delete(msg: discord.Message):
     if msg.author == msg.guild.me or msg.content.startswith(bot.command_prefix):
         return
@@ -153,8 +146,9 @@ async def on_command_error(ctx, error):
     if isinstance(error, commands.errors.CommandNotFound):
         await ctx.send('Stoopid. That is not a command.')
         return
-    if isinstance(error, commands.errors.MissingRequiredArgument) or isinstance(error, commands.errors.MissingAnyRole):
-        await ctx.send(str(error))
+    if isinstance(error, commands.errors.MissingRequiredArgument) or isinstance(error, commands.errors.MissingAnyRole)\
+            or isinstance(error, commands.errors.CommandOnCooldown):
+        await ctx.reply(str(error))
         return
     if isinstance(error, commands.errors.ChannelNotFound):
         await ctx.send("Invalid channel. Maybe you've tagged the wrong one?")

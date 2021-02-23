@@ -5,7 +5,7 @@ import discord
 
 __version__ = '1.2.1'
 
-from discord.ext.commands import Cog, Context, command, has_any_role, group
+from discord.ext.commands import Cog, Context, command, has_any_role, group, cooldown, BucketType
 
 from dimsecret import debug
 from missile import Missile
@@ -33,6 +33,7 @@ class BitBay(Cog):
     def __init__(self, bot):
         self.bot: discord.Client = bot
         self.organs: dict = {}
+        self.xp: dict = {}
 
     def get_size(self, uid: int) -> int:
         if uid in self.organs.keys():
@@ -121,9 +122,10 @@ class BitBay(Cog):
             return
         self.organs.pop(ctx.author.id)
         await ctx.send(embed=discord.Embed(title=ctx.author.display_name + "'s penis",
-                                           description=f"8\n{'='*size}D", colour=discord.Colour.red()))
+                                           description=f"8\n{'=' * size}D", colour=discord.Colour.red()))
 
     @pp.command(aliases=['sf'])
+    @cooldown(rate=1, per=10.0, type=BucketType.user)
     async def swordfight(self, ctx: Context, user: discord.User):
         me = self.get_size(ctx.author.id)
         him = self.get_size(user.id)
@@ -133,6 +135,19 @@ class BitBay(Cog):
             title = "TIE"
         else:
             title = "LOST"
+        xp = me - him
+        if ctx.author.id not in self.xp:
+            self.xp[ctx.author.id] = 0
+        self.xp[ctx.author.id] += xp
         await ctx.send(embed=discord.Embed(title=title, description=f"**{ctx.author.name}'s penis:**\n{draw_pp(me)}\n"
-                                                                    f"**{user.name}'s penis:**\n{draw_pp(him)}",
+                                                                    f"**{user.name}'s penis:**\n{draw_pp(him)}\n\n"
+                                                                    f"You gained **{xp}** xp!",
                                            colour=Missile.random_rgb()))
+
+    @pp.command()
+    async def lb(self, ctx: Context):
+        v = dict(sorted(self.xp.items(), key=lambda item: item[1], reverse=True))
+        base = 'pp score leaderboard:\n'
+        for key in v.keys():
+            base += f"{self.bot.get_user(key).name}: **{v[key]}** "
+        await ctx.reply(base)
