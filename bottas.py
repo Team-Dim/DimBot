@@ -75,9 +75,9 @@ class Bottas(commands.Cog):
         user = user if user else ctx.author
         self.cursor.execute("SELECT ROWID, msg, quoter FROM Quote WHERE uid = ?", (user.id,))
         quotes = self.cursor.fetchall()
-        content = f"The following are quotes uploaded by **{user}**:\n"
+        content = f"The following are quotes uploaded by **{user}**:"
         for quote in quotes:
-            content += f'> {quote[0]}. {quote[1]} - {quote[2]}\n'
+            content += f'\n> {quote[0]}. {quote[1]} - {quote[2]}'
         await ctx.send(content)
 
     @quote.command()
@@ -148,6 +148,15 @@ class Bottas(commands.Cog):
                 await ctx.send("You must be the quote uploader to delete the quote!")
         else:
             await ctx.send('No quote found!')
+
+    @quote.command(aliases=['m'])
+    async def message(self, ctx: commands.Context, *, search):
+        quotes = self.cursor.execute("SELECT ROWID, msg, quoter FROM Quote WHERE msg like ?",
+                                     ('%'+search+'%',)).fetchall()
+        base = f'The following quotes contains **{search}**:'
+        for q in quotes:
+            base += f"\n> {q['ROWID']}. {q['msg']} - {q['quoter']}"
+        await ctx.send(base)
 
     @commands.Cog.listener()
     async def on_guild_remove(self, guild: discord.Guild):
