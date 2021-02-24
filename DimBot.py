@@ -19,7 +19,7 @@ bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=int
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.11.3"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.11.4"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -68,42 +68,50 @@ async def info(ctx):
 @bot.command()
 async def userinfo(ctx, user: discord.User):
     emb = discord.Embed(title=str(user))
-    emb.set_author(name=user.display_name, icon_url=user.default_avatar_url)
     emb.set_thumbnail(url=user.avatar_url)
-    emb.set_footer(text='Avatar hash: ' + user.avatar)
+    emb.set_footer(text='Avatar hash: ' + str(user.avatar))
     emb.add_field(name='❄ ID', value=user.id)
     emb.add_field(name='Is bot?', value=user.bot)
     emb.add_field(name='Discord staff?', value=user.system)
     emb.add_field(name='Created at', value=user.created_at)
     emb.add_field(name='Public flags', value=f"{user.public_flags.value}")
+    member: discord.Member = None
+    for g in bot.guilds:
+        m = g.get_member(user.id)
+        if m:
+            member = m
+            if m.voice:
+                break
     # TODO: Use user.mutual_guilds to check status&activities instead when d.py 1.7 is released
+    if member:
+        emb.add_field(name='Activities', value=str(len(member.activities)) if member.activities else '0')
+        stat = str(member.status)
+        if member.desktop_status != discord.Status.offline:
+            stat += ' 💻'
+        if member.mobile_status != discord.Status.offline:
+            stat += ' 📱'
+        if member.web_status != discord.Status.offline:
+            stat += ' 🌐'
+        emb.add_field(name='Status', value=stat)
+        if member.voice:
+            v_state = str(member.voice.channel.id)
+            if member.voice.self_mute:
+                v_state += ' **Muted**'
+            if member.voice.self_deaf:
+                v_state += ' **Deaf**'
+            if member.voice.self_stream:
+                v_state += ' **Streaming**'
+            emb.add_field(name='Voice channel ❄ ID', value=v_state)
+    # Guild specific data
     if ctx.guild:
-        user: discord.Member = ctx.guild.get_member(user.id)
-        if user:
-            emb.add_field(name='Activities', value=str(len(user.activities)) if user.activities else '0')
-            stat = str(user.status)
-            if user.desktop_status != discord.Status.offline:
-                stat += ' 💻'
-            if user.mobile_status != discord.Status.offline:
-                stat += ' 📱'
-            if user.web_status != discord.Status.offline:
-                stat += ' 🌐'
-            emb.add_field(name='Status', value=stat)
-            emb.add_field(name='Joined at', value=user.joined_at)
-            emb.add_field(name='Pending member?', value=user.pending)
-            emb.add_field(name='Nitro boosting server since', value=user.premium_since)
-            emb.add_field(name='Roles', value=' '.join([role.mention for role in user.roles[1:]][::-1]))
-            # TODO: Check all mutual_guilds to see if a user is in a VC
-            if user.voice:
-                v_state = user.voice.channel.name
-                if user.voice.self_mute:
-                    v_state += ' **Muted**'
-                if user.voice.self_deaf:
-                    v_state += ' **Deaf**'
-                if user.voice.self_stream:
-                    v_state += ' **Streaming**'
-                emb.add_field(name='Voice channel', value=v_state)
+        member = ctx.guild.get_member(user.id)
+        if member:
+            emb.add_field(name='Joined at', value=member.joined_at)
+            emb.add_field(name='Pending member?', value=member.pending)
+            emb.add_field(name='Nitro boosting server since', value=member.premium_since)
+            emb.add_field(name='Roles', value=' '.join([role.mention for role in member.roles[1:]][::-1]))
             emb.colour = user.color
+    emb.set_author(name=member.display_name if member else user.name, icon_url=user.default_avatar_url)
     await ctx.reply(embed=emb)
 
 
@@ -186,20 +194,21 @@ async def snipe(ctx):
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.errors.CommandNotFound):
-        await ctx.send('Stoopid. That is not a command.')
+        await ctx.reply('Stoopid. That is not a command.')
         return
     if isinstance(error, commands.errors.MissingRequiredArgument) or isinstance(error, commands.errors.MissingAnyRole)\
-            or isinstance(error, commands.errors.CommandOnCooldown):
+            or isinstance(error, commands.errors.CommandOnCooldown) or isinstance(error, commands.errors.UserNotFound)\
+            or isinstance(error, commands.errors.MemberNotFound):
         await ctx.reply(str(error))
         return
     if isinstance(error, commands.errors.ChannelNotFound):
-        await ctx.send("Invalid channel. Maybe you've tagged the wrong one?")
+        await ctx.reply("Invalid channel. Maybe you've tagged the wrong one?")
         return
     if isinstance(error, commands.errors.RoleNotFound):
-        await ctx.send("Invalid role. Maybe you've tagged the wrong one?")
+        await ctx.reply("Invalid role. Maybe you've tagged the wrong one?")
         return
     if isinstance(error, commands.errors.BadArgument):
-        await ctx.send('Bad arguments.')
+        await ctx.reply('Bad arguments.')
     elif isinstance(error, commands.errors.CheckFailure) or isinstance(error, asyncio.TimeoutError):
         return
     raise error
