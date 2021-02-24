@@ -19,7 +19,7 @@ bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=int
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.11"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.11.1"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -70,7 +70,8 @@ async def info(ctx):
 async def userinfo(ctx, user: discord.Member):
     emb = discord.Embed(title=user.display_name, description=str(user), color=user.color)
     emb.set_thumbnail(url=user.avatar_url)
-    emb.add_field(name='Activity', value=f"{user.activity.type} {user.activity.name}")
+    if user.activity:
+        emb.add_field(name='Activity', value=f"**{user.activity.type}** {user.activity.name}")
     emb.add_field(name='Avatar hash', value=user.avatar)
     emb.add_field(name='Is bot?', value=user.bot)
     emb.add_field(name='Created at', value=user.created_at)
@@ -79,7 +80,7 @@ async def userinfo(ctx, user: discord.Member):
     emb.add_field(name='Joined at', value=user.joined_at)
     emb.add_field(name='Pending member?', value=user.pending)
     emb.add_field(name='Nitro boosting server since', value=user.premium_since)
-    emb.add_field(name='Public flags', value=f"{user.public_flags}")
+    emb.add_field(name='Public flags', value=f"{user.public_flags.value}")
     emb.add_field(name='Roles', value=' '.join([role.mention for role in user.roles[1:]]))
     emb.add_field(name='Discord staff?', value=user.system)
     emb.add_field(name='Voice channel', value=user.voice.channel)
