@@ -19,7 +19,7 @@ bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=int
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.11.4"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.12"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -65,19 +65,19 @@ async def info(ctx):
     )
 
 
-@bot.command()
-async def userinfo(ctx, user: discord.User):
-    emb = discord.Embed(title=str(user))
-    emb.set_thumbnail(url=user.avatar_url)
-    emb.set_footer(text='Avatar hash: ' + str(user.avatar))
-    emb.add_field(name='❄ ID', value=user.id)
-    emb.add_field(name='Is bot?', value=user.bot)
-    emb.add_field(name='Discord staff?', value=user.system)
-    emb.add_field(name='Created at', value=user.created_at)
-    emb.add_field(name='Public flags', value=f"{user.public_flags.value}")
+@bot.group(invoke_without_command=True)
+async def user(ctx, u: discord.User = None):
+    u = u if u else ctx.author
+    emb = discord.Embed(title=str(u), description=f"Send `{bot.command_prefix}user f <user>` for flag details")
+    emb.set_thumbnail(url=u.avatar_url)
+    emb.set_footer(text='Avatar hash: ' + str(u.avatar))
+    emb.add_field(name='❄ ID', value=u.id)
+    emb.add_field(name='Is bot?', value=u.bot)
+    emb.add_field(name='Public flags', value=u.public_flags.value)
+    emb.add_field(name='Created at', value=u.created_at)
     member: discord.Member = None
     for g in bot.guilds:
-        m = g.get_member(user.id)
+        m = g.get_member(u.id)
         if m:
             member = m
             if m.voice:
@@ -104,14 +104,45 @@ async def userinfo(ctx, user: discord.User):
             emb.add_field(name='Voice channel ❄ ID', value=v_state)
     # Guild specific data
     if ctx.guild:
-        member = ctx.guild.get_member(user.id)
+        member = ctx.guild.get_member(u.id)
         if member:
             emb.add_field(name='Joined at', value=member.joined_at)
             emb.add_field(name='Pending member?', value=member.pending)
             emb.add_field(name='Nitro boosting server since', value=member.premium_since)
             emb.add_field(name='Roles', value=' '.join([role.mention for role in member.roles[1:]][::-1]))
-            emb.colour = user.color
-    emb.set_author(name=member.display_name if member else user.name, icon_url=user.default_avatar_url)
+            emb.colour = member.color
+    emb.set_author(name=member.display_name if member else u.name, icon_url=u.default_avatar_url)
+    await ctx.reply(embed=emb)
+
+
+@user.command(aliases=['f'])
+async def flags(ctx, u: discord.User = None):
+    u = u if u else ctx.author
+    bin_value = f'{u.public_flags.value:b}'
+    hex_value = f'{u.public_flags.value:X}'
+    emb = discord.Embed(title=u.name + "'s public flags",
+                        description=f"{u.public_flags.value}, 0b{bin_value.zfill(53)}, "
+                                    f"0x{hex_value.zfill(14)}",
+                        color=Missile.random_rgb())
+    emb.add_field(name='Verified bot developer', value=u.public_flags.verified_bot_developer)
+    emb.add_field(name='Verified bot', value=u.public_flags.verified_bot)
+    if u.public_flags.bug_hunter_level_2:
+        emb.add_field(name='Bug hunter', value='**Level 2**')
+    else:
+        emb.add_field(name='Bug hunter', value=u.public_flags.bug_hunter)
+    emb.add_field(name='Discord system', value=u.public_flags.system)
+    emb.add_field(name='Team User', value=u.public_flags.team_user)
+    emb.add_field(name='Early supporter', value=u.public_flags.early_supporter)
+    if u.public_flags.hypesquad_balance:
+        emb.add_field(name='HypeSquad', value='Balance')
+    elif u.public_flags.hypesquad_bravery:
+        emb.add_field(name='HypeSquad', value='Bravery')
+    elif u.public_flags.hypesquad_brilliance:
+        emb.add_field(name='HypeSquad', value='Brilliance')
+    else:
+        emb.add_field(name='HypeSquad', value=u.public_flags.hypesquad)
+    emb.add_field(name='Discord partner', value=u.public_flags.partner)
+    emb.add_field(name='Discord employee', value=u.public_flags.staff)
     await ctx.reply(embed=emb)
 
 
@@ -196,8 +227,8 @@ async def on_command_error(ctx, error):
     if isinstance(error, commands.errors.CommandNotFound):
         await ctx.reply('Stoopid. That is not a command.')
         return
-    if isinstance(error, commands.errors.MissingRequiredArgument) or isinstance(error, commands.errors.MissingAnyRole)\
-            or isinstance(error, commands.errors.CommandOnCooldown) or isinstance(error, commands.errors.UserNotFound)\
+    if isinstance(error, commands.errors.MissingRequiredArgument) or isinstance(error, commands.errors.MissingAnyRole) \
+            or isinstance(error, commands.errors.CommandOnCooldown) or isinstance(error, commands.errors.UserNotFound) \
             or isinstance(error, commands.errors.MemberNotFound):
         await ctx.reply(str(error))
         return
