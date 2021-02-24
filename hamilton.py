@@ -47,6 +47,7 @@ class Hamilton(Cog):
 
     @Cog.listener()
     async def on_typing(self, channel, user, when):
-        if user.guild == self.bot.missile.guild and user.status == discord.Status.offline \
-                and channel.type == discord.ChannelType.text:
-            await user.send(f"Please don't set your status as invisible while online in {user.guild.name} :)")
+        if channel.type == discord.ChannelType.text:
+            if user.guild == self.bot.missile.guild and user.status == discord.Status.offline \
+                    and channel.type == discord.ChannelType.text:
+                await user.send(f"Please don't set your status as invisible while online in {user.guild.name} :)")

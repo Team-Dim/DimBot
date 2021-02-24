@@ -19,7 +19,7 @@ bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=int
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.11.2"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.11.3"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -66,32 +66,44 @@ async def info(ctx):
 
 
 @bot.command()
-@commands.guild_only()
-async def userinfo(ctx, user: discord.Member):
-    emb = discord.Embed(title=user.display_name, description=str(user), color=user.color)
+async def userinfo(ctx, user: discord.User):
+    emb = discord.Embed(title=str(user))
+    emb.set_author(name=user.display_name, icon_url=user.default_avatar_url)
     emb.set_thumbnail(url=user.avatar_url)
-    if user.activity:
-        emb.add_field(name='Activity', value=f"**{user.activity.type}** {user.activity.name}")
-    emb.add_field(name='Avatar hash', value=user.avatar)
+    emb.set_footer(text='Avatar hash: ' + user.avatar)
+    emb.add_field(name='❄ ID', value=user.id)
     emb.add_field(name='Is bot?', value=user.bot)
-    emb.add_field(name='Created at', value=user.created_at)
-    emb.add_field(name='Status', value=user.status)
-    emb.add_field(name='Snowflake ID', value=user.id)
-    emb.add_field(name='Joined at', value=user.joined_at)
-    emb.add_field(name='Pending member?', value=user.pending)
-    emb.add_field(name='Nitro boosting server since', value=user.premium_since)
-    emb.add_field(name='Public flags', value=f"{user.public_flags.value}")
-    emb.add_field(name='Roles', value=' '.join([role.mention for role in user.roles[1:]][::-1]))
     emb.add_field(name='Discord staff?', value=user.system)
-    if user.voice:
-        v_state = user.voice.channel.name
-        if user.voice.self_mute:
-            v_state += ' **Muted**'
-        if user.voice.self_deaf:
-            v_state += ' **Deaf**'
-        if user.voice.self_stream:
-            v_state += ' **Streaming**'
-        emb.add_field(name='Voice channel', value=v_state)
+    emb.add_field(name='Created at', value=user.created_at)
+    emb.add_field(name='Public flags', value=f"{user.public_flags.value}")
+    # TODO: Use user.mutual_guilds to check status&activities instead when d.py 1.7 is released
+    if ctx.guild:
+        user: discord.Member = ctx.guild.get_member(user.id)
+        if user:
+            emb.add_field(name='Activities', value=str(len(user.activities)) if user.activities else '0')
+            stat = str(user.status)
+            if user.desktop_status != discord.Status.offline:
+                stat += ' 💻'
+            if user.mobile_status != discord.Status.offline:
+                stat += ' 📱'
+            if user.web_status != discord.Status.offline:
+                stat += ' 🌐'
+            emb.add_field(name='Status', value=stat)
+            emb.add_field(name='Joined at', value=user.joined_at)
+            emb.add_field(name='Pending member?', value=user.pending)
+            emb.add_field(name='Nitro boosting server since', value=user.premium_since)
+            emb.add_field(name='Roles', value=' '.join([role.mention for role in user.roles[1:]][::-1]))
+            # TODO: Check all mutual_guilds to see if a user is in a VC
+            if user.voice:
+                v_state = user.voice.channel.name
+                if user.voice.self_mute:
+                    v_state += ' **Muted**'
+                if user.voice.self_deaf:
+                    v_state += ' **Deaf**'
+                if user.voice.self_stream:
+                    v_state += ' **Streaming**'
+                emb.add_field(name='Voice channel', value=v_state)
+            emb.colour = user.color
     await ctx.reply(embed=emb)
 
 

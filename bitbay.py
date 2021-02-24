@@ -141,7 +141,7 @@ class BitBay(Cog):
         self.xp[ctx.author.id] += xp
         await ctx.send(embed=discord.Embed(title=title, description=f"**{ctx.author.name}'s penis:**\n{draw_pp(me)}\n"
                                                                     f"**{user.name}'s penis:**\n{draw_pp(him)}\n\n"
-                                                                    f"You gained **{xp}** xp!",
+                                                                    f"You gained **{xp}** score!",
                                            colour=Missile.random_rgb()))
 
     @pp.command()
