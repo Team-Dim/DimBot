@@ -19,7 +19,7 @@ bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=int
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.11.1"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.11.2"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -81,9 +81,17 @@ async def userinfo(ctx, user: discord.Member):
     emb.add_field(name='Pending member?', value=user.pending)
     emb.add_field(name='Nitro boosting server since', value=user.premium_since)
     emb.add_field(name='Public flags', value=f"{user.public_flags.value}")
-    emb.add_field(name='Roles', value=' '.join([role.mention for role in user.roles[1:]]))
+    emb.add_field(name='Roles', value=' '.join([role.mention for role in user.roles[1:]][::-1]))
     emb.add_field(name='Discord staff?', value=user.system)
-    emb.add_field(name='Voice channel', value=user.voice.channel)
+    if user.voice:
+        v_state = user.voice.channel.name
+        if user.voice.self_mute:
+            v_state += ' **Muted**'
+        if user.voice.self_deaf:
+            v_state += ' **Deaf**'
+        if user.voice.self_stream:
+            v_state += ' **Streaming**'
+        emb.add_field(name='Voice channel', value=v_state)
     await ctx.reply(embed=emb)
 
 
