@@ -1,5 +1,6 @@
 import asyncio
 from random import choice
+from typing import Optional
 
 import discord
 from discord.ext import commands
@@ -19,7 +20,7 @@ bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=int
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.12"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.12.1"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -75,7 +76,7 @@ async def user(ctx, u: discord.User = None):
     emb.add_field(name='Is bot?', value=u.bot)
     emb.add_field(name='Public flags', value=u.public_flags.value)
     emb.add_field(name='Created at', value=u.created_at)
-    member: discord.Member = None
+    member: Optional[discord.Member] = None
     for g in bot.guilds:
         m = g.get_member(u.id)
         if m:
@@ -84,7 +85,7 @@ async def user(ctx, u: discord.User = None):
                 break
     # TODO: Use user.mutual_guilds to check status&activities instead when d.py 1.7 is released
     if member:
-        emb.add_field(name='Activities', value=str(len(member.activities)) if member.activities else '0')
+        emb.add_field(name='Number of activities', value=str(len(member.activities)) if member.activities else '0')
         stat = str(member.status)
         if member.desktop_status != discord.Status.offline:
             stat += ' 💻'
@@ -121,8 +122,8 @@ async def flags(ctx, u: discord.User = None):
     bin_value = f'{u.public_flags.value:b}'
     hex_value = f'{u.public_flags.value:X}'
     emb = discord.Embed(title=u.name + "'s public flags",
-                        description=f"{u.public_flags.value}, 0b{bin_value.zfill(53)}, "
-                                    f"0x{hex_value.zfill(14)}",
+                        description=f"{u.public_flags.value}, 0b{bin_value.zfill(17)}, "
+                                    f"0x{hex_value.zfill(5)}",
                         color=Missile.random_rgb())
     emb.add_field(name='Verified bot developer', value=u.public_flags.verified_bot_developer)
     emb.add_field(name='Verified bot', value=u.public_flags.verified_bot)

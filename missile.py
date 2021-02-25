@@ -24,7 +24,8 @@ class Missile:
         self.logs: discord.TextChannel = None
         self.loop = False
         self.new = True  # For DimBot change activity loop
-        self.snipe: discord.Embed = discord.Embed(description='No one has deleted anything yet...')
+        self.snipe: discord.Embed = discord.Embed(description='No one has deleted anything yet...',
+                                                  color=Missile.random_rgb())
         self.ghost_pings = {}
 
     def get_logger(self, name: str) -> logging.Logger:
