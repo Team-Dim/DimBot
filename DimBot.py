@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 from random import choice
 from typing import Optional
 
@@ -20,7 +21,7 @@ bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=int
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.12.1"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.13"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -111,6 +112,8 @@ async def user(ctx, u: discord.User = None):
             emb.add_field(name='Pending member?', value=member.pending)
             emb.add_field(name='Nitro boosting server since', value=member.premium_since)
             emb.add_field(name='Roles', value=' '.join([role.mention for role in member.roles[1:]][::-1]))
+            emb.add_field(name='Permissions in this server', value=member.guild_permissions.value)
+            emb.add_field(name='Permissions in this channel', value=member.permissions_in(ctx.channel).value)
             emb.colour = member.color
     emb.set_author(name=member.display_name if member else u.name, icon_url=u.default_avatar_url)
     await ctx.reply(embed=emb)
@@ -150,6 +153,16 @@ async def flags(ctx, u: discord.User = None):
 @bot.command()
 async def sponsor(ctx):
     await ctx.send(sponsor_txt)
+
+
+@bot.command()
+async def noel(ctx):
+    """Shows the ping of the bot"""
+    msg = await ctx.send(f':heartbeat: {bot.latency*1000:.3f}ms')
+    tic = datetime.now()
+    await msg.add_reaction('📡')
+    toc = datetime.now()
+    await msg.edit(content=msg.content + f' :satellite_orbital: {(toc - tic).total_seconds()*1000}ms')
 
 
 @bot.event

@@ -5,7 +5,7 @@ import discord
 
 __version__ = '1.2.1'
 
-from discord.ext.commands import Cog, Context, command, has_any_role, group, cooldown, BucketType
+from discord.ext.commands import Cog, Context, command, has_any_role, group, cooldown, BucketType, Bot
 
 from dimsecret import debug
 from missile import Missile
@@ -19,19 +19,10 @@ def convert(text: str) -> str:
     return encoded.decode()
 
 
-def draw_pp(size: int) -> str:
-    if size == -1:
-        return "No pp found. Have you set it up by d.pp?"
-    description = f'8{"=" * size}D'
-    if size == max_pp_size:
-        description += '\n**MAX POWER**'
-    return description
-
-
 class BitBay(Cog):
 
     def __init__(self, bot):
-        self.bot: discord.Client = bot
+        self.bot: Bot = bot
         self.organs: dict = {}
         self.xp: dict = {}
 
@@ -39,6 +30,14 @@ class BitBay(Cog):
         if uid in self.organs.keys():
             return self.organs[uid]
         return -1
+
+    def draw_pp(self, size: int) -> str:
+        if size == -1:
+            return f"No pp found. Have you set it up by {self.bot.command_prefix}pp?"
+        description = f'8{"=" * size}D'
+        if size == max_pp_size:
+            description += '\n**MAX POWER**'
+        return description
 
     @command(aliases=['enc'])
     async def encode(self, ctx: Context, *, url: str):
@@ -79,7 +78,7 @@ class BitBay(Cog):
         user = user if user else ctx.author
         size = randint(0, max_pp_size)
         self.organs[user.id] = size
-        await ctx.send(embed=discord.Embed(title=user.display_name + "'s penis", description=draw_pp(size),
+        await ctx.send(embed=discord.Embed(title=user.display_name + "'s penis", description=self.draw_pp(size),
                                            colour=Missile.random_rgb()))
 
     @pp.command()
@@ -87,7 +86,7 @@ class BitBay(Cog):
         user = user if user else ctx.author
         size = self.get_size(user.id)
         if size == -1:
-            await ctx.send(draw_pp(size))
+            await ctx.send(self.draw_pp(size))
             return
         await ctx.send('pp size: ' + str(size))
 
@@ -95,9 +94,9 @@ class BitBay(Cog):
     async def slap(self, ctx: Context, user: discord.User):
         size = self.get_size(ctx.author.id)
         if size == -1:
-            await ctx.send(draw_pp(size))
+            await ctx.send(self.draw_pp(size))
             return
-        emb = discord.Embed(description=draw_pp(self.get_size(ctx.author.id)), colour=Missile.random_rgb())
+        emb = discord.Embed(description=self.draw_pp(self.get_size(ctx.author.id)), colour=Missile.random_rgb())
         emb.set_thumbnail(url=user.avatar_url)
         await ctx.send(embed=emb)
 
@@ -105,7 +104,7 @@ class BitBay(Cog):
     @Missile.is_rainbow_cmd_check()
     async def max(self, ctx: Context):
         self.organs[ctx.author.id] = max_pp_size
-        await ctx.send(embed=discord.Embed(title=ctx.author.display_name + "'s penis", description=draw_pp(max_pp_size),
+        await ctx.send(embed=discord.Embed(title=ctx.author.display_name + "'s penis", description=self.draw_pp(max_pp_size),
                                            colour=Missile.random_rgb()))
 
     @pp.command()
@@ -118,7 +117,7 @@ class BitBay(Cog):
     async def cut(self, ctx: Context):
         size = self.get_size(ctx.author.id)
         if size == -1:
-            await ctx.send(draw_pp(size))
+            await ctx.send(self.draw_pp(size))
             return
         self.organs.pop(ctx.author.id)
         await ctx.send(embed=discord.Embed(title=ctx.author.display_name + "'s penis",
@@ -139,8 +138,8 @@ class BitBay(Cog):
         if ctx.author.id not in self.xp:
             self.xp[ctx.author.id] = 0
         self.xp[ctx.author.id] += xp
-        await ctx.send(embed=discord.Embed(title=title, description=f"**{ctx.author.name}'s penis:**\n{draw_pp(me)}\n"
-                                                                    f"**{user.name}'s penis:**\n{draw_pp(him)}\n\n"
+        await ctx.send(embed=discord.Embed(title=title, description=f"**{ctx.author.name}'s penis:**\n{self.draw_pp(me)}\n"
+                                                                    f"**{user.name}'s penis:**\n{self.draw_pp(him)}\n\n"
                                                                     f"You gained **{xp}** score!",
                                            colour=Missile.random_rgb()))
 
