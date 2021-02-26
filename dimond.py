@@ -16,7 +16,9 @@ class Dimond(commands.Cog):
     @commands.group(invoke_without_command=True)
     async def user(self, ctx, u: discord.User = None):
         u = u if u else ctx.author
-        emb = discord.Embed(title=str(u), description=f"Send `{self.bot.command_prefix}user f [user]` for flag details")
+        desc = f"Send {self.bot.command_prefix}user f [user]` for flag details\n`{self.bot.command_prefix}perm " \
+               "[user|channel] [channel]` for permission details"
+        emb = discord.Embed(title=str(u), description=desc)
         emb.set_thumbnail(url=u.avatar_url)
         if u.avatar:
             emb.set_footer(text='Avatar hash: ' + u.avatar)
@@ -59,8 +61,6 @@ class Dimond(commands.Cog):
                 emb.add_field(name='Pending member?', value=member.pending)
                 emb.add_field(name='Nitro boosting server since', value=member.premium_since)
                 emb.add_field(name='Roles', value=' '.join([role.mention for role in member.roles[1:]][::-1]))
-                emb.add_field(name='Permissions in this server', value=member.guild_permissions.value)
-                emb.add_field(name='Permissions in this channel', value=member.permissions_in(ctx.channel).value)
                 emb.colour = member.color
         emb.set_author(name=member.display_name if member else u.name, icon_url=u.default_avatar_url)
         await ctx.reply(embed=emb)

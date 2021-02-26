@@ -21,7 +21,7 @@ bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=int
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.14"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.15"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -63,7 +63,7 @@ async def info(ctx):
         f'**Project Albon** `{albon.__version__}`: HTTP server sub-project used by `Verstapen`.\n'
         '**Project Norris** `0`: Chat bot for answering BBM questions.\n'
         f'**Project BitBay** `{bitbay.__version__}`: Utilities for 128BB\n'
-        f'**Project Dimond** `{dimond.__version__}`: Named by {bot.get_user(98591077975465984)}'
+        f'**Project Dimond** `{dimond.__version__}`: (Named by {bot.get_user(98591077975465984)}) '
         f'Report users/channels/servers details. Literally CIA\n\n'
         f'Devblog: Instagram @techdim\nDiscord server: `6PjhjCD`\n{sponsor_txt}'
     )
@@ -183,6 +183,16 @@ async def on_command_error(ctx, error):
 async def exit(ctx):
     bot.echo.db.commit()
     await ctx.send('https://pbs.twimg.com/media/ED4Ia8AWkAMcXvK.jpg')
+    await bot.logout()
+
+
+@bot.command()
+@Missile.is_rainbow_cmd_check()
+async def update(ctx):
+    bot.echo.db.commit()
+    await ctx.send('https://pbs.twimg.com/media/ED4Ia8AWkAMcXvK.jpg')
+    import subprocess
+    subprocess.Popen(['systemctl restart dimbot'])
     await bot.logout()
 
 bot.add_cog(ricciardo.Ricciardo(bot))
