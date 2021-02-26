@@ -87,13 +87,18 @@ async def noel(ctx):
 @bot.event
 async def on_ready():
     try:
+        logger.info('First shit in on_ready')
         with open('final', 'r') as fi:
+            logger.info('Found final file')
             last_channel_id = fi.readline()
+            logger.info('Final file content:' + last_channel_id)
             bot.get_channel(int(last_channel_id)).send('Restarted')
         import os
+        logger.info('Deleting final')
         os.remove('final')
+        logger.info('Deleted final')
     except FileNotFoundError:
-        pass
+        logger.info('No previous final file found')
     bot.missile.guild = bot.get_guild(285366651312930817)
     bot.missile.bottyland = bot.get_channel(372386868236386307)
     bot.missile.bruck_ch = bot.get_channel(688948118712090644)
@@ -201,9 +206,9 @@ async def update(ctx):
     await ctx.send('https://pbs.twimg.com/media/ED4Ia8AWkAMcXvK.jpg')
     with open('final', 'w') as fi:
         fi.writeline(ctx.channel.id)
+    logger.critical('RESTARTING')
     import subprocess
     subprocess.Popen(['sudo systemctl restart dimbot'], shell=True)
-    logger.critical('RESTARTING')
     await bot.logout()
 
 bot.add_cog(ricciardo.Ricciardo(bot))
