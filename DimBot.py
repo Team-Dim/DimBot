@@ -92,7 +92,7 @@ async def on_ready():
             logger.info('Found final file')
             last_channel_id = fi.readline()
             logger.info('Final file content:' + last_channel_id)
-            bot.get_channel(int(last_channel_id)).send('Restarted')
+            await bot.get_channel(int(last_channel_id)).send('Restarted')
         import os
         logger.info('Deleting final')
         os.remove('final')
