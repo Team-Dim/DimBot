@@ -21,7 +21,7 @@ bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=int
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.15.3"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.15.4"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -105,16 +105,15 @@ async def on_ready():
         bot.missile.announcement = bot.get_channel(425703064733876225)
     bot.missile.logs = bot.get_channel(384636771805298689)
     logger.info(f'Guild count: {len(bot.guilds)}')
-    if reborn_channel:
-        epilogue = "Now, with 0.7.15, DimBot can automatically download updates and relaunches itself, just like " \
-                   "Falcon 9.\nRestarted. Ready to kick some balls!\n" \
-                   "https://data.whicdn.com/images/343444322/original.gif"
-        await bot.get_channel(reborn_channel).send(epilogue)
     for guild in bot.guilds:
         if guild.me.nick != nickname:
             await guild.me.edit(nick=nickname)
     if bot.missile.new:
         bot.missile.new = False
+        if reborn_channel:
+            epilogue = "DimBot has updated, restarted itself and landed, just like the Falcon 9.\n" \
+                       "Ready to kick some balls!\nhttps://data.whicdn.com/images/343444322/original.gif"
+            await bot.get_channel(reborn_channel).send(epilogue)
         while True:
             logger.debug('Changed activity')
             await bot.change_presence(activity=choice(activities))
@@ -205,9 +204,7 @@ async def exit(ctx):
 @Missile.is_rainbow_cmd_check()
 async def update(ctx):
     bot.echo.db.commit()
-    prologue = "Since DimBot 0.0 started in May 2019, I had to manually cross the python program, then manually " \
-               "launch it again.\nSince DimBot 0.6.8, on 9th December 2020, `d.exit` was added so I can use a " \
-               "command to kill the bot, but still need to launch it manually.\n" \
+    prologue = "Introducing DimBot 0.7.15: Auto update and restart. DimBot now lifts off!\n" \
                "https://pbs.twimg.com/media/ED4Ia8AWkAMcXvK.jpg"
     await ctx.send(prologue)
     with open('final', 'w') as fi:

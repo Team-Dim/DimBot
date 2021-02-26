@@ -1,4 +1,5 @@
 import base64
+import random
 from random import randint
 
 import discord
@@ -125,7 +126,12 @@ class BitBay(Cog):
 
     @pp.command(aliases=['sf'])
     @cooldown(rate=1, per=10.0, type=BucketType.user)
-    async def swordfight(self, ctx: Context, user: discord.User):
+    async def swordfight(self, ctx: Context, user: discord.User = None):
+        if not user:
+            if not len(self.organs.keys()):
+                await ctx.reply('No one has pp. Either `d.pp` yourself or any members first, or `d.pp sf @anyone`')
+                return
+            user = self.bot.get_user(random.choice(list(self.organs.keys())))
         me = self.get_size(ctx.author.id)
         him = self.get_size(user.id)
         if me > him:
