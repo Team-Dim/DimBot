@@ -205,7 +205,7 @@ async def update(ctx):
     bot.echo.db.commit()
     await ctx.send('https://pbs.twimg.com/media/ED4Ia8AWkAMcXvK.jpg')
     with open('final', 'w') as fi:
-        fi.writeline(ctx.channel.id)
+        fi.write(str(ctx.channel.id))
     logger.critical('RESTARTING')
     import subprocess
     subprocess.Popen(['sudo systemctl restart dimbot'], shell=True)
