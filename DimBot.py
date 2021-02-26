@@ -117,6 +117,7 @@ async def on_message_delete(msg: discord.Message):
 
 @bot.event
 async def on_message_edit(before: discord.Message, after: discord.Message):
+    """Detect ghost pings due to edited message"""
     if before.guild and not before.edited_at and before.mentions:
         bot.missile.ghost_pings[before.id] = [m for m in before.mentions if not m.bot]
     if before.guild and before.id in bot.missile.ghost_pings.keys():
@@ -134,6 +135,7 @@ async def on_message_edit(before: discord.Message, after: discord.Message):
 
 @bot.command()
 async def snipe(ctx):
+    """Displays the last deleted message"""
     if bot.missile.snipe:
         await ctx.send(embed=bot.missile.snipe)
 
@@ -162,11 +164,12 @@ async def on_command_error(ctx, error):
 @bot.command()
 @Missile.is_rainbow_cmd_check()
 async def exit(ctx):
+    """Forcefully exits the program"""
     bot.echo.db.commit()
     await ctx.send(':dizzy_face:')
     await bot.logout()
 
-
+# Enable modules
 bot.add_cog(ricciardo.Ricciardo(bot))
 bot.add_cog(verstapen.Verstapen(bot))
 bot.add_cog(bot.echo)
