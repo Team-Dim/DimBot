@@ -1,13 +1,13 @@
 import asyncio
 from datetime import datetime
 from random import choice
-from typing import Optional
 
 import discord
 from discord.ext import commands
 
 import bitbay
 import bottas
+import dimond
 import dimsecret
 import hamilton
 import ricciardo
@@ -21,7 +21,7 @@ bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=int
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.13"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.14"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -62,92 +62,11 @@ async def info(ctx):
         f'**Project Verstapen** `{verstapen.__version__}`: Connects to AWS and manage a minecraft server instance.\n'
         f'**Project Albon** `{albon.__version__}`: HTTP server sub-project used by `Verstapen`.\n'
         '**Project Norris** `0`: Chat bot for answering BBM questions.\n'
-        f'**Project BitBay** `{bitbay.__version__}`: Utilities for 128BB\n\n'
+        f'**Project BitBay** `{bitbay.__version__}`: Utilities for 128BB\n'
+        f'**Project Dimond** `{dimond.__version__}`: Named by {bot.get_user(98591077975465984)}'
+        f'Report users/channels/servers details. Literally CIA\n\n'
         f'Devblog: Instagram @techdim\nDiscord server: `6PjhjCD`\n{sponsor_txt}'
     )
-
-
-@bot.group(invoke_without_command=True)
-async def user(ctx, u: discord.User = None):
-    u = u if u else ctx.author
-    emb = discord.Embed(title=str(u), description=f"Send `{bot.command_prefix}user f <user>` for flag details")
-    emb.set_thumbnail(url=u.avatar_url)
-    emb.set_footer(text='Avatar hash: ' + str(u.avatar))
-    emb.add_field(name='❄ ID', value=u.id)
-    emb.add_field(name='Is bot?', value=u.bot)
-    emb.add_field(name='Public flags', value=u.public_flags.value)
-    emb.add_field(name='Created at', value=u.created_at)
-    member: Optional[discord.Member] = None
-    for g in bot.guilds:
-        m = g.get_member(u.id)
-        if m:
-            member = m
-            if m.voice:
-                break
-    # TODO: Use user.mutual_guilds to check status&activities instead when d.py 1.7 is released
-    if member:
-        emb.add_field(name='Number of activities', value=str(len(member.activities)) if member.activities else '0')
-        stat = str(member.status)
-        if member.desktop_status != discord.Status.offline:
-            stat += ' 💻'
-        if member.mobile_status != discord.Status.offline:
-            stat += ' 📱'
-        if member.web_status != discord.Status.offline:
-            stat += ' 🌐'
-        emb.add_field(name='Status', value=stat)
-        if member.voice:
-            v_state = str(member.voice.channel.id)
-            if member.voice.self_mute:
-                v_state += ' **Muted**'
-            if member.voice.self_deaf:
-                v_state += ' **Deaf**'
-            if member.voice.self_stream:
-                v_state += ' **Streaming**'
-            emb.add_field(name='Voice channel ❄ ID', value=v_state)
-    # Guild specific data
-    if ctx.guild:
-        member = ctx.guild.get_member(u.id)
-        if member:
-            emb.add_field(name='Joined at', value=member.joined_at)
-            emb.add_field(name='Pending member?', value=member.pending)
-            emb.add_field(name='Nitro boosting server since', value=member.premium_since)
-            emb.add_field(name='Roles', value=' '.join([role.mention for role in member.roles[1:]][::-1]))
-            emb.add_field(name='Permissions in this server', value=member.guild_permissions.value)
-            emb.add_field(name='Permissions in this channel', value=member.permissions_in(ctx.channel).value)
-            emb.colour = member.color
-    emb.set_author(name=member.display_name if member else u.name, icon_url=u.default_avatar_url)
-    await ctx.reply(embed=emb)
-
-
-@user.command(aliases=['f'])
-async def flags(ctx, u: discord.User = None):
-    u = u if u else ctx.author
-    bin_value = f'{u.public_flags.value:b}'
-    hex_value = f'{u.public_flags.value:X}'
-    emb = discord.Embed(title=u.name + "'s public flags",
-                        description=f"{u.public_flags.value}, 0b{bin_value.zfill(17)}, "
-                                    f"0x{hex_value.zfill(5)}",
-                        color=Missile.random_rgb())
-    emb.add_field(name='Verified bot developer', value=u.public_flags.verified_bot_developer)
-    emb.add_field(name='Verified bot', value=u.public_flags.verified_bot)
-    if u.public_flags.bug_hunter_level_2:
-        emb.add_field(name='Bug hunter', value='**Level 2**')
-    else:
-        emb.add_field(name='Bug hunter', value=u.public_flags.bug_hunter)
-    emb.add_field(name='Discord system', value=u.public_flags.system)
-    emb.add_field(name='Team User', value=u.public_flags.team_user)
-    emb.add_field(name='Early supporter', value=u.public_flags.early_supporter)
-    if u.public_flags.hypesquad_balance:
-        emb.add_field(name='HypeSquad', value='Balance')
-    elif u.public_flags.hypesquad_bravery:
-        emb.add_field(name='HypeSquad', value='Bravery')
-    elif u.public_flags.hypesquad_brilliance:
-        emb.add_field(name='HypeSquad', value='Brilliance')
-    else:
-        emb.add_field(name='HypeSquad', value=u.public_flags.hypesquad)
-    emb.add_field(name='Discord partner', value=u.public_flags.partner)
-    emb.add_field(name='Discord employee', value=u.public_flags.staff)
-    await ctx.reply(embed=emb)
 
 
 @bot.command()
@@ -157,12 +76,12 @@ async def sponsor(ctx):
 
 @bot.command()
 async def noel(ctx):
-    """Shows the ping of the bot"""
-    msg = await ctx.send(f':heartbeat: {bot.latency*1000:.3f}ms')
+    """Listens to the heartbeat of Nezuko"""
+    msg = await ctx.reply(f':heartbeat: {bot.latency * 1000:.3f}ms')
     tic = datetime.now()
     await msg.add_reaction('📡')
     toc = datetime.now()
-    await msg.edit(content=msg.content + f' :satellite_orbital: {(toc - tic).total_seconds()*1000}ms')
+    await msg.edit(content=msg.content + f' :satellite_orbital: {(toc - tic).total_seconds() * 1000}ms')
 
 
 @bot.event
@@ -263,13 +182,13 @@ async def on_command_error(ctx, error):
 @Missile.is_rainbow_cmd_check()
 async def exit(ctx):
     bot.echo.db.commit()
-    await ctx.send(':dizzy_face:')
+    await ctx.send('https://pbs.twimg.com/media/ED4Ia8AWkAMcXvK.jpg')
     await bot.logout()
-
 
 bot.add_cog(ricciardo.Ricciardo(bot))
 bot.add_cog(hamilton.Hamilton(bot))
 bot.add_cog(verstapen.Verstapen(bot))
 bot.add_cog(bot.echo)
 bot.add_cog(bitbay.BitBay(bot))
+bot.add_cog(dimond.Dimond(bot))
 bot.run(dimsecret.discord)

@@ -78,6 +78,15 @@ class Missile:
         return commands.check(check)
 
     @staticmethod
+    def guild_only():
+        async def check(ctx):
+            if ctx.guild:
+                return True
+            await ctx.send('This command is only available in servers!')
+            return False
+        return commands.check(check)
+
+    @staticmethod
     def regex_is_url(url: str):
         return re.search(r"[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&/=]*)", url)
 
