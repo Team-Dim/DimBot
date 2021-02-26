@@ -21,7 +21,7 @@ bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=int
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.15"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.15.1"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -86,6 +86,14 @@ async def noel(ctx):
 
 @bot.event
 async def on_ready():
+    try:
+        with open('final', 'r') as fi:
+            last_channel_id = fi.readline()
+            bot.get_channel(int(last_channel_id)).send('Restarted')
+        import os
+        os.remove('final')
+    except FileNotFoundError:
+        pass
     bot.missile.guild = bot.get_guild(285366651312930817)
     bot.missile.bottyland = bot.get_channel(372386868236386307)
     bot.missile.bruck_ch = bot.get_channel(688948118712090644)
@@ -191,8 +199,11 @@ async def exit(ctx):
 async def update(ctx):
     bot.echo.db.commit()
     await ctx.send('https://pbs.twimg.com/media/ED4Ia8AWkAMcXvK.jpg')
+    with open('final', 'w') as fi:
+        fi.writeline(ctx.channel.id)
     import subprocess
-    subprocess.Popen(['systemctl restart dimbot'])
+    subprocess.Popen(['sudo systemctl restart dimbot'], shell=True)
+    logger.critical('RESTARTING')
     await bot.logout()
 
 bot.add_cog(ricciardo.Ricciardo(bot))
