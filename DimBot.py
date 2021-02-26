@@ -48,9 +48,7 @@ reborn_channel = None
 try:
     with open('final', 'r') as fi:
         logger.info('Found final file')
-        last_channel_id = fi.readline()
-        logger.info('Final file content:' + last_channel_id)
-        reborn_channel = int(last_channel_id)
+        reborn_channel = int(fi.readline())
     import os
     os.remove('final')
 except FileNotFoundError:
@@ -108,7 +106,8 @@ async def on_ready():
     bot.missile.logs = bot.get_channel(384636771805298689)
     logger.info(f'Guild count: {len(bot.guilds)}')
     if reborn_channel:
-        await bot.get_channel(reborn_channel).send('Restarted')
+        await bot.get_channel(reborn_channel).send('Restarted. Ready to kick some balls!\n'
+                                                   'https://data.whicdn.com/images/343444322/original.gif')
     for guild in bot.guilds:
         if guild.me.nick != nickname:
             await guild.me.edit(nick=nickname)
