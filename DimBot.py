@@ -44,6 +44,21 @@ with open('.git/HEAD', 'r') as f:
 sponsor_txt = 'You guys see my brother Tanjiro? I need to save him! Donate me! ' \
               '<https://streamlabs.com/pythonic_rainbow/tip> '
 
+reborn_channel = None
+try:
+    logger.info('First shit in on_ready')
+    with open('final', 'r') as fi:
+        logger.info('Found final file')
+        last_channel_id = fi.readline()
+        logger.info('Final file content:' + last_channel_id)
+        reborn_channel = int(last_channel_id)
+    import os
+    logger.info('Deleting final')
+    os.remove('final')
+    logger.info('Deleted final')
+except FileNotFoundError:
+    logger.info('No previous final file found')
+
 
 @bot.command(aliases=['ver', 'verinfo'])
 async def info(ctx):
@@ -86,19 +101,8 @@ async def noel(ctx):
 
 @bot.event
 async def on_ready():
-    try:
-        logger.info('First shit in on_ready')
-        with open('final', 'r') as fi:
-            logger.info('Found final file')
-            last_channel_id = fi.readline()
-            logger.info('Final file content:' + last_channel_id)
-            await bot.get_channel(int(last_channel_id)).send('Restarted')
-        import os
-        logger.info('Deleting final')
-        os.remove('final')
-        logger.info('Deleted final')
-    except FileNotFoundError:
-        logger.info('No previous final file found')
+    if reborn_channel:
+        await bot.get_channel(reborn_channel).send('Restarted')
     bot.missile.guild = bot.get_guild(285366651312930817)
     bot.missile.bottyland = bot.get_channel(372386868236386307)
     bot.missile.bruck_ch = bot.get_channel(688948118712090644)
