@@ -21,7 +21,7 @@ bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=int
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.15.1"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.15.2"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -46,16 +46,13 @@ sponsor_txt = 'You guys see my brother Tanjiro? I need to save him! Donate me! '
 
 reborn_channel = None
 try:
-    logger.info('First shit in on_ready')
     with open('final', 'r') as fi:
         logger.info('Found final file')
         last_channel_id = fi.readline()
         logger.info('Final file content:' + last_channel_id)
         reborn_channel = int(last_channel_id)
     import os
-    logger.info('Deleting final')
     os.remove('final')
-    logger.info('Deleted final')
 except FileNotFoundError:
     logger.info('No previous final file found')
 
@@ -101,8 +98,6 @@ async def noel(ctx):
 
 @bot.event
 async def on_ready():
-    if reborn_channel:
-        await bot.get_channel(reborn_channel).send('Restarted')
     bot.missile.guild = bot.get_guild(285366651312930817)
     bot.missile.bottyland = bot.get_channel(372386868236386307)
     bot.missile.bruck_ch = bot.get_channel(688948118712090644)
@@ -112,6 +107,8 @@ async def on_ready():
         bot.missile.announcement = bot.get_channel(425703064733876225)
     bot.missile.logs = bot.get_channel(384636771805298689)
     logger.info(f'Guild count: {len(bot.guilds)}')
+    if reborn_channel:
+        await bot.get_channel(reborn_channel).send('Restarted')
     for guild in bot.guilds:
         if guild.me.nick != nickname:
             await guild.me.edit(nick=nickname)
