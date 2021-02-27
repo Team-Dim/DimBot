@@ -1,5 +1,6 @@
 import base64
 import random
+import re
 from random import randint
 
 import discord
@@ -39,6 +40,12 @@ class BitBay(Cog):
         if size == max_pp_size:
             description += '\n**MAX POWER**'
         return description
+
+    @Cog.listener()
+    async def on_message(self, msg: discord.Message):
+        if msg.guild.id == 675477913411518485 and \
+                re.search(r".*(get|download) wii ?u (rom|game)s?", msg.content, re.IGNORECASE):
+            await msg.reply("Please use the last link in the oldest pin in <#718989936837263450>")
 
     @command(aliases=['enc'])
     async def encode(self, ctx: Context, *, url: str):
