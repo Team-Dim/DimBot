@@ -27,6 +27,7 @@ class BitBay(Cog):
         self.bot: Bot = bot
         self.organs: dict = {}
         self.xp: dict = {}
+        self.mpm = True
 
     def get_size(self, uid: int) -> int:
         if uid in self.organs.keys():
@@ -43,12 +44,12 @@ class BitBay(Cog):
 
     @Cog.listener()
     async def on_message(self, msg: discord.Message):
-        if msg.guild.id == 675477913411518485:
+        if msg.guild.id == 675477913411518485 and self.mpm:
             if re.search(r".*(where|get|download|find|obtain|acquire).*(cemu|wii ?u) (rom|game)s?", msg.content, re.IGNORECASE):
                 await msg.reply("Please use the last link in the oldest pin in <#718989936837263450>")
             elif re.search(r".*(where|get|download|find|obtain|acquire).*(switch|yuzu|ryu) (rom|game)s?", msg.content, re.IGNORECASE):
                 await msg.reply("<#730596209701421076>")
-            elif re.search(r".*(where|get|download|find|obtain|acquire).*(shader.*(switch|yuzu|ryu))|((switch|yuzu|ryu).*shader)", msg.content, re.IGNORECASE):
+            elif re.search(r".*(where|get|download|find|obtain|acquire).*((shader.*(switch|yuzu|ryu))|((switch|yuzu|ryu).*shader))", msg.content, re.IGNORECASE):
                 await msg.reply("<#709944999399260190>")
 
     @command(aliases=['enc'])
@@ -60,6 +61,12 @@ class BitBay(Cog):
         else:
             url = ctx.author.mention + ': ' + url
             await ctx.send(convert(url))
+
+    @command()
+    @has_any_role(735911149681508383, 702889819570831572)
+    async def mpm(self, ctx: Context):
+        await ctx.reply(('Disabled' if self.mpm else 'Enabled') + ' Message Pattern Matching (MPM)')
+        self.mpm = not self.mpm
 
     @command(aliases=['dec'])
     async def decode(self, ctx: Context, content: str):
