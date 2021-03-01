@@ -36,7 +36,7 @@ class BitBay(Cog):
 
     def draw_pp(self, size: int) -> str:
         if size == -1:
-            return f"No pp found. Have you set it up by {self.bot.command_prefix}pp?"
+            return f"No pp found. Have you set it up by {self.bot.default_prefix}pp?"
         description = f'8{"=" * size}D'
         if size == max_pp_size:
             description += '\n**MAX POWER**'
@@ -44,7 +44,7 @@ class BitBay(Cog):
 
     @Cog.listener()
     async def on_message(self, msg: discord.Message):
-        if msg.guild.id == 675477913411518485 and self.mpm:
+        if msg.guild and msg.guild.id == 675477913411518485 and self.mpm:
             if re.search(r".*(get|download|find|obtain|acquire).*(cemu|wii ?u) (rom|game)s?", msg.content, re.IGNORECASE):
                 await msg.reply("Please use the last link in the oldest pin in <#718989936837263450>")
             elif re.search(r".*(get|download|find|obtain|acquire).*(switch|yuzu|ryu) (rom|game)s?", msg.content, re.IGNORECASE):
@@ -123,7 +123,8 @@ class BitBay(Cog):
     @Missile.is_rainbow_cmd_check()
     async def max(self, ctx: Context):
         self.organs[ctx.author.id] = max_pp_size
-        await ctx.send(embed=discord.Embed(title=ctx.author.display_name + "'s penis", description=self.draw_pp(max_pp_size),
+        await ctx.send(embed=discord.Embed(title=ctx.author.display_name + "'s penis",
+                                           description=self.draw_pp(max_pp_size),
                                            colour=Missile.random_rgb()))
 
     @pp.command()
@@ -147,7 +148,8 @@ class BitBay(Cog):
     async def swordfight(self, ctx: Context, user: discord.User = None):
         if not user:
             if not len(self.organs.keys()):
-                await ctx.reply('No one has pp. Either `d.pp` yourself or any members first, or `d.pp sf @anyone`')
+                await ctx.reply(f'No one has pp. Either `{self.bot.default_prefix}pp` yourself or any members first,'
+                                f' or `{self.bot.default_prefix}pp sf @anyone`')
                 return
             user = self.bot.get_user(random.choice(list(self.organs.keys())))
         me = self.get_size(ctx.author.id)

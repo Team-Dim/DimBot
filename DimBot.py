@@ -1,4 +1,5 @@
 import asyncio
+import re
 from datetime import datetime
 from random import choice
 
@@ -20,25 +21,20 @@ intent.presences = True
 
 
 async def prefix_process(bot: commands.Bot, msg: discord.Message):
-    prefix = ['t.' if dimsecret.debug else 'd.']
-    if msg.author.id == 264756129916125184:
-        prefix.append(msg.guild.me.mention + ' , ')
-        prefix.append(msg.guild.me.mention + ' ,')
-        prefix.append(bot.user.mention + ' ,')
-        prefix.append(bot.user.mention + ' , ')
-        prefix.append('DimBot, ')
-        prefix.append('DimBot,')
-    elif msg.content.startswith(bot.user.mention + ' ,') or msg.content.startswith(msg.guild.me.mention + ' ,') or \
-            msg.content.startswith('DimBot,'):
-        await msg.reply('Only my little pog champ can use authoritative orders!')
-    return prefix
-
+    tag_mention = re.search(f'^((<@.?{bot.user.id}> |DimBot), )', msg.content)
+    if tag_mention:
+        if msg.author.id == 264756129916125184:
+            return tag_mention.group(0)
+        else:
+            await msg.reply('Only my little pog champ can use authoritative orders!')
+    return bot.default_prefix
 
 bot = commands.Bot(command_prefix=prefix_process, intents=intent)
+bot.default_prefix = 't.' if dimsecret.debug else 'd.'
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.17"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.17.1"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),

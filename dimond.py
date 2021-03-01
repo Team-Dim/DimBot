@@ -16,7 +16,7 @@ class Dimond(commands.Cog):
     @commands.group(invoke_without_command=True)
     async def user(self, ctx, u: discord.User = None):
         u = u if u else ctx.author
-        desc = f"Send `{self.bot.command_prefix}user f [user]` for flag details,\n`{self.bot.command_prefix}perm " \
+        desc = f"Send `{self.bot.default_prefix}user f [user]` for flag details,\n`{self.bot.default_prefix}perm " \
                "[user|channel] [channel]` for permission details"
         emb = discord.Embed(title=str(u), description=desc)
         emb.set_thumbnail(url=u.avatar_url)
