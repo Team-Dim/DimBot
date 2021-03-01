@@ -5,7 +5,7 @@ from random import randint
 
 import discord
 
-__version__ = '1.2.1'
+__version__ = '1.3'
 
 from discord.ext.commands import Cog, Context, command, has_any_role, group, cooldown, BucketType, Bot
 
@@ -45,16 +45,16 @@ class BitBay(Cog):
     @Cog.listener()
     async def on_message(self, msg: discord.Message):
         if msg.guild.id == 675477913411518485 and self.mpm:
-            if re.search(r".*(where|get|download|find|obtain|acquire).*(cemu|wii ?u) (rom|game)s?", msg.content, re.IGNORECASE):
+            if re.search(r".*(get|download|find|obtain|acquire).*(cemu|wii ?u) (rom|game)s?", msg.content, re.IGNORECASE):
                 await msg.reply("Please use the last link in the oldest pin in <#718989936837263450>")
-            elif re.search(r".*(where|get|download|find|obtain|acquire).*(switch|yuzu|ryu) (rom|game)s?", msg.content, re.IGNORECASE):
+            elif re.search(r".*(get|download|find|obtain|acquire).*(switch|yuzu|ryu) (rom|game)s?", msg.content, re.IGNORECASE):
                 await msg.reply("<#730596209701421076>")
-            elif re.search(r".*(where|get|download|find|obtain|acquire).*((shader.*(switch|yuzu|ryu))|((switch|yuzu|ryu).*shader))", msg.content, re.IGNORECASE):
+            elif re.search(r".*(get|download|find|obtain|acquire).*((shader.*(switch|yuzu|ryu))|((switch|yuzu|ryu).*shader))", msg.content, re.IGNORECASE):
                 await msg.reply("<#709944999399260190>")
 
     @command(aliases=['enc'])
     async def encode(self, ctx: Context, *, url: str):
-        if isinstance(ctx.channel, discord.TextChannel):
+        if ctx.channel.type == discord.ChannelType.text:
             await ctx.message.delete()
         if Missile.regex_is_url(url):
             await ctx.send(f'<https://codebeautify.org/base64-decode?input={convert(url)}>')

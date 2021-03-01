@@ -17,11 +17,28 @@ from missile import Missile
 intent = discord.Intents.none()
 intent.guilds = intent.members = intent.messages = intent.reactions = intent.voice_states = intent.typing = True
 intent.presences = True
-bot = commands.Bot(command_prefix='t.' if dimsecret.debug else 'd.', intents=intent)
+
+
+async def prefix_process(bot: commands.Bot, msg: discord.Message):
+    prefix = ['t.' if dimsecret.debug else 'd.']
+    if msg.author.id == 264756129916125184:
+        prefix.append(msg.guild.me.mention + ' , ')
+        prefix.append(msg.guild.me.mention + ' ,')
+        prefix.append(bot.user.mention + ' ,')
+        prefix.append(bot.user.mention + ' , ')
+        prefix.append('DimBot, ')
+        prefix.append('DimBot,')
+    elif msg.content.startswith(bot.user.mention + ' ,') or msg.content.startswith(msg.guild.me.mention + ' ,') or \
+            msg.content.startswith('DimBot,'):
+        await msg.reply('Only my little pog champ can use authoritative orders!')
+    return prefix
+
+
+bot = commands.Bot(command_prefix=prefix_process, intents=intent)
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.16.3"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.17"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -111,8 +128,8 @@ async def on_ready():
     if bot.missile.new:
         bot.missile.new = False
         if reborn_channel:
-            epilogue = "DimBot has updated, restarted itself and landed, just like the Falcon 9.\n" \
-                       "Ready to kick some balls!\nhttps://data.whicdn.com/images/343444322/original.gif"
+            epilogue = "Arc-Cor𐑞: Reconnected with Discord, transform complete. Ready to kick some balls!\n" \
+                       "https://data.whicdn.com/images/343444322/original.gif"
             await bot.get_channel(reborn_channel).send(epilogue)
         while True:
             logger.debug('Changed activity')
@@ -120,9 +137,9 @@ async def on_ready():
             await asyncio.sleep(300)
 
 
-@bot.event
-async def on_disconnect():
-    bot.missile.new = True
+# @bot.event
+# async def on_disconnect():
+#     bot.missile.new = True
 
 
 @bot.event
@@ -192,27 +209,30 @@ async def on_command_error(ctx, error):
     raise error
 
 
-@bot.command()
+@bot.group(invoke_without_command=True)
+async def arccore(ctx):
+    pass
+
+
+@arccore.command()
 @Missile.is_rainbow_cmd_check()
-async def exit(ctx):
+async def off(ctx):
     bot.echo.db.commit()
-    await ctx.send('https://pbs.twimg.com/media/ED4Ia8AWkAMcXvK.jpg')
+    await ctx.send('Arc-Cor𐑞: **OFF**\nhttps://pbs.twimg.com/media/ED4Ia8AWkAMcXvK.jpg')
     await bot.logout()
 
 
-@bot.command()
+@arccore.command()
 @Missile.is_rainbow_cmd_check()
-async def update(ctx):
+async def transform(ctx):
     bot.echo.db.commit()
-    prologue = "Introducing DimBot 0.7.15: Auto update and restart. DimBot now lifts off!\n" \
-               "https://pbs.twimg.com/media/ED4Ia8AWkAMcXvK.jpg"
-    await ctx.send(prologue)
-    with open('final', 'w') as fi:
-        fi.write(str(ctx.channel.id))
+    await ctx.send('Arc-Cor𐑞: **TRANSFORM**\nInitiating update and restart operations!')
+    with open('final', 'w') as death_note:
+        death_note.write(str(ctx.channel.id))
     logger.critical('RESTARTING')
     import subprocess
     subprocess.Popen(['sudo systemctl restart dimbot'], shell=True)
-    await bot.logout()
+
 
 bot.add_cog(ricciardo.Ricciardo(bot))
 bot.add_cog(hamilton.Hamilton(bot))
