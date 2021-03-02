@@ -13,6 +13,7 @@ __version__ = '5.0'
 
 from discord.ext.commands import Context
 
+from RGBEmbed import RGBEmbed
 from dimsecret import debug, youtube
 from missile import Missile
 
@@ -86,10 +87,8 @@ class Ricciardo(commands.Cog):
             rss_sub = cursor.execute('SELECT rssChID, footer FROM RssSub WHERE url = ?',
                                      (row['url'],)).fetchall()
             description = (content.get_text()[:497] + '...') if len(content.get_text()) > 500 else content.get_text()
-            emb = discord.Embed(title=feed.title, description=description, url=feed.link)
-            emb.colour = discord.Colour.from_rgb(randint(0, 255), randint(0, 255), randint(0, 255))
+            emb = RGBEmbed(title=feed.title, description=description, url=feed.link)
             for row in rss_sub:
-                # TODO: Create a class called RSSEmb which subclasses Embed in order to satisfy NEA
                 local_emb = emb.copy()
                 channel = self.bot.get_channel(row['rssChID'])
                 local_emb.set_footer(text=f"{row['footer']} | {feed.published}")
