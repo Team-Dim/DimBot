@@ -1,14 +1,15 @@
-from typing import Optional, Union
+from typing import Optional
 
 import discord
 from discord.ext import commands
-
-__version__ = '1.0'
 
 from missile import Missile
 
 
 class Dimond(commands.Cog):
+    """Named by Anqaa' (uid: 98591077975465984)
+    Report users/channels/servers details. Literally CIA
+    Version: 1.0"""
 
     def __init__(self, bot):
         self.bot: commands.Bot = bot

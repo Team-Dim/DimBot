@@ -6,10 +6,9 @@ from bruckserver.albon import Albon
 from missile import Missile
 
 
-__version__ = '1.3.1'
-
-
 class Verstapen(commands.Cog):
+    """Connects to AWS and communicates with a minecraft server instance.
+    Version 1.3.1"""
 
     def __init__(self, bot):
         self.bot = bot

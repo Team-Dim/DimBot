@@ -1,10 +1,10 @@
 import discord
 from discord.ext.commands import Cog
 
-__version__ = '1.3.1'
-
 
 class Hamilton(Cog):
+    """Dim's guild specific features
+    Version 1.3.1"""
 
     def __init__(self, bot):
         self.bot = bot

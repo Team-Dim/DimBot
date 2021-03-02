@@ -4,9 +4,6 @@ import re
 from random import randint
 
 import discord
-
-__version__ = '1.3'
-
 from discord.ext.commands import Cog, Context, command, has_any_role, group, cooldown, BucketType, Bot
 
 from dimsecret import debug
@@ -22,6 +19,8 @@ def convert(text: str) -> str:
 
 
 class BitBay(Cog):
+    """Utilities for 128BB
+    Version 1.3"""
 
     def __init__(self, bot):
         self.bot: Bot = bot
@@ -45,11 +44,15 @@ class BitBay(Cog):
     @Cog.listener()
     async def on_message(self, msg: discord.Message):
         if msg.guild and msg.guild.id == 675477913411518485 and self.mpm:
-            if re.search(r".*(get|download|find|obtain|acquire).*(cemu|wii ?u) (rom|game)s?", msg.content, re.IGNORECASE):
+            if re.search(r".*(get|download|find|obtain|acquire).*(cemu|wii ?u) (rom|game)s?", msg.content,
+                         re.IGNORECASE):
                 await msg.reply("Please use the last link in the oldest pin in <#718989936837263450>")
-            elif re.search(r".*(get|download|find|obtain|acquire).*(switch|yuzu|ryu) (rom|game)s?", msg.content, re.IGNORECASE):
+            elif re.search(r".*(get|download|find|obtain|acquire).*(switch|yuzu|ryu) (rom|game)s?", msg.content,
+                           re.IGNORECASE):
                 await msg.reply("<#730596209701421076>")
-            elif re.search(r".*(get|download|find|obtain|acquire).*((shader.*(switch|yuzu|ryu))|((switch|yuzu|ryu).*shader))", msg.content, re.IGNORECASE):
+            elif re.search(
+                    r".*(get|download|find|obtain|acquire).*((shader.*(switch|yuzu|ryu))|((switch|yuzu|ryu).*shader))",
+                    msg.content, re.IGNORECASE):
                 await msg.reply("<#709944999399260190>")
 
     @command(aliases=['enc'])
@@ -164,10 +167,11 @@ class BitBay(Cog):
         if ctx.author.id not in self.xp:
             self.xp[ctx.author.id] = 0
         self.xp[ctx.author.id] += xp
-        await ctx.send(embed=discord.Embed(title=title, description=f"**{ctx.author.name}'s penis:**\n{self.draw_pp(me)}\n"
-                                                                    f"**{user.name}'s penis:**\n{self.draw_pp(him)}\n\n"
-                                                                    f"You gained **{xp}** score!",
-                                           colour=Missile.random_rgb()))
+        await ctx.send(
+            embed=discord.Embed(title=title, description=f"**{ctx.author.name}'s penis:**\n{self.draw_pp(me)}\n"
+                                                         f"**{user.name}'s penis:**\n{self.draw_pp(him)}\n\n"
+                                                         f"You gained **{xp}** score!",
+                                colour=Missile.random_rgb()))
 
     @pp.command()
     async def lb(self, ctx: Context):

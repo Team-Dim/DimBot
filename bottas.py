@@ -4,15 +4,14 @@ from datetime import datetime
 
 import discord
 from discord.ext import commands
-
-__version__ = '1.3'
-
 from dimsecret import debug
 from missile import Missile
 
 
 # TODO: instead of hardcoded queries like execute('DELETE FROM'), use object oriented approaches like table.delete()
 class Bottas(commands.Cog):
+    """Quote database.
+    Version 1.3"""
 
     def __init__(self, bot):
         self.bot = bot

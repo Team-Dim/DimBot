@@ -2,10 +2,11 @@ import asyncio
 
 from aiohttp import web
 
-__version__ = '1.2.1'
-
 
 class Albon:
+    """HTTP server sub-project used by Verstapen
+    Version 1.2.1"""
+
     def __init__(self, logger):
         self._channels = []
         self.logger = logger

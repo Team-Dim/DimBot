@@ -34,7 +34,7 @@ bot.default_prefix = 't.' if dimsecret.debug else 'd.'
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.17.2"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.17.3"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -77,18 +77,9 @@ async def info(ctx):
         f'This bot is running on Python `{python_version()}`\n'
         f'It interacts with Discord via discord.py `{discord.__version__}`, '
         f'Amazon Web Services via boto3 `{boto3ver}`.\n'
-        'Bot source code: https://github.com/TCLRainbow/DimBot\n\n'
-        'This bot has the following modules:\n'
-        f'**Project Ricciardo** `{ricciardo.__version__}`: Relaying RSS, BBM and YouTube feeds to discord channels.\n'
-        f'**Project Bottas** `{bottas.__version__}`: Add or search quotes through a SQLite database.\n'
-        f'**Project Hamilton** `{hamilton.__version__}`: Adds additional feature per role\n'
-        f'**Project Verstapen** `{verstapen.__version__}`: Connects to AWS and manage a minecraft server instance.\n'
-        f'**Project Albon** `{albon.__version__}`: HTTP server sub-project used by `Verstapen`.\n'
-        '**Project Norris** `0`: Chat bot for answering BBM questions.\n'
-        f'**Project BitBay** `{bitbay.__version__}`: Utilities for 128BB\n'
-        f'**Project Dimond** `{dimond.__version__}`: (Named by {bot.get_user(98591077975465984)}) '
-        f'Report users/channels/servers details. Literally CIA\n\n'
-        f'Devblog: Instagram @techdim\nDiscord server: `6PjhjCD`\n{sponsor_txt}'
+        'Bot source code: https://github.com/TCLRainbow/DimBot\n'
+        f'Bot module descriptions have been moved to `{bot.default_prefix}help <module name>`\n'
+        f'Devblog: Instagram @techdim\nDiscord server: `6PjhjCD`\n\n{sponsor_txt}'
     )
 
 

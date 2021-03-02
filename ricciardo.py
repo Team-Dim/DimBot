@@ -8,9 +8,6 @@ import discord
 import feedparser
 from bs4 import BeautifulSoup
 from discord.ext import commands
-
-__version__ = '5.0'
-
 from discord.ext.commands import Context
 
 from dimsecret import debug, youtube
@@ -18,6 +15,8 @@ from missile import Missile
 
 
 class Ricciardo(commands.Cog):
+    """Relaying RSS, BBM and YouTube feeds to discord channels.
+    Version 5.0"""
 
     def __init__(self, bot):
         self.bot = bot
