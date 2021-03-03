@@ -23,10 +23,9 @@ class Ricciardo(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logger = bot.missile.get_logger('Ricciardo')
-        self.new = True
-        self.session = aiohttp.ClientSession()
-        self.addon_ids = [274058, 306357, 274326]
-        self.data = {}
+        self.new = True  # For DimBot change activity loop
+        self.session = aiohttp.ClientSession()  # A master Session for all requests within this class
+        self.addon_ids = [274058, 306357, 274326]  # List of addon IDs from BBM operations
         if debug:  # Debug system uses Windows while production server uses Linux
             asyncio.set_event_loop_policy(  # change to check os in future
                 asyncio.WindowsSelectorEventLoopPolicy())  # https://github.com/aio-libs/aiohttp/issues/4324
@@ -37,6 +36,7 @@ class Ricciardo(commands.Cog):
         if self.new:
             self.new = False
             while True:
+                # Dispatch tasks every 10 minutes.
                 await self.raceline_task()
                 self.bot.echo.db.commit()
                 await asyncio.sleep(600)
@@ -45,19 +45,37 @@ class Ricciardo(commands.Cog):
     async def on_disconnect(self):
         self.new = True
 
+    @commands.Cog.listener()
+    async def on_guild_remove(self, guild: discord.Guild):
+        """When the bot leaves a server, remove subscriptions related to the server."""
+        ch_ids = [ch.id for ch in guild.text_channels]
+        q_marks = ','.join(['?'] * len(ch_ids))
+        self.bot.echo.cursor.execute(f"DELETE FROM BbmRole WHERE bbmChID IN ({q_marks})", (ch_ids,))
+        self.bot.echo.cursor.execute(f"DELETE FROM BbmAddon WHERE bbmChID IN ({q_marks})", (ch_ids,))
+        self.bot.echo.cursor.execute(f"DELETE FROM RssSub WHERE rssChID IN ({q_marks})", (ch_ids,))
+        self.bot.echo.cursor.execute(f"DELETE FROM RssData WHERE url NOT IN (SELECT url FROM RssSub)")
+        self.bot.echo.cursor.execute(f"DELETE FROM YtSub WHERE ytChID IN ({q_marks})", (ch_ids,))
+        self.bot.echo.cursor.execute("DELETE FROM YtData WHERE channelID NOT IN (SELECT channelID FROM YtSub)")
+
     async def raceline_task(self):
+        """Dispatches RSS, BBM and YouTube update detectors"""
         bbm_futures = {}
         for addon_id in self.addon_ids:
-            bbm_futures[addon_id] = self.bot.loop.create_task(self.bbm_process(addon_id))
+            bbm_futures[addon_id] = self.bot.loop.create_task(self.bbm_process(addon_id))  # Dispatch BBM tasks
         resultless_futures = []
-        rss_data = self.bot.echo.cursor.execute('SELECT * FROM RssData').fetchall()
+        rss_data = self.bot.echo.cursor.execute('SELECT * FROM RssData').fetchall()  # Fetches RSS data from db
         for index, row in enumerate(rss_data):
+            # Dispatches RSS tasks
             resultless_futures.append(self.bot.loop.create_task(self.rss_process(index + 1, row)))
-        yt_data = self.bot.echo.cursor.execute('SELECT * FROM YtData').fetchall()
+        yt_data = self.bot.echo.cursor.execute('SELECT * FROM YtData').fetchall()  # Fetches YouTube data from db
         for row in yt_data:
+            # Dispatches YouTube tasks
             resultless_futures.append(self.bot.loop.create_task(self.yt_process(row)))
+
+        # The tasks are running. Now prepare when all BBM tasks return.
+        # Fetches role subscriptions for BBM
         bbm_role = self.bot.echo.cursor.execute('SELECT * FROM BbmRole').fetchall()
-        await asyncio.wait(bbm_futures.values())
+        await asyncio.wait(bbm_futures.values())  # Wait for all BBM tasks to return
         for row in bbm_role:
             bbm_addon = self.bot.echo.cursor.execute('SELECT addonID FROM BbmAddon WHERE bbmChID = ?',
                                                      (row[0],)).fetchall()
