@@ -31,17 +31,10 @@ class Ricciardo(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        self.logger.debug('on_ready')
-        if self.new:
-            self.new = False
-            while True:
-                await self.raceline_task()
-                self.bot.echo.db.commit()
-                await asyncio.sleep(600)
-
-    @commands.Cog.listener()
-    async def on_disconnect(self):
-        self.new = True
+        while True:
+            await self.raceline_task()
+            self.bot.echo.db.commit()
+            await asyncio.sleep(600)
 
     async def raceline_task(self):
         bbm_futures = {}

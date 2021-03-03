@@ -12,7 +12,7 @@ import dimond
 import dimsecret
 import hamilton
 import ricciardo
-from bruckserver import verstapen, albon
+from bruckserver import verstapen
 from missile import Missile
 
 intent = discord.Intents.none()
@@ -34,7 +34,7 @@ bot.default_prefix = 't.' if dimsecret.debug else 'd.'
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.17.3"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.18"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -112,21 +112,19 @@ async def on_ready():
     for guild in bot.guilds:
         if guild.me.nick != nickname:
             await guild.me.edit(nick=nickname)
-    if bot.missile.new:
-        bot.missile.new = False
-        if reborn_channel:
-            epilogue = "Arc-Cor𐑞: Reconnected with Discord, transform complete. Ready to kick some balls!\n" \
-                       "https://data.whicdn.com/images/343444322/original.gif"
-            await bot.get_channel(reborn_channel).send(epilogue)
-        while True:
-            logger.debug('Changed activity')
-            await bot.change_presence(activity=choice(activities))
-            await asyncio.sleep(300)
+    if reborn_channel:
+        epilogue = "Arc-Cor𐑞: Reconnected with Discord, transform complete. Ready to kick some balls!\n" \
+                   "https://data.whicdn.com/images/343444322/original.gif"
+        await bot.get_channel(reborn_channel).send(epilogue)
+    while True:
+        logger.debug('Changed activity')
+        await bot.change_presence(activity=choice(activities))
+        await asyncio.sleep(300)
 
 
-# @bot.event
-# async def on_disconnect():
-#     bot.missile.new = True
+@bot.event
+async def on_resumed():
+    await bot.missile.bottyland.send("<@264756129916125184> WARNING: Bot has resumed.")
 
 
 @bot.event
@@ -169,8 +167,7 @@ async def on_message_edit(before: discord.Message, after: discord.Message):
 
 @bot.command()
 async def snipe(ctx):
-    if bot.missile.snipe:
-        await ctx.send(embed=bot.missile.snipe)
+    await ctx.send(embed=bot.missile.snipe)
 
 
 @bot.event
