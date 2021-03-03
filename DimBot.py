@@ -13,6 +13,7 @@ import dimsecret
 import hamilton
 import ricciardo
 from bruckserver import verstapen
+from ikaros import Ikaros
 from missile import Missile
 
 intent = discord.Intents.none()
@@ -34,7 +35,7 @@ bot.default_prefix = 't.' if dimsecret.debug else 'd.'
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.18"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.19"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -90,7 +91,7 @@ async def sponsor(ctx):
 
 @bot.command()
 async def noel(ctx):
-    """Listens to the heartbeat of Nezuko"""
+    """Listens to my heartbeat"""
     msg = await ctx.reply(f':heartbeat: {bot.latency * 1000:.3f}ms')
     tic = datetime.now()
     await msg.add_reaction('📡')
@@ -218,10 +219,17 @@ async def transform(ctx):
     subprocess.Popen(['sudo systemctl restart dimbot'], shell=True)
 
 
+@bot.command()
+@Missile.is_rainbow_cmd_check()
+async def say(ctx, ch: discord.TextChannel, *, msg: str):
+    await ch.send(msg)
+
+
 bot.add_cog(ricciardo.Ricciardo(bot))
 bot.add_cog(hamilton.Hamilton(bot))
 bot.add_cog(verstapen.Verstapen(bot))
 bot.add_cog(bot.echo)
 bot.add_cog(bitbay.BitBay(bot))
 bot.add_cog(dimond.Dimond(bot))
+bot.add_cog(Ikaros(bot))
 bot.run(dimsecret.discord)
