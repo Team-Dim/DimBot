@@ -16,7 +16,7 @@ async def send(ctx: Context, content: str):
 
 class Ikaros(Cog):
     """Moderation commands. For AutoMod please check out Aegis in the future
-    Version 0.2"""
+    Version 0.2.1"""
 
     def __init__(self, bot):
         self.bot = bot
@@ -42,11 +42,11 @@ class Ikaros(Cog):
     @command()
     @Missile.guild_only()
     @has_any_role(702608566845964338, 452859434104913931, 702889819570831572)
-    async def kick(self, ctx: Context, target: discord.Member):
+    async def kick(self, ctx: Context, target: discord.Member, countdown: int = 3):
         msg = await send(ctx, "Target locked: " + target.mention)
-        for i in range(3, 0, -1):
+        for i in range(countdown, 0, -1):
             await Missile.append_message(msg, str(i))
             await asyncio.sleep(1)
         await target.kick(reason=f'Ikaros: Kicked by {ctx.author}')
-        switch = "**NOT**" if ctx.guild.get_member(target.id) else ''
-        await ctx.send(target.mention + ' has ' + switch + ' been kicked.')
+        switch = "**NOT** " if ctx.guild.get_member(target.id) else ''
+        await send(ctx, target.mention + ' has ' + switch + 'been kicked.')
