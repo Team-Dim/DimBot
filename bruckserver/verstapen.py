@@ -13,8 +13,8 @@ class Verstapen(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.logger = bot.missile.get_logger('Vireg')
-        self.http_not_started = True
+        self.logger = bot.missile.get_logger('Verstapen')
+        self.http_not_started = True  # Whether Albon has been started
         self.albon = Albon(bot.missile.get_logger('Albon'))
 
     @commands.Cog.listener()
@@ -22,43 +22,45 @@ class Verstapen(commands.Cog):
         self.logger.debug('on_ready')
 
     async def boot_instance(self, ctx, instance_id: str, region_id: str):
+        """Booting the AWS instance"""
         msg = await ctx.send('Connecting to Amazon Web Service...')
         self.logger.info('Connecting to AWS')
-        session = boto3.session.Session(
+        session = boto3.session.Session(  # Initialises session to AWS via boto3
             region_name=region_id,
             aws_access_key_id=dimsecret.aws_access_key,
             aws_secret_access_key=dimsecret.aws_secret_key
         )
-        ec2 = session.resource('ec2')
-        ssm = session.client('ssm')
+        ec2 = session.resource('ec2')  # Elastic Compute Cloud
+        ssm = session.client('ssm')  # Systems Manager
         self.logger.debug('Fetching SSM parameter')
+        # Fetches the region name of the Minecraft server instance
         response = ssm.get_parameter(Name=f'/aws/service/global-infrastructure/regions/{region_id}/longName')
         region_name = response['Parameter']['Value']
         await Missile.append_message(msg, f'Checking if instance *{instance_id}* is already running...')
-        instance = ec2.Instance(instance_id)
-        if instance.state['Code'] != 80:
+        instance = ec2.Instance(instance_id)  # Fetches details of the remote instance
+        if instance.state['Code'] != 80:  # Code 80 means Stopped. Don't send start request if instance is running.
             await Missile.append_message(msg, 'Instance is already running')
         else:
             msg = await ctx.send('Sending start request...')
-            instance.start()
+            instance.start()  # Sends an instance start request to AWS
             await Missile.append_message(msg, "Waiting for the instance to be booted...")
-            instance.wait_until_running()
+            instance.wait_until_running()  # Waits until AWS responses that the instance has successfully started
             await Missile.append_message(msg, 'Instance has successfully started')
         await Missile.append_message(
             msg,
             f'in {region_id} **"{region_name}"**. IP address: **{instance.public_ip_address}** ',
             delimiter=' '
-        )
+        )  # Reports the IP address of the instance; The IP address is dynamic if the server shut down completely
+        # Adds the Discord channel to the list of channels to receive Lokeon events.
         self.albon.add_channel(ctx.channel)
         if self.http_not_started:
-            await self.albon.run_server()
+            await self.albon.run_server()  # Start Albon if its not running
             self.http_not_started = False
 
     @commands.command()
-    @Missile.is_rainbow_cmd_check(':construction: Sorry, this feature is currently not available, please ask Dim '
-                                  'in Discord to help you!')
+    @Missile.is_rainbow_cmd_check()
     async def start(self, ctx):
-        # Remove this check when Lokeon has finished rewriting.
+        """Launches the bruckserver Minecraft server"""
         if dimsecret.debug:
             await ctx.send('⚠DimBot is currently in **DEBUG** mode.'
                            ' I cannot receive messages from Lokeon, also things may not work as expected!⚠\n')

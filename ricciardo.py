@@ -1,6 +1,5 @@
 import asyncio
 import re
-from random import randint
 from time import mktime
 
 import aiohttp
