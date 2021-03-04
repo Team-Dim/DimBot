@@ -59,7 +59,6 @@ async def info(ctx):
         f'**Project Bottas** `{bottas.__version__}`: Add or search quotes through a SQLite database.\n'
         f'**Project Verstapen** `{verstapen.__version__}`: Connects to AWS and manage a minecraft server instance.\n'
         f'**Project Albon** `{albon.__version__}`: HTTP server sub-project used by `Verstapen`.\n'
-        '**Project Norris** `0`: Chat bot for answering BBM questions.\n'
         f'**Project BitBay** `{bitbay.__version__}`: Utilities for 128BB\n\n'
         f'Devblog: Instagram @techdim\nDiscord server: `6PjhjCD`\n{sponsor_txt}'  # Contact
     )
