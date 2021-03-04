@@ -131,7 +131,7 @@ class Bottas(commands.Cog):
     async def delete(self, ctx, index: int):
         quote = self.get_quote(index)
         if quote:
-            if quote['uid'] == ctx.author.id or Missile.is_rainbow(ctx):
+            if quote['uid'] == ctx.author.id or Missile.is_rainbow(ctx.author.id):
                 q = f"> {quote['msg']}\nYou sure you want to delete this? React ✅ to confirm"
                 q = await ctx.send(q)
                 await q.add_reaction('✅')
