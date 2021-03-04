@@ -66,7 +66,7 @@ class BitBay(Cog):
             await ctx.send(convert(url))
 
     @command()
-    @has_any_role(735911149681508383, 702889819570831572)
+    @has_any_role(702608566845964338, 735911149681508383, 702889819570831572)
     async def mpm(self, ctx: Context):
         await ctx.reply(('Disabled' if self.mpm else 'Enabled') + ' Message Pattern Matching (MPM)')
         self.mpm = not self.mpm
@@ -83,7 +83,7 @@ class BitBay(Cog):
             await ctx.send('Malformed base64 string.')
 
     @command()
-    @has_any_role(702889819570831572, 720319730883362816)
+    @has_any_role(702608566845964338, 702889819570831572, 720319730883362816)
     async def ea(self, ctx: Context, build: int, url: str):
         msg = f'<@&719572310129901710>\n\nYuzu Early Access {build}\n\nDownload:\n' \
               f'<https://codebeautify.org/base64-decode?input={convert(url)}>'

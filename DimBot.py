@@ -2,6 +2,7 @@ import asyncio
 import re
 from datetime import datetime
 from random import choice
+from typing import Union
 
 import discord
 from discord.ext import commands
@@ -35,7 +36,7 @@ bot.default_prefix = 't.' if dimsecret.debug else 'd.'
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.19"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.20"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -221,8 +222,14 @@ async def transform(ctx):
 
 @bot.command()
 @Missile.is_rainbow_cmd_check()
-async def say(ctx, ch: discord.TextChannel, *, msg: str):
-    await ch.send(msg)
+async def saych(ctx, ch: Union[discord.TextChannel, discord.User]):
+    bot.missile.say_ch = ch.id
+
+
+@bot.command()
+@Missile.is_rainbow_cmd_check()
+async def say(ctx, *, msg: str):
+    await bot.get_channel(bot.missile.say_ch).send(msg)
 
 
 bot.add_cog(ricciardo.Ricciardo(bot))
