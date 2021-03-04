@@ -44,7 +44,7 @@ sponsor_txt = 'You guys see my brother Tanjiro? I need to save him! Donate me! '
 
 @bot.command(aliases=['ver', 'verinfo'])
 async def info(ctx):
-    """A command that displays the bot information"""
+    """Displays bot and module information"""
     from platform import python_version
     from boto3 import __version__ as boto3ver
     await ctx.send(

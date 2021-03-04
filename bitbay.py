@@ -24,7 +24,7 @@ class BitBay(Cog):
 
     @command(aliases=['enc'])
     async def encode(self, ctx: Context, *, url: str):
-        """Command for encoding a message to base64"""
+        """Encodes base64 via command"""
         if isinstance(ctx.channel, discord.TextChannel):
             # Attempts to delete the message for privacy reasons
             await ctx.message.delete()
