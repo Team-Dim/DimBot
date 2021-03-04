@@ -13,6 +13,7 @@ import dimond
 import dimsecret
 import hamilton
 import ricciardo
+from aegis import Aegis
 from bruckserver import verstapen
 from ikaros import Ikaros
 from missile import Missile
@@ -25,7 +26,7 @@ intent.presences = True
 async def prefix_process(bot: commands.Bot, msg: discord.Message):
     tag_mention = re.search(f'^((<@.?{bot.user.id}> |DimBot), )', msg.content)
     if tag_mention:
-        if msg.author.id == 264756129916125184:
+        if Missile.is_rainbow(msg.author.id):
             return tag_mention.group(0)
         else:
             await msg.reply('Only my little pog champ can use authoritative orders!')
@@ -36,7 +37,7 @@ bot.default_prefix = 't.' if dimsecret.debug else 'd.'
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.21"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.22"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -244,4 +245,5 @@ bot.add_cog(bot.echo)
 bot.add_cog(bitbay.BitBay(bot))
 bot.add_cog(dimond.Dimond(bot))
 bot.add_cog(Ikaros(bot))
+bot.add_cog(Aegis(bot))
 bot.run(dimsecret.discord)
