@@ -38,9 +38,6 @@ logger = bot.missile.get_logger('DimBot')
 with open('.git/HEAD', 'r') as f:
     branch = f.readline().split('/')[-1]  # Read Git branch
 
-sponsor_txt = 'You guys see my brother Tanjiro? I need to save him! Donate me! ' \
-              '<https://streamlabs.com/pythonic_rainbow/tip> '
-
 
 @bot.command(aliases=['ver', 'verinfo'])
 async def info(ctx):
@@ -59,15 +56,8 @@ async def info(ctx):
         f'**Project Bottas** `{bottas.__version__}`: Add or search quotes through a SQLite database.\n'
         f'**Project Verstapen** `{verstapen.__version__}`: Connects to AWS and manage a minecraft server instance.\n'
         f'**Project Albon** `{albon.__version__}`: HTTP server sub-project used by `Verstapen`.\n'
-        f'**Project BitBay** `{bitbay.__version__}`: Utilities for 128BB\n\n'
-        f'Devblog: Instagram @techdim\nDiscord server: `6PjhjCD`\n{sponsor_txt}'  # Contact
+        f'**Project BitBay** `{bitbay.__version__}`: Utilities for 128BB'
     )
-
-
-@bot.command()
-async def sponsor(ctx):
-    """Shows the sponsor message"""
-    await ctx.send(sponsor_txt)
 
 
 @bot.event
