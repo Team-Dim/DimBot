@@ -153,9 +153,8 @@ class Dimond(commands.Cog):
         emb.add_field(name='View audit log', value=perm.view_audit_log)  # 2^7
         emb.add_field(name='Add reactions', value=perm.add_reactions)  # 2^6
         emb.add_field(name='Manage server', value=perm.manage_guild)  # 2^5
-        emb.add_field(name='Manage channels', value=perm.manage_channels)  # 2^4
-        emb.add_field(name='Administrator', value=perm.administrator)  # 2^3
-        emb.add_field(name='Ban members', value=perm.ban_members)  # 2^2
-        emb.add_field(name='Kick members', value=perm.kick_members)  # 2^1
-        emb.add_field(name='Create invites', value=perm.create_instant_invite)  # 2^0
-        await ctx.reply(embed=emb)
+        await ctx.reply(content=f"Manage channels: {perm.manage_channels} "  # 2^4
+                        f"Administrator: {perm.administrator} "  # 2^3
+                        f"Ban members: {perm.ban_members} "  # 2^2
+                        f"Kick members: {perm.kick_members} "  # 2^1
+                        f"Create invites: {perm.create_instant_invite}", embed=emb)  # 2^0

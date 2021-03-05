@@ -10,6 +10,7 @@ from dimsecret import debug
 from missile import Missile
 
 max_pp_size = 27
+__guild_id__ = 675477913411518485
 
 
 def convert(text: str) -> str:
