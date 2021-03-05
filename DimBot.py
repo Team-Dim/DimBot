@@ -37,7 +37,7 @@ bot.default_prefix = 't.' if dimsecret.debug else 'd.'
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.23"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.23.1"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -123,11 +123,6 @@ async def on_ready():
         logger.debug('Changed activity')
         await bot.change_presence(activity=choice(activities))
         await asyncio.sleep(300)
-
-
-@bot.event
-async def on_resumed():
-    await bot.missile.bottyland.send("<@264756129916125184> WARNING: Bot has resumed.")
 
 
 @bot.event

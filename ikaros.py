@@ -14,6 +14,35 @@ async def send(ctx: Context, content: str):
     return await ctx.send('**Ikaros:** ' + content)
 
 
+async def ensure_target(ctx, target: discord.Member, countdown: int):
+    msg = await send(ctx, "Attempting to lock target: " + target.mention)
+    if target.top_role >= ctx.guild.me.top_role or Missile.is_rainbow(target.id):
+        await Missile.append_message(msg, 'Cannot lock target.')
+        raise PermissionError
+    await Missile.append_message(msg, 'Target locked.')
+    for i in range(countdown, 0, -1):
+        await Missile.append_message(msg, str(i))
+        await asyncio.sleep(1)
+
+
+async def kick(ctx: Context, target: discord.Member, countdown: int, reason: str):
+    try:
+        await ensure_target(ctx, target, countdown)
+        await target.kick(reason=reason)
+        await send(ctx, target.mention + ' has been kicked.')
+    except PermissionError:
+        pass
+
+
+async def ban(ctx: Context, target: discord.Member, countdown: int, reason: str):
+    try:
+        await ensure_target(ctx, target, countdown)
+        await target.ban(reason=reason)
+        await send(ctx, target.mention + ' has been banned.')
+    except PermissionError:
+        pass
+
+
 class Ikaros(Cog):
     """Moderation commands. For AutoMod please check out Aegis in the future
     Version 0.2.1"""
@@ -42,34 +71,16 @@ class Ikaros(Cog):
             await target.add_roles(role, reason=f'Ikaros: Added by {ctx.author}')
             await reply(ctx, f'Assigned **{role.name}** to {target}')
 
-    @command()
+    @command(name='kick')
     @Missile.guild_only()
     @has_permissions(kick_members=True)
     @bot_has_permissions(kick_members=True)
-    async def kick(self, ctx: Context, target: discord.Member, countdown: int = 3):
-        msg = await send(ctx, "Attempting to lock target: " + target.mention)
-        if target.top_role >= ctx.guild.me.top_role or Missile.is_rainbow(target.id):
-            await Missile.append_message(msg, 'Cannot lock target.')
-            return
-        await Missile.append_message(msg, 'Target locked.')
-        for i in range(countdown, 0, -1):
-            await Missile.append_message(msg, str(i))
-            await asyncio.sleep(1)
-        await target.kick(reason=f'Ikaros: Kicked by {ctx.author}')
-        await send(ctx, target.mention + ' has been kicked.')
+    async def kick_cmd(self, ctx: Context, target: discord.Member, countdown: int = 3):
+        await kick(ctx, target, countdown, f'Ikaros: Kicked by {ctx.author}')
 
-    @command()
+    @command(name='ban')
     @Missile.guild_only()
     @has_permissions(ban_members=True)
     @bot_has_permissions(ban_members=True)
-    async def ban(self, ctx: Context, target: discord.Member, countdown: int = 3):
-        msg = await send(ctx, "Attempting to lock target: " + target.mention)
-        if target.top_role >= ctx.guild.me.top_role or Missile.is_rainbow(target.id):
-            await Missile.append_message(msg, 'Cannot lock target.')
-            return
-        await Missile.append_message(msg, 'Target locked.')
-        for i in range(countdown, 0, -1):
-            await Missile.append_message(msg, str(i))
-            await asyncio.sleep(1)
-        await target.ban(reason=f'Ikaros: Banned by {ctx.author}')
-        await send(ctx, target.mention + ' has been banned.')
+    async def ban_cmd(self, ctx: Context, target: discord.Member, countdown: int = 3):
+        await ban(ctx, target, countdown, f'Ikaros: Banned by {ctx.author}')
