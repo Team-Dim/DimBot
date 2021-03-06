@@ -9,8 +9,9 @@ from discord.ext.commands import Cog, Context, command, has_any_role, group, coo
 from dimsecret import debug
 from missile import Missile
 
-max_pp_size = 27
-__guild_id__ = 675477913411518485
+max_pp_size = 69
+guild_id = 675477913411518485
+spam_ch_id = 723153902454964224
 
 
 def convert(text: str) -> str:
