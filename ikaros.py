@@ -84,3 +84,10 @@ class Ikaros(Cog):
     @bot_has_permissions(ban_members=True)
     async def ban_cmd(self, ctx: Context, target: discord.Member, countdown: int = 3):
         await ban(ctx, target, countdown, f'Ikaros: Banned by {ctx.author}')
+
+    @command()
+    @Missile.guild_only()
+    async def surprise(self, ctx: Context, target: discord.Member, countdown: int = 3):
+        await ctx.send('Initiating ban procedure for ' + str(target))
+        await ensure_target(ctx, target, countdown)
+        await ctx.send('🥳 Surprise')
