@@ -25,12 +25,8 @@ class Aegis(Cog):
         if msg.author.bot or msg.channel.id == 723153902454964224:
             return
         if len(msg.raw_mentions) > 5:
-            aegis_msg = await send(msg.channel, f'Detected mass ping ({len(msg.raw_mentions)})')
-            if msg.author.top_role >= msg.guild.me.top_role or Missile.is_rainbow(msg.author.id):
-                await Missile.append_message(aegis_msg, 'Cannot lock target.')
-                return
-            await msg.author.ban(reason='Aegis: Mass ping detected')
-            await send(msg.channel, 'Banned ' + msg.author.mention)
+            await send(msg.channel, f'Detected mass ping ({len(msg.raw_mentions)})')
+            await ikaros.ban(await self.bot.get_context(msg), msg.author, 0, 'Aegis: Mass ping detected')
         if msg.author.id not in self.count:
             self.count[msg.author.id] = [[], [], 0]
         self.count[msg.author.id][0].append(self.bot.loop.create_task(self.fast_spam_1(msg)))

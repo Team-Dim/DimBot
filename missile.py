@@ -27,7 +27,7 @@ class Missile:
         self.snipe: discord.Embed = discord.Embed(description='No one has deleted anything yet...',
                                                   color=Missile.random_rgb())
         self.ghost_pings = {}
-        self.say_ch = None
+        self.sch = None
 
     def get_logger(self, name: str) -> logging.Logger:
         logger = logging.getLogger(name)

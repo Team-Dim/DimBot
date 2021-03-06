@@ -37,7 +37,7 @@ bot.default_prefix = 't.' if dimsecret.debug else 'd.'
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.23.1"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.24"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -223,15 +223,23 @@ async def transform(ctx):
 
 @bot.command()
 @Missile.is_rainbow_cmd_check()
-async def saych(ctx, ch: Union[discord.TextChannel, discord.User]):
-    bot.missile.say_ch = ch
+async def sch(ctx, ch: Union[discord.TextChannel, discord.User]):
+    bot.missile.sch = ch
 
 
 @bot.command()
 @Missile.is_rainbow_cmd_check()
 async def say(ctx, *, msg: str):
-    await bot.missile.say_ch.send(msg)
+    await bot.missile.sch.send(msg)
 
+
+@bot.command()
+@Missile.is_rainbow_cmd_check()
+async def shadow(c, *, cmd: str):
+    msg = await bot.missile.sch.send(bot.default_prefix + cmd, delete_after=0.00000001)
+    msg.author = msg.guild.get_member(264756129916125184)
+    ctx = await bot.get_context(msg)
+    await bot.invoke(ctx)
 
 bot.add_cog(ricciardo.Ricciardo(bot))
 bot.add_cog(hamilton.Hamilton(bot))

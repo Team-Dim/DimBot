@@ -1,8 +1,8 @@
 .idea
 dimsecret.py
 data.json
-DimBot.db
-DimBot.db-journal
+*.db
+*.db-journal
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
