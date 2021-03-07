@@ -37,7 +37,7 @@ bot.default_prefix = 't.' if dimsecret.debug else 'd.'
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = bottas.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.25.2"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.7.26"
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
@@ -54,12 +54,7 @@ activities = [
     discord.Activity(name='Muzen train', type=discord.ActivityType.watching)
 ]
 logger = bot.missile.get_logger('DimBot')
-with open('.git/HEAD', 'r') as f:
-    branch = f.readline().split('/')[-1]
-
-sponsor_txt = 'You guys see my brother Tanjiro? I need to save him! Donate me! ' \
-              '<https://streamlabs.com/pythonic_rainbow/tip> '
-
+sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip>'
 reborn_channel = None
 try:
     with open('final', 'r') as fi:
@@ -76,11 +71,8 @@ async def info(ctx):
     from platform import python_version
     from boto3 import __version__ as boto3ver
     await ctx.send(
-        f'Guild count: **{len(bot.guilds)}** | Branch: **{branch}**\n'
-        f'This bot is running on Python `{python_version()}`\n'
-        f'It interacts with Discord via discord.py `{discord.__version__}`, '
-        f'Amazon Web Services via boto3 `{boto3ver}`.\n'
-        'Bot source code: https://github.com/TCLRainbow/DimBot\n'
+        f'Guild count: **{len(bot.guilds)}** | Python: `{python_version()}` | Discord.py: `{discord.__version__}` | '
+        f'boto3: `{boto3ver}`\nBot source code: https://github.com/TCLRainbow/DimBot\n'
         f'Bot module descriptions have been moved to `{bot.default_prefix}help <module name>`\n'
         f'Devblog: Instagram @techdim\nDiscord server: `6PjhjCD`\n\n{sponsor_txt}'
     )
@@ -103,7 +95,7 @@ async def noel(ctx):
 
 @bot.event
 async def on_ready():
-    bot.missile.guild = bot.get_guild(285366651312930817)
+    bot.missile.guild = bot.get_guild(hamilton.guild_id)
     bot.missile.bottyland = bot.get_channel(372386868236386307)
     bot.missile.bruck_ch = bot.get_channel(688948118712090644)
     if dimsecret.debug:
@@ -180,7 +172,7 @@ async def on_command_error(ctx, error):
         return
     if isinstance(error, commands.errors.MissingRequiredArgument) or isinstance(error, commands.errors.MissingAnyRole) \
             or isinstance(error, commands.errors.CommandOnCooldown) or isinstance(error, commands.errors.UserNotFound) \
-            or isinstance(error, commands.errors.MemberNotFound):
+            or isinstance(error, commands.errors.MemberNotFound) or isinstance(error, commands.errors.MissingPermissions):
         await ctx.reply(str(error))
         return
     if isinstance(error, commands.errors.ChannelNotFound):
@@ -236,10 +228,10 @@ async def say(ctx, *, msg: str):
 @bot.command()
 @Missile.is_rainbow_cmd_check()
 async def shadow(c, *, cmd: str):
-    msg = await bot.missile.sch.send(bot.default_prefix + cmd, delete_after=0.00000001)
+    msg = await bot.missile.sch.send('⠀')
+    msg.content = bot.default_prefix + cmd
     msg.author = msg.guild.get_member(264756129916125184)
-    ctx = await bot.get_context(msg)
-    await bot.invoke(ctx)
+    await bot.invoke(await bot.get_context(msg))
 
 bot.add_cog(ricciardo.Ricciardo(bot))
 bot.add_cog(hamilton.Hamilton(bot))

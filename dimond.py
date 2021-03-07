@@ -9,7 +9,7 @@ from missile import Missile
 class Dimond(commands.Cog):
     """Named by Anqaa' (uid: 98591077975465984)
     Report users/channels/servers details. Literally CIA
-    Version: 1.0"""
+    Version: 1.1"""
 
     def __init__(self, bot):
         self.bot: commands.Bot = bot
@@ -136,6 +136,7 @@ class Dimond(commands.Cog):
         emb.add_field(name='Use voice activation', value=perm.use_voice_activation)  # 2^25
         emb.add_field(name='Move members to voice channels', value=perm.move_members)  # 2^24
         emb.add_field(name='Deaf members', value=perm.deafen_members)  # 2^23
+        emb.add_field(name='Mute members', value=perm.mute_members)  # 2^22
         emb.add_field(name='Speak', value=perm.speak)  # 2^21
         emb.add_field(name='Connect to voice channels', value=perm.connect)  # 2^20
         emb.add_field(name='View server insights', value=perm.view_guild_insights)  # 2^19
@@ -152,9 +153,9 @@ class Dimond(commands.Cog):
         emb.add_field(name='Priority speaker', value=perm.priority_speaker)  # 2^8
         emb.add_field(name='View audit log', value=perm.view_audit_log)  # 2^7
         emb.add_field(name='Add reactions', value=perm.add_reactions)  # 2^6
-        emb.add_field(name='Manage server', value=perm.manage_guild)  # 2^5
-        await ctx.reply(content=f"Manage channels: {perm.manage_channels} "  # 2^4
-                        f"Administrator: {perm.administrator} "  # 2^3
-                        f"Ban members: {perm.ban_members} "  # 2^2
-                        f"Kick members: {perm.kick_members} "  # 2^1
-                        f"Create invites: {perm.create_instant_invite}", embed=emb)  # 2^0
+        await ctx.reply(content=f"Manage server: **{perm.manage_guild}** "  # 2^5
+                        f"Manage channels: **{perm.manage_channels}** "  # 2^4
+                        f"Administrator: **{perm.administrator}** "  # 2^3
+                        f"Ban members: **{perm.ban_members}** "  # 2^2
+                        f"Kick members: **{perm.kick_members}** "  # 2^1
+                        f"Create invites: **{perm.create_instant_invite}**", embed=emb)  # 2^0

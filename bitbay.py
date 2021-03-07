@@ -51,7 +51,7 @@ class BitBay(Cog):
                 await msg.reply("Please use the last link in the oldest pin in <#718989936837263450>")
             elif re.search(r".*(get|download|find|obtain|acquire).*(switch|yuzu|ryu) (rom|game)s?", msg.content,
                            re.IGNORECASE):
-                await msg.reply("<#730596209701421076>")
+                await msg.reply("Please use <#730596209701421076>, don't use FitGirl repacks.")
             elif re.search(
                     r".*(get|download|find|obtain|acquire).*((shader.*(switch|yuzu|ryu))|((switch|yuzu|ryu).*shader))",
                     msg.content, re.IGNORECASE):

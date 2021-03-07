@@ -1,6 +1,7 @@
 import discord
 from discord.ext.commands import Cog
 
+guild_id = 285366651312930817
 
 class Hamilton(Cog):
     """Dim's guild specific features
