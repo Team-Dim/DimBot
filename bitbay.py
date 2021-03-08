@@ -15,6 +15,7 @@ spam_ch_id = 723153902454964224
 
 
 def convert(text: str) -> str:
+    """Converts the given string to base64"""
     b: bytes = text.encode()
     encoded: bytes = base64.b64encode(b)
     return encoded.decode()
@@ -26,16 +27,18 @@ class BitBay(Cog):
 
     def __init__(self, bot):
         self.bot: Bot = bot
-        self.organs: dict = {}
-        self.xp: dict = {}
-        self.mpm = True
+        self.organs: dict = {}  # Dict for storing pp size
+        self.xp: dict = {}  # Dict for storing pp leaderboard
+        self.mpm = True  # Message Pattern Matching master switch
 
-    def get_size(self, uid: int) -> int:
+    def get_size(self, uid: int):
+        """Gets the pp size of a User"""
         if uid in self.organs.keys():
             return self.organs[uid]
-        return -1
+        return -1  # Should not change as return None in the future
 
     def draw_pp(self, size: int) -> str:
+        """Returns the string for displaying pp"""
         if size == -1:
             return f"No pp found. Have you set it up by {self.bot.default_prefix}pp?"
         description = f'8{"=" * size}D'
@@ -45,6 +48,7 @@ class BitBay(Cog):
 
     @Cog.listener()
     async def on_message(self, msg: discord.Message):
+        """Message Pattern Matching logic"""
         if msg.guild and msg.guild.id == 675477913411518485 and self.mpm:
             if re.search(r".*(get|download|find|obtain|acquire).*(cemu|wii ?u) (rom|game)s?", msg.content,
                          re.IGNORECASE):
@@ -59,6 +63,7 @@ class BitBay(Cog):
 
     @command(aliases=['enc'])
     async def encode(self, ctx: Context, *, url: str):
+        """Encodes base64 via command"""
         if ctx.channel.type == discord.ChannelType.text:
             await ctx.message.delete()
         if Missile.regex_is_url(url):
@@ -70,11 +75,13 @@ class BitBay(Cog):
     @command()
     @has_any_role(702608566845964338, 735911149681508383, 702889819570831572)
     async def mpm(self, ctx: Context):
+        """Toggles the Message Pattern Matching switch"""
         await ctx.reply(('Disabled' if self.mpm else 'Enabled') + ' Message Pattern Matching (MPM)')
         self.mpm = not self.mpm
 
     @command(aliases=['dec'])
     async def decode(self, ctx: Context, content: str):
+        """Decodes base64 via command"""
         import binascii
         try:
             b: bytes = content.encode()
@@ -87,6 +94,7 @@ class BitBay(Cog):
     @command()
     @has_any_role(702608566845964338, 702889819570831572, 720319730883362816)
     async def ea(self, ctx: Context, build: int, url: str):
+        """Notifies EAWindows that a new Yuzu EA build is available"""
         msg = f'<@&719572310129901710>\n\nYuzu Early Access {build}\n\nDownload:\n' \
               f'<https://codebeautify.org/base64-decode?input={convert(url)}>'
         if debug:
@@ -99,6 +107,7 @@ class BitBay(Cog):
         """
         Wiki for the d.pp commands: https://github.com/TCLRainbow/DimBot/wiki/pp
         """
+        # Randomises user's pp size
         user = user if user else ctx.author
         size = randint(0, max_pp_size)
         self.organs[user.id] = size
@@ -107,6 +116,7 @@ class BitBay(Cog):
 
     @pp.command()
     async def size(self, ctx: Context, user: discord.User = None):
+        """Shows the pp size in number"""
         user = user if user else ctx.author
         size = self.get_size(user.id)
         if size == -1:
@@ -116,6 +126,7 @@ class BitBay(Cog):
 
     @pp.command()
     async def slap(self, ctx: Context, user: discord.User):
+        """Use pp to slap others"""
         size = self.get_size(ctx.author.id)
         if size == -1:
             await ctx.send(self.draw_pp(size))
@@ -134,12 +145,15 @@ class BitBay(Cog):
 
     @pp.command()
     async def min(self, ctx: Context):
+        """Sets your pp size to 0"""
         self.organs[ctx.author.id] = 0
         await ctx.send(embed=discord.Embed(title=ctx.author.display_name + "'s penis", description='8D',
                                            colour=Missile.random_rgb()))
 
     @pp.command()
     async def cut(self, ctx: Context):
+        """Cuts your pp"""
+        # Internally this removes the user from self.organs
         size = self.get_size(ctx.author.id)
         if size == -1:
             await ctx.send(self.draw_pp(size))
@@ -149,10 +163,11 @@ class BitBay(Cog):
                                            description=f"8\n{'=' * size}D", colour=discord.Colour.red()))
 
     @pp.command(aliases=['sf'])
-    @cooldown(rate=1, per=10.0, type=BucketType.user)
+    @cooldown(rate=1, per=10.0, type=BucketType.user)  # Each person can only call this once per 10s
     async def swordfight(self, ctx: Context, user: discord.User = None):
-        if not user:
-            if not len(self.organs.keys()):
+        """Use your pp as a weapon and fight"""
+        if not user:  # User did not specify a target to fight
+            if not self.organs:  # There is no one to fight
                 await ctx.reply(f'No one has pp. Either `{self.bot.default_prefix}pp` yourself or any members first,'
                                 f' or `{self.bot.default_prefix}pp sf @anyone`')
                 return
@@ -165,10 +180,10 @@ class BitBay(Cog):
             title = "TIE"
         else:
             title = "LOST"
-        xp = 0 if him == -1 else me - him
+        xp = 0 if him == -1 else me - him  # Should not gain xp if opponent has no pp
         if ctx.author.id not in self.xp:
             self.xp[ctx.author.id] = 0
-        self.xp[ctx.author.id] += xp
+        self.xp[ctx.author.id] += xp  # Adds score
         await ctx.send(
             embed=discord.Embed(title=title, description=f"**{ctx.author.name}'s penis:**\n{self.draw_pp(me)}\n"
                                                          f"**{user.name}'s penis:**\n{self.draw_pp(him)}\n\n"
@@ -177,7 +192,8 @@ class BitBay(Cog):
 
     @pp.command()
     async def lb(self, ctx: Context):
-        v = dict(sorted(self.xp.items(), key=lambda item: item[1], reverse=True))
+        """Shows the pp leaderboard"""
+        v = dict(sorted(self.xp.items(), key=lambda item: item[1], reverse=True))  # Sort self.xp by score
         base = 'pp score leaderboard:\n'
         for key in v.keys():
             base += f"{self.bot.get_user(key).name}: **{v[key]}** "

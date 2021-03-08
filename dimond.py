@@ -16,6 +16,8 @@ class Dimond(commands.Cog):
 
     @commands.group(invoke_without_command=True)
     async def user(self, ctx, u: discord.User = None):
+        """Shows user info"""
+        # https://discordpy.readthedocs.io/en/latest/api.html#discord.User
         u = u if u else ctx.author
         desc = f"Send `{self.bot.default_prefix}user f [user]` for flag details,\n`{self.bot.default_prefix}perm " \
                "[user|channel] [channel]` for permission details"
@@ -28,14 +30,15 @@ class Dimond(commands.Cog):
         emb.add_field(name='Public flags', value=u.public_flags.value)
         emb.add_field(name='Created at', value=u.created_at)
         member: Optional[discord.Member] = None
+        # A hacky way to try getting data that can only be accessed as a Member
         for g in self.bot.guilds:
             m = g.get_member(u.id)
             if m:
                 member = m
-                if m.voice:
-                    break
+                if m.voice:  # Searches whether the 'member' is in a VC
+                    break   # A user can only be in 1 VC
         # TODO: Use user.mutual_guilds to check status&activities instead when d.py 1.7 is released
-        if member:
+        if member:  # Data that can only be accessed as a Member
             emb.add_field(name='Number of activities', value=str(len(member.activities)) if member.activities else '0')
             stat = str(member.status)
             if member.desktop_status != discord.Status.offline:
@@ -68,6 +71,8 @@ class Dimond(commands.Cog):
 
     @user.command(aliases=['f'])
     async def flags(self, ctx, u: discord.User = None):
+        """Shows public flags of a user"""
+        # https://discordpy.readthedocs.io/en/latest/api.html#discord.PublicUserFlags
         u = u if u else ctx.author
         bin_value = f'{u.public_flags.value:b}'
         hex_value = f'{u.public_flags.value:X}'
@@ -98,14 +103,24 @@ class Dimond(commands.Cog):
     @commands.command(aliases=['perm', 'perms', 'permission'])
     @Missile.guild_only()
     async def permissions(self, ctx, *args):
+        """Shows a user's permission server/channel wise"""
+        # TODO: Maybe first arg use Union[User, TextCh, VC, Category, None],
+        #  second arg use Optional[TextCh, VC, Category]
+
+        # If cmd has no args, evaluates sender's perms server-wise
         if len(args) == 0:
             mem = ctx.author
             channel = None
         else:
+            # Process the first argument. If cmd only has 1 arg, its either member or channel
+            # So first attempt to process member.
             try:
                 mem = await commands.MemberConverter().convert(ctx, args[0])
             except commands.MemberNotFound:
                 mem = ctx.author
+            # Then attempt to process channel. If above failed, args[0] should be a channel so these converters should
+            # work. If above succeed, these converters should fail.
+            # If 2 args, then first arg must be a Member, which processed above. So 2nd arg should be a channel.
             ch_wanna_be = args[0] if len(args) == 1 else args[1]
             try:
                 channel = await commands.TextChannelConverter().convert(ctx, ch_wanna_be)
@@ -117,13 +132,14 @@ class Dimond(commands.Cog):
                         channel = await commands.CategoryChannelConverter().convert(ctx, ch_wanna_be)
                     except commands.ChannelNotFound:
                         channel = None
-        if channel:
+        if channel:  # If no channel specified, then  check permission server-wise
             perm = channel.permissions_for(mem)
             title = channel.name
-        else:
+        else:  # Check permission of the member in that channel
             perm = mem.guild_permissions
             title = 'the server'
 
+        # https://discordpy.readthedocs.io/en/latest/api.html#discord.Permissions
         bin_value = f'{perm.value:b}'
         hex_value = f'{perm.value:X}'
         emb = discord.Embed(title=f'Permissions for {mem.name} in ' + title,

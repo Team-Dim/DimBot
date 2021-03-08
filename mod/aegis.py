@@ -4,7 +4,7 @@ import discord
 from discord.ext.commands import Cog
 
 import bitbay
-import ikaros
+from . import ikaros
 
 
 async def send(ch: discord.TextChannel, content: str):
