@@ -46,7 +46,7 @@ class Albon:
             self.logger.debug('Received PlayerJoinEvent')
             data = await request.text()
             for channel in self.get_channels:
-                await channel.send(f'**{data}** :handshake: Minecraft server')
+                asyncio.get_running_loop().create_task(channel.send(f'**{data}** :handshake: Minecraft server'))
             return web.Response()
 
         @routes.post('/quit')

@@ -12,7 +12,7 @@ class Verstapen(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.logger = bot.missile.get_logger('Vireg')
+        self.logger = bot.missile.get_logger('Verstapen')
         self.http_not_started = True
         self.albon = Albon(bot.missile.get_logger('Albon'))
 

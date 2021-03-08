@@ -16,16 +16,19 @@ class Bottas(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logger = bot.missile.get_logger('Bottas')
+        # Initialise database connection
         self.db: sqlite3.Connection = sqlite3.connect('DimBot.db', check_same_thread=False,
                                                       detect_types=sqlite3.PARSE_DECLTYPES)
         self.cursor: sqlite3.Cursor = self.get_cursor()
 
     def get_cursor(self) -> sqlite3.Cursor:
+        """Returns a cursor from the db connection. Multiple cursors are needed when dispatching Raceline tasks"""
         cursor = self.db.cursor()
         cursor.row_factory = sqlite3.Row
         return cursor
 
     def get_quote(self, index: int):
+        """Gets a quote from the db via ROWID"""
         self.cursor.execute("SELECT * FROM Quote WHERE ROWID = ?", (index,))
         return self.cursor.fetchone()
 
@@ -43,22 +46,24 @@ class Bottas(commands.Cog):
 
     @quote.command(aliases=['i'])
     async def index(self, ctx, index: int = 0):
+        """Search a quote by its ID"""
         quote = self.get_quote(index)
         content = ''
-        if not quote:
+        if not quote:  # Provided Quote ID is invalid
             count = self.cursor.execute('SELECT MAX(ROWID) FROM Quote').fetchone()[0]
             content = f'That quote ID is invalid. There are **{count}** quotes in the database. This is a random one:\n'
-            while not quote:
+            while not quote:  # Randomly generates a valid quote
                 index = random.randint(1, count)
                 quote = self.get_quote(index)
         user = self.bot.get_user(quote[2])
-        if not user:
+        if not user:  # Ensures that user is not None
             user = await self.bot.fetch_user(quote[2])
         content += f"Quote #{index}:\n> {quote[0]} - {quote[1]}\n Uploaded by {user}"
         await ctx.send(content)
 
     @quote.command(aliases=['q'])
     async def quoter(self, ctx, *, quoter):
+        """List quotes that are said by a quoter"""
         self.cursor.execute("SELECT ROWID, msg FROM Quote WHERE quoter = ?", (quoter,))
         quotes = self.cursor.fetchall()
         content = f"The following are **{quoter}**'s quotes:\n"
@@ -68,6 +73,7 @@ class Bottas(commands.Cog):
 
     @quote.command(aliases=['u'])
     async def uploader(self, ctx, user: discord.User = None):
+        """List quotes that are uploaded by a Discord user"""
         user = user if user else ctx.author
         self.cursor.execute("SELECT ROWID, msg, quoter FROM Quote WHERE uid = ?", (user.id,))
         quotes = self.cursor.fetchall()
@@ -79,8 +85,9 @@ class Bottas(commands.Cog):
     @quote.command()
     @Missile.is_rainbow_cmd_check()
     async def exe(self, ctx, *, msg: str):
+        # Directly executes SQL statements
         try:
-            tic = datetime.now()
+            tic = datetime.now()  # Measure execution time
             rows = self.db.execute(msg)
             result = rows.fetchall()
             toc = datetime.now()
@@ -91,44 +98,55 @@ class Bottas(commands.Cog):
     @quote.command()
     @Missile.is_rainbow_cmd_check()
     async def save(self, ctx):
+        # Forcefully saves the db
         self.db.commit()
         await ctx.send('Saved')
 
     @quote.command(aliases=['a'])
     async def add(self, ctx, *, args):
+        """Adds a quote"""
+        # Quote message validation
         if '<@' in args:
             await ctx.send("You can't mention others in quote message!")
             return
         if '\n' in args:
             await ctx.send("The quote should be only one line!")
             return
+        # Check if a quote with the same content already exists in the database
         self.cursor.execute("SELECT ROWID FROM Quote WHERE msg = ?", (args,))
         exists = self.cursor.fetchone()
         if exists:
             await ctx.send(f'This quote duplicates with #{exists[0]}')
         else:
+            # Asks for the quoter who said the quote
             quoter = await self.bot.missile.ask_msg(ctx, 'Quoter?')
             if quoter:
+                # Quote message validation
                 if '<@' in quoter:
                     await ctx.send("You can't mention others in quote message!")
                     return
                 if '\n' in quoter:
                     await ctx.send("The quote should be only one line!")
                     return
+
+                # Determines the ROWID to be used for inserting the quote
                 rowid = self.cursor.execute('SELECT id FROM QuoteRowID LIMIT 1').fetchone()
-                if rowid:
+                if rowid:  # Use ROWID from QuoteRowID if available. These IDs exist when a quote was deleted
                     self.cursor.execute("INSERT INTO Quote(ROWID, msg, quoter, uid) VALUES (?, ?, ?, ?)",
                                         (rowid[0], args, quoter, ctx.author.id))
                     self.cursor.execute("DELETE FROM QuoteRowID WHERE id = ?", (rowid[0], ))
-                else:
+                else:  # Normal insertion, using a fresh ROWID
                     self.cursor.execute("INSERT INTO Quote VALUES (?, ?, ?)", (args, quoter, ctx.author.id))
                 await ctx.send(f"Added quote #{self.cursor.lastrowid}")
 
     @quote.command(aliases=['d', 'del'])
     async def delete(self, ctx, index: int):
-        quote = self.get_quote(index)
+        """Deletes a quote by its quote ID"""
+        quote = self.get_quote(index)  # Checks if the quote exists
         if quote:
+            # Check if sender is quote uploader or sender is me (db admin)
             if quote['uid'] == ctx.author.id or Missile.is_rainbow(ctx.author.id):
+                # Confirmation
                 q = f"> {quote['msg']}\nYou sure you want to delete this? React ✅ to confirm"
                 q = await ctx.send(q)
                 await q.add_reaction('✅')
@@ -137,6 +155,7 @@ class Bottas(commands.Cog):
                     return user == ctx.author and str(reaction.emoji) == '✅'
 
                 await self.bot.wait_for('reaction_add', timeout=10, check=check)
+                # Delete
                 self.cursor.execute("DELETE FROM Quote WHERE ROWID = ?", (index,))
                 self.cursor.execute("INSERT INTO QuoteRowID VALUES (?)", (index,))
                 await ctx.send('Deleted quote.')
@@ -147,6 +166,7 @@ class Bottas(commands.Cog):
 
     @quote.command(aliases=['m'])
     async def message(self, ctx: commands.Context, *, search):
+        """Search quotes by keywords"""
         quotes = self.cursor.execute("SELECT ROWID, msg, quoter FROM Quote WHERE msg like ?",
                                      ('%'+search+'%',)).fetchall()
         base = f'The following quotes contains **{search}**:'
