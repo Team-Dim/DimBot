@@ -53,7 +53,10 @@ class Bottas(commands.Cog):
             while not quote:  # Randomly generates a valid quote
                 index = random.randint(1, count)
                 quote = self.get_quote(index)
-        content += f"Quote #{index}:\n> {quote[0]} - {quote[1]}\n Uploaded by {self.bot.get_user(quote[2])}"
+        user = self.bot.get_user(quote[2])
+        if not user:
+            user = await self.bot.fetch_user(quote[2])
+        content += f"Quote #{index}:\n> {quote[0]} - {quote[1]}\n Uploaded by {user}"
         await ctx.send(content)  # Sends the quote
 
     @quote.command(aliases=['q'])
