@@ -21,7 +21,6 @@ class Ricciardo(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logger = bot.missile.get_logger('Ricciardo')
-        self.new = True
         self.session = aiohttp.ClientSession()
         self.addon_ids = [274058, 306357, 274326]
         self.data = {}
@@ -35,6 +34,17 @@ class Ricciardo(commands.Cog):
             await self.raceline_task()
             self.bot.echo.db.commit()
             await asyncio.sleep(600)
+
+    @commands.Cog.listener()
+    async def on_guild_remove(self, guild: discord.Guild):
+        ch_ids = [ch.id for ch in guild.text_channels]
+        q_marks = ','.join(['?'] * len(ch_ids))
+        self.bot.echo.cursor.execute(f"DELETE FROM BbmRole WHERE bbmChID IN ({q_marks})", (ch_ids,))
+        self.bot.echo.cursor.execute(f"DELETE FROM BbmAddon WHERE bbmChID IN ({q_marks})", (ch_ids,))
+        self.bot.echo.cursor.execute(f"DELETE FROM RssSub WHERE rssChID IN ({q_marks})", (ch_ids,))
+        self.bot.echo.cursor.execute(f"DELETE FROM RssData WHERE url NOT IN (SELECT url FROM RssSub)")
+        self.bot.echo.cursor.execute(f"DELETE FROM YtSub WHERE ytChID IN ({q_marks})", (ch_ids,))
+        self.bot.echo.cursor.execute("DELETE FROM YtData WHERE channelID NOT IN (SELECT channelID FROM YtSub)")
 
     async def raceline_task(self):
         bbm_futures = {}

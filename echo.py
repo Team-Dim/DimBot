@@ -4,7 +4,7 @@ from datetime import datetime
 
 import discord
 from discord.ext import commands
-from dimsecret import debug
+
 from missile import Missile
 
 
@@ -16,9 +16,7 @@ class Bottas(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logger = bot.missile.get_logger('Bottas')
-        # TODO: Just use DimBot.db when NEA is finished. Also have to merge DimBot-og.db into DimBot.db and delete og
-        db_name = 'DimBot.db' if debug else 'DimBot-og.db'
-        self.db: sqlite3.Connection = sqlite3.connect(db_name, check_same_thread=False,
+        self.db: sqlite3.Connection = sqlite3.connect('DimBot.db', check_same_thread=False,
                                                       detect_types=sqlite3.PARSE_DECLTYPES)
         self.cursor: sqlite3.Cursor = self.get_cursor()
 
@@ -35,10 +33,6 @@ class Bottas(commands.Cog):
     def exists(self, table: str, args: dict) -> bool:
         base = f"SELECT EXISTS(SELECT 1 FROM {table} WHERE {' AND '.join([f'{key} = ?' for key in args.keys()])}"
         return self.cursor.execute(base, args.values()).fetchone()[0]
-
-    @commands.Cog.listener()
-    async def on_ready(self):
-        self.logger.debug('on_ready')
 
     @commands.group(invoke_without_command=True)
     async def quote(self, ctx):
@@ -57,7 +51,10 @@ class Bottas(commands.Cog):
             while not quote:
                 index = random.randint(1, count)
                 quote = self.get_quote(index)
-        content += f"Quote #{index}:\n> {quote[0]} - {quote[1]}\n Uploaded by {self.bot.get_user(quote[2])}"
+        user = self.bot.get_user(quote[2])
+        if not user:
+            user = await self.bot.fetch_user(quote[2])
+        content += f"Quote #{index}:\n> {quote[0]} - {quote[1]}\n Uploaded by {user}"
         await ctx.send(content)
 
     @quote.command(aliases=['q'])
@@ -70,7 +67,7 @@ class Bottas(commands.Cog):
         await ctx.send(content)
 
     @quote.command(aliases=['u'])
-    async def uploader(self, ctx, user: discord.User):
+    async def uploader(self, ctx, user: discord.User = None):
         user = user if user else ctx.author
         self.cursor.execute("SELECT ROWID, msg, quoter FROM Quote WHERE uid = ?", (user.id,))
         quotes = self.cursor.fetchall()
@@ -156,14 +153,3 @@ class Bottas(commands.Cog):
         for q in quotes:
             base += f"\n> {q['ROWID']}. {q['msg']} - {q['quoter']}"
         await ctx.send(base)
-
-    @commands.Cog.listener()
-    async def on_guild_remove(self, guild: discord.Guild):
-        ch_ids = [ch.id for ch in guild.text_channels]
-        q_marks = ','.join(['?']*len(ch_ids))
-        self.cursor.execute(f"DELETE FROM BbmRole WHERE bbmChID IN ({q_marks})", (ch_ids,))
-        self.cursor.execute(f"DELETE FROM BbmAddon WHERE bbmChID IN ({q_marks})", (ch_ids,))
-        self.cursor.execute(f"DELETE FROM RssSub WHERE rssChID IN ({q_marks})", (ch_ids,))
-        self.cursor.execute(f"DELETE FROM RssData WHERE url NOT IN (SELECT url FROM RssSub)")
-        self.cursor.execute(f"DELETE FROM YtSub WHERE ytChID IN ({q_marks})", (ch_ids,))
-        self.cursor.execute("DELETE FROM YtData WHERE channelID NOT IN (SELECT channelID FROM YtSub)")

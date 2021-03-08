@@ -3,6 +3,7 @@ from discord.ext.commands import Cog
 
 guild_id = 285366651312930817
 
+
 class Hamilton(Cog):
     """Dim's guild specific features
     Version 1.3.1"""
@@ -22,7 +23,6 @@ class Hamilton(Cog):
 
     @Cog.listener()
     async def on_ready(self):
-        self.logger.debug('on_ready')
         self.invites = await self.bot.missile.guild.invites()
 
     @Cog.listener()

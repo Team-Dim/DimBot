@@ -2,7 +2,7 @@ import boto3
 from discord.ext import commands
 
 import dimsecret
-from bruckserver.albon import Albon
+from bruckserver.pythania import Albon
 from missile import Missile
 
 
@@ -15,10 +15,6 @@ class Verstapen(commands.Cog):
         self.logger = bot.missile.get_logger('Vireg')
         self.http_not_started = True
         self.albon = Albon(bot.missile.get_logger('Albon'))
-
-    @commands.Cog.listener()
-    async def on_ready(self):
-        self.logger.debug('on_ready')
 
     async def boot_instance(self, ctx, instance_id: str, region_id: str):
         msg = await ctx.send('Connecting to Amazon Web Service...')

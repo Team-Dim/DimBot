@@ -1,6 +1,5 @@
 .idea
 dimsecret.py
-data.json
 *.db
 *.db-journal
 

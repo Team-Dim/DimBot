@@ -1,7 +1,7 @@
 import asyncio
 
 import discord
-from discord.ext.commands import Cog, command, Context, has_any_role, has_permissions, bot_has_permissions, guild_only, \
+from discord.ext.commands import Cog, command, Context, has_any_role, has_permissions, bot_has_permissions, \
     has_guild_permissions, bot_has_guild_permissions
 
 from missile import Missile
@@ -50,10 +50,10 @@ async def mute(msg: discord.Message, target: discord.Member, length: int, countd
         await ensure_target(msg, target, countdown)
         role = None
         import bitbay
-        import hamilton
+        import tribe
         if msg.guild.id == bitbay.guild_id:
             role = msg.guild.get_role(718210713893601301)  # Muted Pirate
-        elif msg.guild.id == hamilton.guild_id:
+        elif msg.guild.id == tribe.guild_id:
             role = msg.guild.get_role(474578007156326412)  # Asteroid Belt
         if role:
             await target.add_roles(role, reason=reason)
@@ -69,10 +69,10 @@ async def mute(msg: discord.Message, target: discord.Member, length: int, countd
 async def unmute(msg: discord.Message, target: discord.Member, reason: str):
     role = None
     import bitbay
-    import hamilton
+    import tribe
     if msg.guild.id == bitbay.guild_id:
         role = msg.guild.get_role(718210713893601301)  # Muted Pirate
-    elif msg.guild.id == hamilton.guild_id:
+    elif msg.guild.id == tribe.guild_id:
         role = msg.guild.get_role(474578007156326412)  # Asteroid Belt
     if role:
         await target.remove_roles(role, reason=reason)
@@ -125,7 +125,7 @@ class Ikaros(Cog):
     @has_guild_permissions(mute_members=True)
     @bot_has_guild_permissions(manage_roles=True)
     @Missile.guild_only()
-    async def mute_cmd(self, ctx: Context, target: discord.Member, length: int = 0, countdown: int = 3):
+    async def mute_cmd(self, ctx: Context, target: discord.Member, length: int = None, countdown: int = 3):
         await mute(ctx.message, target, length, countdown, f'Ikaros: Muted by {ctx.author}')
 
     @command(name='unmute')
