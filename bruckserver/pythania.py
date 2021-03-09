@@ -2,10 +2,11 @@ import asyncio
 
 from aiohttp import web
 
-__version__ = '1.2.1'
 
+class Albon:
+    """HTTP server sub-project used by Verstapen
+    Version 1.2.1"""
 
-class Pythania:
     def __init__(self, logger):
         self._channels = []
         self.logger = logger
@@ -45,7 +46,7 @@ class Pythania:
             self.logger.debug('Received PlayerJoinEvent')
             data = await request.text()
             for channel in self.get_channels:
-                await channel.send(f'**{data}** :handshake: Minecraft server')
+                asyncio.get_running_loop().create_task(channel.send(f'**{data}** :handshake: Minecraft server'))
             return web.Response()
 
         @routes.post('/quit')

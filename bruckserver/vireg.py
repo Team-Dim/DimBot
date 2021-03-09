@@ -2,28 +2,19 @@ import boto3
 from discord.ext import commands
 
 import dimsecret
-from bruckserver.pythania import Pythania
+from bruckserver.pythania import Albon
 from missile import Missile
 
 
-def is_rainbow(ctx):
-    return ctx.author.id == 264756129916125184
-
-
-__version__ = '1.3'
-
-
-class Vireg(commands.Cog):
+class Verstapen(commands.Cog):
+    """Connects to AWS and communicates with a minecraft server instance.
+    Version 1.3.1"""
 
     def __init__(self, bot):
         self.bot = bot
-        self.logger = bot.missile.get_logger('Vireg')
+        self.logger = bot.missile.get_logger('Verstapen')
         self.http_not_started = True
-        self.pythania = Pythania(bot.missile.get_logger('Pythania'))
-
-    @commands.Cog.listener()
-    async def on_ready(self):
-        self.logger.debug('on_ready')
+        self.albon = Albon(bot.missile.get_logger('Albon'))
 
     async def boot_instance(self, ctx, instance_id: str, region_id: str):
         msg = await ctx.send('Connecting to Amazon Web Service...')
@@ -53,22 +44,17 @@ class Vireg(commands.Cog):
             f'in {region_id} **"{region_name}"**. IP address: **{instance.public_ip_address}** ',
             delimiter=' '
         )
-        self.pythania.add_channel(ctx.channel)
+        self.albon.add_channel(ctx.channel)
         if self.http_not_started:
-            await self.pythania.run_server()
+            await self.albon.run_server()
             self.http_not_started = False
 
     @commands.command()
-    @commands.check(is_rainbow)
-    async def eu(self, ctx):
-        await self.boot_instance(ctx, dimsecret.eu_instance_id, 'eu-north-1')
-
-    @commands.command()
+    @Missile.is_rainbow_cmd_check(':construction: Sorry, this feature is currently not available, please ask Dim '
+                                  'in Discord to help you!')
     async def start(self, ctx):
         # Remove this check when Lokeon has finished rewriting.
-        if not is_rainbow(ctx):
-            await ctx.send(':construction: Sorry, this feature is currently not available, please ask ChingDim in Discord to help you!')
-            return
         if dimsecret.debug:
-            await ctx.send('⚠DimBot is currently in **DEBUG** mode. I cannot receive messages from Lokeon, also things may not work as expected!⚠\n')
+            await ctx.send('⚠DimBot is currently in **DEBUG** mode.'
+                           ' I cannot receive messages from Lokeon, also things may not work as expected!⚠\n')
         await self.boot_instance(ctx, dimsecret.bruck_instance_id, 'ap-southeast-1')
