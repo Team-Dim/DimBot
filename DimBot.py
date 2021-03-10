@@ -6,14 +6,14 @@ from typing import Union
 import discord
 from discord.ext import commands
 
-import bitbay
 import dimond
 import dimsecret
 import echo
 import raceline
 import tribe
 from bruckserver import vireg
-from missile import Missile
+from bitbay import BitBay
+from missile import Missile, dim_id
 from mod.aegis import Aegis
 from mod.ikaros import Ikaros
 
@@ -26,7 +26,7 @@ bot.default_prefix = 't.' if dimsecret.debug else 'd.'
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = echo.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.1"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.2"
 # List of activities that will be randomly displayed every 5 minutes
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -231,7 +231,7 @@ async def say(ctx, *, msg: str):
 async def shadow(c, *, cmd: str):
     msg = await bot.missile.sch.send('⠀')
     msg.content = bot.default_prefix + cmd
-    msg.author = msg.guild.get_member(bot.owner_id)
+    msg.author = msg.guild.get_member(dim_id)
     await bot.invoke(await bot.get_context(msg))
 
 
@@ -245,11 +245,38 @@ async def hug(ctx):
     await ctx.send(f'{gif}\nIn memory of our friendship, {bot.missile.eggy}\nHug {ctx.author.mention}')
 
 
+@bot.command(aliases=['color'])
+async def colour(ctx, a: str, *args):
+    """Shows info about the color"""
+    try:
+        is_hex = a[0] == '#'
+        if is_hex:
+            colour = discord.Colour(int(a[1:], 16))
+        elif a.lower() == 'rgb':
+            colour = discord.Colour.from_rgb(int(Missile.ensure_index_value(args, 0, 0)),
+                                             int(Missile.ensure_index_value(args, 1, 0)),
+                                             int(Missile.ensure_index_value(args, 2, 0)))
+        elif a.lower() == 'hsv':
+            colour = discord.Colour.from_hsv(int(Missile.ensure_index_value(args, 0, 0)),
+                                             int(Missile.ensure_index_value(args, 1, 0)),
+                                             int(Missile.ensure_index_value(args, 2, 0)))
+        else:
+            colour = discord.Colour(int(a))
+        emb = discord.Embed(title=a if is_hex else f'{colour.value:X}', color=colour)
+        emb.add_field(name='R', value=colour.r)
+        emb.add_field(name='G', value=colour.g)
+        emb.add_field(name='B', value=colour.b)
+        await ctx.reply(embed=emb)
+    except ValueError:
+        await ctx.reply('Invalid color. You can input an integer `2048` , a hex code `#ABCABC`, or a RGB/HSV '
+                        'combination `rgb/hsv <> <> <>`')
+
+
 bot.add_cog(raceline.Ricciardo(bot))
 bot.add_cog(tribe.Hamilton(bot))
 bot.add_cog(vireg.Verstapen(bot))
 bot.add_cog(bot.echo)
-bot.add_cog(bitbay.BitBay(bot))
+bot.add_cog(BitBay(bot))
 bot.add_cog(dimond.Dimond(bot))
 bot.add_cog(Ikaros(bot))
 bot.add_cog(Aegis(bot))

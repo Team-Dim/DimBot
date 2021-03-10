@@ -231,7 +231,7 @@ class BitBay(Cog):
                 my.viagra_rounds -= 1
                 if my.viagra_rounds == -1:
                     await ctx.send(f"Faith effect has worn off for {ctx.author.display_name}'s pp")
-                    my.size >>= 1
+                    my.size = my.size // 2
 
     @pp.command()
     async def lb(self, ctx: Context):
@@ -251,7 +251,7 @@ class BitBay(Cog):
                 await ctx.reply('You are already one with your pp! Rounds left: ' + str(pp.viagra_rounds))
             elif pp.viagra_available:
                 pp.viagra_available = False
-                pp.size <<= 1
+                pp.size = pp.size * 2
                 pp.viagra_rounds = 2
                 await ctx.send(ctx.author.mention + " has faith in his pp!!!!! New pp size: " + str(pp.size))
             else:

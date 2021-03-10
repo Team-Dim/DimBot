@@ -1,13 +1,14 @@
 import asyncio
 import logging
 import re
-from random import randint
 from typing import Optional
 
 import discord
 from discord.ext import commands
 
 import dimsecret
+
+dim_id = 264756129916125184
 
 
 class Missile:
@@ -58,27 +59,31 @@ class Missile:
     @staticmethod
     def random_rgb():
         """Generates a random color"""
-        return discord.Colour.from_rgb(randint(0, 255), randint(0, 255), randint(0, 255))
+        # TODO: Remove this method
+        return discord.Colour.random()
 
     @staticmethod
     def is_rainbow(uid: int):
         """Is it me?"""
-        return uid == 264756129916125184
+        return uid == dim_id
 
     @staticmethod
     # similar to @commands.is_owner()
     def is_rainbow_cmd_check(msg: str = 'I guess you are not my little pog champ :3'):
         """When a command has been invoked, checks whether the sender is me, and reply msg if it is not."""
+
         async def check(ctx):
             rainbow = Missile.is_rainbow(ctx.author.id)
             if not rainbow:
                 await ctx.send(msg)
             return rainbow
+
         return commands.check(check)
 
     @staticmethod
     def is_channel_owner_cmd_check():
         """When a command has been invoked, checks whether the sender is the owner of that text channel."""
+
         async def check(ctx):
             if ctx.guild:
                 owner = ctx.author == ctx.guild.owner
@@ -86,16 +91,19 @@ class Missile:
                     await ctx.send("I guess you are not this server's pogchamp. Bruh.")
                 return owner
             return True
+
         return commands.check(check)
 
     @staticmethod
     def guild_only():
         """When a command has been invoked, checks whether it is sent in a server"""
+
         async def check(ctx):
             if ctx.guild:  # In a server
                 return True
             await ctx.send('This command is only available in servers!')
             return False
+
         return commands.check(check)
 
     @staticmethod
@@ -136,3 +144,10 @@ class Missile:
             return True
         except asyncio.TimeoutError:
             return False
+
+    @staticmethod
+    def ensure_index_value(collection, index, default=None):
+        try:
+            return collection[index]
+        except IndexError or KeyError:
+            return default
