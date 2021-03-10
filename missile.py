@@ -1,6 +1,8 @@
+import asyncio
 import logging
 import re
 from random import randint
+from typing import Optional
 
 import discord
 from discord.ext import commands
@@ -101,12 +103,15 @@ class Missile:
         """Uses RegEx to check whether a string is a URL"""
         return re.search(r"[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&/=]*)", url)
 
-    async def ask_msg(self, ctx, msg: str, timeout: int = 10) -> str:
+    async def ask_msg(self, ctx, msg: str, timeout: int = 10) -> Optional[str]:
         """Asks a follow-up question"""
         await ctx.send(msg)
         # Waits for the time specified
-        reply = await self.bot.wait_for('message', timeout=timeout, check=self.check_same_author_and_channel(ctx))
-        return reply.content
+        try:
+            reply = await self.bot.wait_for('message', timeout=timeout, check=self.check_same_author_and_channel(ctx))
+            return reply.content
+        except asyncio.TimeoutError:
+            return None
 
     @staticmethod
     async def prefix_process(bot: commands.Bot, msg: discord.Message):
@@ -118,3 +123,16 @@ class Missile:
             else:
                 await msg.reply('Only my little pog champ can use authoritative orders!')
         return bot.default_prefix
+
+    async def ask_reaction(self, ctx: commands.Context, ask: str, emoji: str = '✅') -> bool:
+        q = await ctx.send(ask)
+        await q.add_reaction(emoji)
+
+        def check(reaction, user):
+            return user == ctx.author and str(reaction.emoji) == emoji
+
+        try:
+            await self.bot.wait_for('reaction_add', timeout=10, check=check)
+            return True
+        except asyncio.TimeoutError:
+            return False

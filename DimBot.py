@@ -26,7 +26,7 @@ bot.default_prefix = 't.' if dimsecret.debug else 'd.'
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = echo.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.1"
 # List of activities that will be randomly displayed every 5 minutes
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -124,7 +124,7 @@ async def on_command_error(ctx, error):
         return
     if isinstance(error, commands.errors.BadArgument):  # Could be a human/program error
         await ctx.reply('Bad arguments.')
-    elif isinstance(error, commands.errors.CheckFailure) or isinstance(error, asyncio.TimeoutError):
+    elif isinstance(error, commands.errors.CheckFailure):
         return
     raise error  # This is basically "unknown error", raise it for debug purposes
 

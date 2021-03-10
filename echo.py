@@ -91,7 +91,7 @@ class Bottas(commands.Cog):
             rows = self.db.execute(msg)
             result = rows.fetchall()
             toc = datetime.now()
-            await ctx.send(f"{result}\n{rows.rowcount} row affected in {(toc - tic).total_seconds()*1000}ms")
+            await ctx.send(f"{result}\n{rows.rowcount} row affected in {(toc - tic).total_seconds() * 1000}ms")
         except sqlite3.Error as e:
             await ctx.send(f"**{e.__class__.__name__}**: {e}")
 
@@ -134,7 +134,7 @@ class Bottas(commands.Cog):
                 if rowid:  # Use ROWID from QuoteRowID if available. These IDs exist when a quote was deleted
                     self.cursor.execute("INSERT INTO Quote(ROWID, msg, quoter, uid) VALUES (?, ?, ?, ?)",
                                         (rowid[0], args, quoter, ctx.author.id))
-                    self.cursor.execute("DELETE FROM QuoteRowID WHERE id = ?", (rowid[0], ))
+                    self.cursor.execute("DELETE FROM QuoteRowID WHERE id = ?", (rowid[0],))
                 else:  # Normal insertion, using a fresh ROWID
                     self.cursor.execute("INSERT INTO Quote VALUES (?, ?, ?)", (args, quoter, ctx.author.id))
                 await ctx.send(f"Added quote #{self.cursor.lastrowid}")
@@ -147,18 +147,12 @@ class Bottas(commands.Cog):
             # Check if sender is quote uploader or sender is me (db admin)
             if quote['uid'] == ctx.author.id or Missile.is_rainbow(ctx.author.id):
                 # Confirmation
-                q = f"> {quote['msg']}\nYou sure you want to delete this? React ✅ to confirm"
-                q = await ctx.send(q)
-                await q.add_reaction('✅')
-
-                def check(reaction, user):
-                    return user == ctx.author and str(reaction.emoji) == '✅'
-
-                await self.bot.wait_for('reaction_add', timeout=10, check=check)
-                # Delete
-                self.cursor.execute("DELETE FROM Quote WHERE ROWID = ?", (index,))
-                self.cursor.execute("INSERT INTO QuoteRowID VALUES (?)", (index,))
-                await ctx.send('Deleted quote.')
+                if await self.bot.missile.ask_reaction(ctx, f"> {quote['msg']}\n"
+                                                            f"You sure you want to delete this? React ✅ to confirm"):
+                    # Delete
+                    self.cursor.execute("DELETE FROM Quote WHERE ROWID = ?", (index,))
+                    self.cursor.execute("INSERT INTO QuoteRowID VALUES (?)", (index,))
+                    await ctx.send('Deleted quote.')
             else:
                 await ctx.send("You must be the quote uploader to delete the quote!")
         else:
@@ -168,7 +162,7 @@ class Bottas(commands.Cog):
     async def message(self, ctx: commands.Context, *, search):
         """Search quotes by keywords"""
         quotes = self.cursor.execute("SELECT ROWID, msg, quoter FROM Quote WHERE msg like ?",
-                                     ('%'+search+'%',)).fetchall()
+                                     ('%' + search + '%',)).fetchall()
         base = f'The following quotes contains **{search}**:'
         for q in quotes:
             base += f"\n> {q['ROWID']}. {q['msg']} - {q['quoter']}"
