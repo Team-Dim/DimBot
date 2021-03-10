@@ -45,6 +45,11 @@ class Hamilton(Cog):
                 )
 
     @Cog.listener()
+    async def on_member_left(self, member: discord.Member):
+        if member.guild == self.bot.missile.guild:
+            await self.bot.missile.logs.send(f'{member.mention} has left.')
+
+    @Cog.listener()
     async def on_voice_state_update(self, mem: discord.Member, before, after: discord.VoiceState):
         """I hate people being invisible"""
         if mem.guild == self.bot.missile.guild and after.channel and mem.status == discord.Status.offline:

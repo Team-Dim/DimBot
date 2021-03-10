@@ -26,7 +26,7 @@ bot.default_prefix = 't.' if dimsecret.debug else 'd.'
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = echo.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.2"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.3"
 # List of activities that will be randomly displayed every 5 minutes
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -74,7 +74,7 @@ async def on_ready():
     # Then updates the nickname for each server that DimBot is listening to
     for guild in bot.guilds:
         if guild.me.nick != nickname:
-            await guild.me.edit(nick=nickname)
+            bot.loop.create_task(guild.me.edit(nick=nickname))
     if reborn_channel:
         epilogue = "Arc-Cor𐑞: Reconnected with Discord, transform complete. Ready to kick some balls!\n" \
                    "https://data.whicdn.com/images/343444322/original.gif"

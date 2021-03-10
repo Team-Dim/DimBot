@@ -40,14 +40,22 @@ async def kick(msg: discord.Message, target: discord.Member, countdown: int, rea
         return
 
 
-async def ban(msg: discord.Message, target: discord.Member, countdown: int, reason: str):
+async def ban(msg: discord.Message, target: discord.Member, length: int, countdown: int, reason: str):
     """Internal logic for banning member"""
     try:
         await ensure_target(msg, target, countdown)
-        await target.ban(reason=reason)
+        await target.ban(delete_message_days=0, reason=reason)
         await send(msg, target.mention + ' has been banned.')
+        if length:  # Unbans if there is a ban time length
+            await asyncio.sleep(length)
+            await unban(msg, target, 'Deactivating ' + reason)
     except PermissionError:
         return
+
+
+async def unban(msg: discord.Message, user: discord.User, reason: str):
+    await msg.guild.unban(user, reason=reason)
+    await send(msg, user.mention + ' has been unbanned.')
 
 
 async def mute(msg: discord.Message, target: discord.Member, length: int, countdown: int, reason: str):
@@ -89,7 +97,7 @@ async def unmute(msg: discord.Message, target: discord.Member, reason: str):
 
 class Ikaros(Cog):
     """Moderation commands. For AutoMod please check out Aegis in the future
-    Version 0.3"""
+    Version 0.4"""
 
     def __init__(self, bot):
         self.bot = bot
@@ -127,15 +135,23 @@ class Ikaros(Cog):
     @has_permissions(ban_members=True)
     @bot_has_permissions(ban_members=True)
     @Missile.guild_only()
-    async def ban_cmd(self, ctx: Context, target: discord.Member, countdown: int = 3):
-        """Bans a member"""
-        await ban(ctx.message, target, countdown, f'Ikaros: Banned by {ctx.author}')
+    async def ban_cmd(self, ctx: Context, target: discord.Member, length: int = None, countdown: int = 3):
+        """Bans a member. Can define a time to auto unban"""
+        await ban(ctx.message, target, length, countdown, f'Ikaros: Banned by {ctx.author}')
+
+    @command(name='unban')
+    @has_permissions(ban_members=True)
+    @bot_has_permissions(ban_members=True)
+    @Missile.guild_only()
+    async def unban_cmd(self, ctx: Context, target: discord.User):
+        """Unbans a user"""
+        await unban(ctx.message, target, f'Ikaros: Unbanned by {ctx.author}')
 
     @command(name='mute')
     @has_guild_permissions(mute_members=True)
     @bot_has_guild_permissions(manage_roles=True)
     @Missile.guild_only()
-    async def mute_cmd(self, ctx: Context, target: discord.Member, length: int = None, countdown: int = 3):
+    async def mute_cmd(self, ctx: Context, target: discord.Member, countdown: int = 3, length: int = None):
         """Mutes a member. Can define a time to auto unmute"""
         await mute(ctx.message, target, length, countdown, f'Ikaros: Muted by {ctx.author}')
 

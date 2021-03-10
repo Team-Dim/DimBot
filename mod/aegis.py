@@ -62,7 +62,7 @@ class Aegis(Cog):
         elif self.count[msg.author.id][1] == 4:  # 4 warns in the past 90s
             await ikaros.kick(msg, msg.author, 0, reason + ', threat level 2')  # Immediate kick
         elif self.count[msg.author.id][1] == 5:  # 5 warns in the past 90s
-            await ikaros.ban(msg, msg.author, 0, reason + ', threat level 3')  # Immediate ban
+            await ikaros.ban(msg, msg.author, 0, 0, reason + ', threat level 3')  # Immediate ban
         await asyncio.sleep(90)  # Reduces total warn count by 1 after 90s
         self.count[msg.author.id][1] -= 1
 
@@ -85,8 +85,11 @@ class Aegis(Cog):
             for m in msg.mentions:
                 if not m.bot:
                     # Tells the victim that he has been ghost pinged
-                    await m.send(
-                        f'{msg.author.mention} ({msg.author}) pinged you in **{msg.guild.name}** and deleted it.')
+                    try:
+                        await m.send(
+                            f'{msg.author.mention} ({msg.author}) pinged you in **{msg.guild.name}** and deleted it.')
+                    except discord.Forbidden:
+                        pass
             # Reports in the incident channel that the culprit deleted a ping
             await send(msg.channel, msg.author.mention + ' has deleted a ping')
 
