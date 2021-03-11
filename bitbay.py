@@ -78,7 +78,7 @@ class BitBay(Cog):
                     await msg.reply("May I suggest you <#750213635975938112> pins?")
                 elif re.search(r".*(gc|gamecube|wii|dolphin) ", match, re.IGNORECASE):
                     await msg.reply("May I suggest you <#750178026704207944> pins?")
-                elif re.search(r"(.*[ n])*ds", match, re.IGNORECASE):
+                elif re.search(r"(.* n?)?ds", match, re.IGNORECASE):
                     await msg.reply("May I suggest you <#749996667511767090> pins?")
                 elif re.search(r".*(rom|game|shader|mod|key|save|mii|firmware)", match, re.IGNORECASE):
                     await msg.reply('Please specify the emulator you want e.g. `Where download switch games`\n'
