@@ -12,6 +12,7 @@ import echo
 import raceline
 import tribe
 from bitbay import BitBay
+from bruckserver.vireg import Verstapen
 from missile import Missile, dim_id
 from mod.aegis import Aegis
 from mod.ikaros import Ikaros
@@ -25,7 +26,7 @@ bot.default_prefix = 't.' if dimsecret.debug else 'd.'
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = echo.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.4"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.5"
 # List of activities that will be randomly displayed every 5 minutes
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -272,7 +273,7 @@ async def colour(ctx, a: str, *args):
 
 bot.add_cog(raceline.Ricciardo(bot))
 bot.add_cog(tribe.Hamilton(bot))
-# bot.add_cog(vireg.Verstapen(bot))
+bot.add_cog(Verstapen(bot))
 bot.add_cog(bot.echo)
 bot.add_cog(BitBay(bot))
 bot.add_cog(dimond.Dimond(bot))

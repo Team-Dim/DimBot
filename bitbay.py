@@ -15,11 +15,16 @@ guild_id = 675477913411518485
 spam_ch_id = 723153902454964224
 
 
-def convert(text: str) -> str:
+def encode(text: str) -> str:
     """Converts the given string to base64"""
     b: bytes = text.encode()
     encoded: bytes = base64.b64encode(b)
     return encoded.decode()
+
+def decode(text: str) -> str:
+    b: bytes = text.encode()
+    decoded: bytes = base64.b64decode(b)
+    return decoded.decode()
 
 
 class PP:
@@ -33,13 +38,93 @@ class PP:
 
 class BitBay(Cog):
     """Utilities for 128BB
-    Version 1.3.1"""
+    Version 1.3.2"""
 
     def __init__(self, bot):
         self.bot: Bot = bot
         self.organs: dict = {}  # Dict for storing pp size
         self.mpm = True  # Message Pattern Matching master switch
         self.no_pp_msg = f"No pp found. Have you set it up by {bot.default_prefix}pp?"
+
+    @Cog.listener()
+    async def on_message(self, msg: discord.Message):
+        """Message Pattern Matching logic"""
+        if msg.guild and (msg.guild.id == guild_id or debug) and self.mpm:
+            match = re.search(r".*(where|how) .*(get|download|find|obtain|acquire) ", msg.content, re.IGNORECASE)
+            if match:  # Download-related
+                match = match.string[match.span()[-1]:]
+                if re.search(r".*(switch|yuzu|ryu)", match, re.IGNORECASE):
+                    if re.search(r".*(game|nsp|xci|rom)", match, re.IGNORECASE):
+                        await msg.reply("Please use <#730596209701421076>, don't use FitGirl repacks.")
+                    elif re.search(r".*shader", match, re.IGNORECASE):
+                        await msg.reply("<#709944999399260190>")
+                    elif re.search(r".*key", match, re.IGNORECASE):
+                        await msg.reply("<#702908846565490708>")
+                    elif re.search(r".*change ?log", match, re.IGNORECASE):
+                        await msg.reply("<#749927995183202376>")
+                    elif re.search(r".*mod", match, re.IGNORECASE):
+                        await msg.reply("Please check pins in <#702621234835226744>")
+                    elif re.search(r".*save", match, re.IGNORECASE):
+                        await msg.reply("<#718565804345393182>")
+                    elif re.search(r".*mii", match, re.IGNORECASE):
+                        await msg.reply("<#731478871823613962>")
+                    elif re.search(r".*firmware", match, re.IGNORECASE):
+                        await msg.reply("Yuzu doesn't need firmware. Unsubscribe the guy that said it.\nSwitch firmware"
+                                        "link is in the oldest pin at <#718990080387317850> but I PMed you")
+                        await msg.author.send(decode('aHR0cHM6Ly9kYXJ0aHN0ZXJuaWUubmV0L3N3aXRjaC1maXJtd2FyZXMv'))
+                elif re.search(r".*(cemu|wii ?u)", match, re.IGNORECASE):
+                    await msg.reply("May I suggest you <#718989936837263450> pins?")
+                elif re.search(r".*(citra|3ds) ", match, re.IGNORECASE):
+                    await msg.reply("May I suggest you <#750213635975938112> pins?")
+                elif re.search(r".*(gc|gamecube|wii|dolphin) ", match, re.IGNORECASE):
+                    await msg.reply("May I suggest you <#750178026704207944> pins?")
+                elif re.search(r".*[^3]ds", match, re.IGNORECASE):
+                    await msg.reply("May I suggest you <#749996667511767090> pins?")
+                elif re.search(r".*(rom|game|shader|mod|key|save|mii|firmware)", match, re.IGNORECASE):
+                    await msg.reply('Please specify the emulator you want e.g. `Where download switch games`\n'
+                                    'Tips: You can send `d.dec <base64>` to decode all those aHxxxx text!')
+                elif re.search(r".*amiibo", match, re.IGNORECASE):
+                    await msg.reply('<#796160202067017789>')
+
+    @command(aliases=['enc'])
+    async def encode(self, ctx: Context, *, url: str):
+        """Encodes base64 via command"""
+        if ctx.channel.type == discord.ChannelType.text:
+            await ctx.message.delete()
+        if Missile.regex_is_url(url):
+            await ctx.send(f'<https://codebeautify.org/base64-decode?input={encode(url)}>')
+        else:
+            url = ctx.author.mention + ': ' + url
+            await ctx.send(encode(url))
+
+    @command()
+    @has_any_role(702608566845964338, 735911149681508383, 702889819570831572)
+    async def mpm(self, ctx: Context):
+        """Toggles the Message Pattern Matching switch"""
+        await ctx.reply(('Disabled' if self.mpm else 'Enabled') + ' Message Pattern Matching (MPM)')
+        self.mpm = not self.mpm
+
+    @command(aliases=['dec'])
+    async def decode(self, ctx: Context, content: str):
+        """Decodes base64 via command"""
+        import binascii
+        try:
+            await ctx.author.send(decode(content))
+            await ctx.message.add_reaction('✅')
+        except (UnicodeDecodeError, binascii.Error):
+            await ctx.send('Malformed base64 string.')
+
+    @command()
+    @has_any_role(702608566845964338, 702889819570831572, 720319730883362816)
+    async def ea(self, ctx: Context, build: int, url: str, changelog: str = None):
+        """Notifies EAWindows that a new Yuzu EA build is available"""
+        msg = f'<@&719572310129901710>\n\nYuzu Early Access {build}\n\nDownload:\n{url}'
+        if changelog:
+            msg += '\n\n' + changelog
+        if debug:
+            await ctx.send(msg)
+            return
+        await self.bot.get_channel(702714661912707072).send(msg)
 
     def get_pp(self, uid: int) -> Optional[PP]:
         """Gets the pp of a User"""
@@ -67,63 +152,6 @@ class BitBay(Cog):
                 description += '\n**MAX POWER**'
             return description
         return self.no_pp_msg
-
-    @Cog.listener()
-    async def on_message(self, msg: discord.Message):
-        """Message Pattern Matching logic"""
-        if msg.guild and msg.guild.id == guild_id and self.mpm:
-            if re.search(r".*(get|download|find|obtain|acquire).*(cemu|wii ?u) (rom|game)s?", msg.content,
-                         re.IGNORECASE):
-                await msg.reply("Please use the last link in the oldest pin in <#718989936837263450>")
-            elif re.search(r".*(get|download|find|obtain|acquire).*(switch|yuzu|ryu) (rom|game)s?", msg.content,
-                           re.IGNORECASE):
-                await msg.reply("Please use <#730596209701421076>, don't use FitGirl repacks.")
-            elif re.search(
-                    r".*(get|download|find|obtain|acquire).*((shader.*(switch|yuzu|ryu))|((switch|yuzu|ryu).*shader))",
-                    msg.content, re.IGNORECASE):
-                await msg.reply("<#709944999399260190>")
-
-    @command(aliases=['enc'])
-    async def encode(self, ctx: Context, *, url: str):
-        """Encodes base64 via command"""
-        if ctx.channel.type == discord.ChannelType.text:
-            await ctx.message.delete()
-        if Missile.regex_is_url(url):
-            await ctx.send(f'<https://codebeautify.org/base64-decode?input={convert(url)}>')
-        else:
-            url = ctx.author.mention + ': ' + url
-            await ctx.send(convert(url))
-
-    @command()
-    @has_any_role(702608566845964338, 735911149681508383, 702889819570831572)
-    async def mpm(self, ctx: Context):
-        """Toggles the Message Pattern Matching switch"""
-        await ctx.reply(('Disabled' if self.mpm else 'Enabled') + ' Message Pattern Matching (MPM)')
-        self.mpm = not self.mpm
-
-    @command(aliases=['dec'])
-    async def decode(self, ctx: Context, content: str):
-        """Decodes base64 via command"""
-        import binascii
-        try:
-            b: bytes = content.encode()
-            decoded: bytes = base64.b64decode(b)
-            await ctx.author.send(decoded.decode())
-            await ctx.message.add_reaction('✅')
-        except (UnicodeDecodeError, binascii.Error):
-            await ctx.send('Malformed base64 string.')
-
-    @command()
-    @has_any_role(702608566845964338, 702889819570831572, 720319730883362816)
-    async def ea(self, ctx: Context, build: int, url: str, changelog: str = None):
-        """Notifies EAWindows that a new Yuzu EA build is available"""
-        msg = f'<@&719572310129901710>\n\nYuzu Early Access {build}\n\nDownload:\n{url}'
-        if changelog:
-            msg += '\n\n' + changelog
-        if debug:
-            await ctx.send(msg)
-            return
-        await self.bot.get_channel(702714661912707072).send(msg)
 
     @group(invoke_without_command=True)
     async def pp(self, ctx: Context, user: discord.User = None):
