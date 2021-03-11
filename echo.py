@@ -11,7 +11,7 @@ from missile import Missile
 # TODO: instead of hardcoded queries like execute('DELETE FROM'), use object oriented approaches like table.delete()
 class Bottas(commands.Cog):
     """Quote database.
-    Version 1.3"""
+    Version 1.4"""
 
     def __init__(self, bot):
         self.bot = bot
@@ -167,3 +167,33 @@ class Bottas(commands.Cog):
         for q in quotes:
             base += f"\n> {q['ROWID']}. {q['msg']} - {q['quoter']}"
         await ctx.send(base)
+
+    @quote.command(aliases=['e'])
+    async def edit(self, ctx: commands.Context, index: int):
+        """Edits a quote"""
+        quote = self.get_quote(index)
+        if quote and (quote['uid'] == ctx.author.id or Missile.is_rainbow(ctx.author.id)):
+            content = await self.bot.missile.ask_msg(ctx, 'Enter the new quote: (wait 10 seconds to cancel)')
+            if content:
+                # Quote message validation
+                if '<@' in content:
+                    await ctx.send("You can't mention others in quote message!")
+                    return
+                if '\n' in content:
+                    await ctx.send("The quote should be only one line!")
+                    return
+                quoter = await self.bot.missile.ask_msg(ctx, "Enter new quoter: (wait 10 seconds if it is the same)")
+                if quoter:
+                    # Quote message validation
+                    if '<@' in quoter:
+                        await ctx.send("You can't mention others in quote message!")
+                        return
+                    if '\n' in quoter:
+                        await ctx.send("The quote should be only one line!")
+                        return
+                    self.cursor.execute("UPDATE Quote SET msg = ?, quoter = ? WHERE ROWID = ?", (content, quoter, index))
+                else:
+                    self.cursor.execute("UPDATE Quote SET msg = ? WHERE ROWID = ?", (content, index))
+                await ctx.reply('Quote updated')
+        else:
+            await ctx.reply("You can't edit this quote!")

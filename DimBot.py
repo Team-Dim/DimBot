@@ -11,7 +11,6 @@ import dimsecret
 import echo
 import raceline
 import tribe
-from bruckserver import vireg
 from bitbay import BitBay
 from missile import Missile, dim_id
 from mod.aegis import Aegis
@@ -26,7 +25,7 @@ bot.default_prefix = 't.' if dimsecret.debug else 'd.'
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = echo.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.3"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.4"
 # List of activities that will be randomly displayed every 5 minutes
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -133,10 +132,9 @@ async def on_command_error(ctx, error):
 async def info(ctx):
     """Displays bot information"""
     from platform import python_version
-    from boto3 import __version__ as boto3ver
     await ctx.send(
-        f'Guild count: **{len(bot.guilds)}** | Python: `{python_version()}` | Discord.py: `{discord.__version__}` | '
-        f'boto3: `{boto3ver}`\nBot source code: https://github.com/TCLRainbow/DimBot\n'
+        f'Guild count: **{len(bot.guilds)}** | Python: `{python_version()}` | Discord.py: `{discord.__version__}` \n'
+        'Bot source code: https://github.com/TCLRainbow/DimBot\n'
         f'Bot module descriptions have been moved to `{bot.default_prefix}help <module name>`\n'
         f'Devblog: Instagram @techdim\nDiscord server: `6PjhjCD`\n\n{sponsor_txt}'
     )
@@ -274,7 +272,7 @@ async def colour(ctx, a: str, *args):
 
 bot.add_cog(raceline.Ricciardo(bot))
 bot.add_cog(tribe.Hamilton(bot))
-bot.add_cog(vireg.Verstapen(bot))
+# bot.add_cog(vireg.Verstapen(bot))
 bot.add_cog(bot.echo)
 bot.add_cog(BitBay(bot))
 bot.add_cog(dimond.Dimond(bot))

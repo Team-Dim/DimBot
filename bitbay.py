@@ -115,10 +115,11 @@ class BitBay(Cog):
 
     @command()
     @has_any_role(702608566845964338, 702889819570831572, 720319730883362816)
-    async def ea(self, ctx: Context, build: int, url: str):
+    async def ea(self, ctx: Context, build: int, url: str, changelog: str = None):
         """Notifies EAWindows that a new Yuzu EA build is available"""
-        msg = f'<@&719572310129901710>\n\nYuzu Early Access {build}\n\nDownload:\n' \
-              f'<https://codebeautify.org/base64-decode?input={convert(url)}>'
+        msg = f'<@&719572310129901710>\n\nYuzu Early Access {build}\n\nDownload:\n{url}'
+        if changelog:
+            msg += '\n\n' + changelog
         if debug:
             await ctx.send(msg)
             return
