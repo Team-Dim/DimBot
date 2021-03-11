@@ -50,9 +50,9 @@ class BitBay(Cog):
     async def on_message(self, msg: discord.Message):
         """Message Pattern Matching logic"""
         if msg.guild and (msg.guild.id == guild_id or debug) and self.mpm and not msg.author.bot:
-            match = re.search(r".*(where|how) .*(get|download|find|obtain|acquire) ", msg.content, re.IGNORECASE)
+            match = re.search(r".*(where|how) .*?(get|download|find|obtain|acquire) ", msg.content, re.IGNORECASE)
             if match:  # Download-related
-                match = match.string[match.span()[-1]:]
+                match = match.string[match.span()[1]:]
                 if re.search(r".*(switch|yuzu|ryu)", match, re.IGNORECASE):
                     if re.search(r".*(game|nsp|xci|rom)", match, re.IGNORECASE):
                         await msg.reply("Please use <#730596209701421076>, don't use FitGirl repacks.")
@@ -78,7 +78,7 @@ class BitBay(Cog):
                     await msg.reply("May I suggest you <#750213635975938112> pins?")
                 elif re.search(r".*(gc|gamecube|wii|dolphin) ", match, re.IGNORECASE):
                     await msg.reply("May I suggest you <#750178026704207944> pins?")
-                elif re.search(r"(.* n?)?ds", match, re.IGNORECASE):
+                elif re.search(r"((.* )|^)n?ds", match, re.IGNORECASE):
                     await msg.reply("May I suggest you <#749996667511767090> pins?")
                 elif re.search(r".*(rom|game|shader|mod|key|save|mii|firmware)", match, re.IGNORECASE):
                     await msg.reply('Please specify the emulator you want e.g. `Where download switch games`\n'
