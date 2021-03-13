@@ -2,6 +2,7 @@ import boto3
 from discord.ext import commands
 
 import dimsecret
+import tribe
 from bruckserver.pythania import Albon
 from missile import Missile
 
@@ -50,8 +51,7 @@ class Verstapen(commands.Cog):
             self.http_not_started = False
 
     @commands.command()
-    @Missile.is_rainbow_cmd_check(':construction: Sorry, this feature is currently not available, please ask Dim '
-                                  'in Discord to help you!')
+    @Missile.is_guild_cmd_check(tribe.guild_id, 686397146290979003)
     async def start(self, ctx):
         # Remove this check when Lokeon has finished rewriting.
         if dimsecret.debug:

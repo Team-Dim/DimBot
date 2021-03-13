@@ -26,7 +26,7 @@ bot.default_prefix = 't.' if dimsecret.debug else 'd.'
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = echo.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.5.5"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.6"
 # List of activities that will be randomly displayed every 5 minutes
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -63,7 +63,6 @@ async def on_ready():
     # First, fetch all the special objects
     bot.missile.guild = bot.get_guild(tribe.guild_id)
     bot.missile.bottyland = bot.get_channel(372386868236386307)
-    bot.missile.bruck_ch = bot.get_channel(688948118712090644)
     if dimsecret.debug:
         bot.missile.announcement = bot.missile.bottyland  # In debug mode, rss,yt should send in bottyland
     else:

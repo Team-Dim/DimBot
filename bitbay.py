@@ -13,6 +13,7 @@ from missile import Missile
 max_pp_size = 69
 guild_id = 675477913411518485
 spam_ch_id = 723153902454964224
+bot_ch_id = 718210372561141771
 
 
 def encode(text: str) -> str:

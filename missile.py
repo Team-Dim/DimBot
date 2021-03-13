@@ -151,3 +151,24 @@ class Missile:
             return collection[index]
         except IndexError or KeyError:
             return default
+
+    @staticmethod
+    def is_guild_cmd_check(*guilds):
+        """When a command has been invoked, checks whether the invoked channel is in one of the guilds"""
+
+        async def check(ctx):
+            async def no_guild():
+                msg = 'The command can only be executed in these servers:'
+                for guild in guilds:
+                    msg += f"\n**{ctx.bot.get_guild(guild).name if ctx.bot.get_guild(guild) else '⚠ Unknown server'}**"
+                await ctx.send(msg)
+
+            if ctx.guild:
+                is_guild = ctx.guild.id in guilds
+                if not is_guild:
+                    await no_guild()
+                return is_guild
+            await no_guild()
+            return False
+
+        return commands.check(check)

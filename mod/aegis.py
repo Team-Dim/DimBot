@@ -25,7 +25,7 @@ class Aegis(Cog):
     @Cog.listener()
     async def on_message(self, msg: discord.Message):
         # Check whether message needs to be scanned by Aegis
-        if not msg.guild or msg.author.bot or msg.channel.id == bitbay.spam_ch_id:
+        if not msg.guild or msg.author.bot or msg.channel.id in (bitbay.spam_ch_id, bitbay.bot_ch_id):
             return
         if msg.author.id not in self.count:  # Creates record for the message author
             self.count[msg.author.id] = [[], 0]  # [Tracked messages, warn count]
@@ -39,16 +39,16 @@ class Aegis(Cog):
             if ml == 4:  # There are 4 previous messages
                 if (msg.created_at - self.count[msg.author.id][0][0]).total_seconds() < 5:  # 5 msg in 5s
                     self.count[msg.author.id][1] += 1
-                    await send(msg.channel, 'Detected spam, type V. Warn: ' + str(self.count[msg.author.id][1]))
                     self.count[msg.author.id][0] = []
+                    await send(msg.channel, 'Detected spam, type V. Warn: ' + str(self.count[msg.author.id][1]))
                     self.bot.loop.create_task(self.act(msg, 'Aegis: Spam, type V'))
                 else:
                     self.count[msg.author.id][0].pop(0)  # We only track up to 5 previous messages
             ml = len(self.count[msg.author.id][0])
             if ml > 1 > (msg.created_at - self.count[msg.author.id][0][ml - 2]).total_seconds():  # 3 msg in 1s
                 self.count[msg.author.id][1] += 1
-                await send(msg.channel, 'Detected spam, type I. Warn: ' + str(self.count[msg.author.id][1]))
                 self.count[msg.author.id][0] = []
+                await send(msg.channel, 'Detected spam, type I. Warn: ' + str(self.count[msg.author.id][1]))
                 self.bot.loop.create_task(self.act(msg, 'Aegis: Spam, type I'))
             for t in self.count[msg.author.id][0]:  # If previous messages are >5s older than current, purge cache
                 if (msg.created_at - t).total_seconds() >= 5:
