@@ -19,7 +19,6 @@ class Verstapen(commands.Cog):
         self.logger = bot.missile.get_logger('Verstapen')
         self.http_not_started = True
         self.albon = Albon(bot.missile.get_logger('Albon'))
-        self.ip = ''
 
     async def boot_instance(self, ctx, region_id: str):
         msg = await ctx.send('Connecting to Amazon Web Service...')
@@ -30,10 +29,19 @@ class Verstapen(commands.Cog):
             aws_secret_access_key=dimsecret.aws_secret_key
         )
         ec2 = session.client('ec2')
-
-        if self.ip:
-            await Missile.append_message(msg, f"Instance is already running at {self.ip}")
-        else:
+        instance = ec2.describe_instances(
+            Filters=[
+                {
+                    'Name': 'instance-state-name',
+                    'Values': ['running']
+                },
+                {
+                    'Name': 'tag:Name',
+                    'Values': ['bruck3 Spot']
+                }
+            ]
+        )
+        if not instance['Reservations']:
             ami = ec2.describe_images(
                 Filters=[{
                     'Name': 'tag:Name',
@@ -71,8 +79,9 @@ class Verstapen(commands.Cog):
                                               f'*{spot_request["LaunchSpecification"]["Placement"]["AvailabilityZone"]}*')
             instance_id = spot_info['InstanceId']
             ec2.create_tags(Resources=[instance_id], Tags=[{'Key': 'Name', 'Value': 'bruck3 Spot'}])
-            instance = ec2.describe_instances(InstanceIds=[instance_id])['Reservations'][0]['Instances'][0]
-            await Missile.append_message(msg, f'IP: **{instance["PublicIpAddress"]}**', ', ')
+            instance = ec2.describe_instances(InstanceIds=[instance_id])
+        instance = instance['Reservations'][0]['Instances'][0]
+        await Missile.append_message(msg, f'IP: **{instance["PublicIpAddress"]}**')
 
         self.albon.add_channel(ctx.channel)
         if self.http_not_started:
