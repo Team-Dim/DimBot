@@ -20,8 +20,9 @@ class Verstapen(commands.Cog):
         self.http_not_started = True
         self.albon = Albon(bot.missile.get_logger('Albon'))
 
-    async def boot_instance(self, ctx, region_id: str):
-        msg = await ctx.send('Connecting to Amazon Web Service...')
+    async def boot_instance(self, ctx, region_id: str, level: int):
+        msg = await ctx.send('Tips: If you think the server is overloading, /stop in mc then send `d.start 1`\n'
+                             'Connecting to Amazon Web Service...')
         self.logger.info('Connecting to AWS')
         session = boto3.session.Session(
             region_name=region_id,
@@ -53,7 +54,9 @@ class Verstapen(commands.Cog):
                 await Missile.append_message(msg, '⚠No AMI! Please ask Dim for help!')
                 return
             ami = ami[0]
-            await Missile.append_message(msg, f"Requesting a new instance with AMI '**{ami['Name']}**'")
+            inst_type = {0: 't4g.small', 1: 'c6g.large'}
+            await Missile.append_message(msg, f"Requesting a new instance with AMI **{ami['Name']}**, "
+                                              f"type **{inst_type[level]}**")
             spot_request = ec2.request_spot_instances(
                 LaunchSpecification={
                     'SecurityGroups': ['default'],
@@ -63,7 +66,7 @@ class Verstapen(commands.Cog):
                     },
                     'ImageId': ami['ImageId'],
                     'KeyName': 'SG',
-                    'InstanceType': 't4g.small',
+                    'InstanceType': inst_type[level],
                     'EbsOptimized': True,
                     'Monitoring': {'Enabled': True}
                 }
@@ -75,15 +78,17 @@ class Verstapen(commands.Cog):
                 spot_info = ec2.describe_spot_instance_requests(SpotInstanceRequestIds=
                                                                 [spot_request['SpotInstanceRequestId']])
                 spot_info = spot_info['SpotInstanceRequests'][0]
-            await Missile.append_message(msg, 'AWS has fulfilled our request in '
-                                              f'*{spot_request["LaunchSpecification"]["Placement"]["AvailabilityZone"]}*')
+            await Missile.append_message(
+                msg, 'AWS has fulfilled our request in '
+                     f'*{spot_request["LaunchSpecification"]["Placement"]["AvailabilityZone"]}*')
             instance_id = spot_info['InstanceId']
             ec2.create_tags(Resources=[instance_id], Tags=[{'Key': 'Name', 'Value': 'bruck3 Spot'}])
             instance = ec2.describe_instances(InstanceIds=[instance_id])
         instance = instance['Reservations'][0]['Instances'][0]
         await Missile.append_message(msg, f'IP: **{instance["PublicIpAddress"]}**')
 
-        self.albon.add_channel(ctx.channel)
+        if ctx.channel not in self.albon.get_channels:
+            self.albon.add_channel(ctx.channel)
         if self.http_not_started:
             await self.albon.run_server()
             self.http_not_started = False
@@ -91,5 +96,5 @@ class Verstapen(commands.Cog):
     @commands.command()
     @cooldown(rate=1, per=600.0, type=BucketType.user)  # Each person can only call this once per 10min
     @Missile.is_guild_cmd_check(tribe.guild_id, 686397146290979003)
-    async def start(self, ctx):
-        await self.boot_instance(ctx, 'ap-southeast-1')
+    async def start(self, ctx, level: int = 0):
+        await self.boot_instance(ctx, 'ap-southeast-1', level)
