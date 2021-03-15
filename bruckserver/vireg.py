@@ -1,5 +1,8 @@
+import asyncio
+
 import boto3
 from discord.ext import commands
+from discord.ext.commands import cooldown, BucketType
 
 import dimsecret
 import tribe
@@ -9,15 +12,16 @@ from missile import Missile
 
 class Verstapen(commands.Cog):
     """Connects to AWS and communicates with a minecraft server instance.
-    Version 1.3.1"""
+    Version 2.0"""
 
     def __init__(self, bot):
         self.bot = bot
         self.logger = bot.missile.get_logger('Verstapen')
         self.http_not_started = True
         self.albon = Albon(bot.missile.get_logger('Albon'))
+        self.ip = ''
 
-    async def boot_instance(self, ctx, instance_id: str, region_id: str):
+    async def boot_instance(self, ctx, region_id: str):
         msg = await ctx.send('Connecting to Amazon Web Service...')
         self.logger.info('Connecting to AWS')
         session = boto3.session.Session(
@@ -25,36 +29,58 @@ class Verstapen(commands.Cog):
             aws_access_key_id=dimsecret.aws_access_key,
             aws_secret_access_key=dimsecret.aws_secret_key
         )
-        ec2 = session.resource('ec2')
-        ssm = session.client('ssm')
-        self.logger.debug('Fetching SSM parameter')
-        response = ssm.get_parameter(Name=f'/aws/service/global-infrastructure/regions/{region_id}/longName')
-        region_name = response['Parameter']['Value']
-        await Missile.append_message(msg, f'Checking if instance *{instance_id}* is already running...')
-        instance = ec2.Instance(instance_id)
-        if instance.state['Code'] != 80:
-            await Missile.append_message(msg, 'Instance is already running')
+        ec2 = session.client('ec2')
+
+        if self.ip:
+            await Missile.append_message(msg, f"Instance is already running at {self.ip}")
         else:
-            msg = await ctx.send('Sending start request...')
-            instance.start()
-            await Missile.append_message(msg, "Waiting for the instance to be booted...")
-            instance.wait_until_running()
-            await Missile.append_message(msg, 'Instance has successfully started')
-        await Missile.append_message(
-            msg,
-            f'in {region_id} **"{region_name}"**. IP address: **{instance.public_ip_address}** ',
-            delimiter=' '
-        )
+            ami = ec2.describe_images(
+                Filters=[{
+                    'Name': 'tag:Name',
+                    'Values': ['bruck3']
+                }],
+                Owners=['self']
+            )['Images']
+            if not ami:
+                await Missile.append_message(msg, '⚠No AMI! Please ask Dim for help!')
+                return
+            ami = ami[0]
+            await Missile.append_message(msg, f"Requesting a new instance with AMI '**{ami['Name']}**'")
+            spot_request = ec2.request_spot_instances(
+                LaunchSpecification={
+                    'SecurityGroups': ['default'],
+                    'BlockDeviceMappings': ami['BlockDeviceMappings'],
+                    'Placement': {
+                        'AvailabilityZone': 'ap-southeast-1a',
+                    },
+                    'ImageId': ami['ImageId'],
+                    'KeyName': 'SG',
+                    'InstanceType': 't4g.small',
+                    'EbsOptimized': True,
+                    'Monitoring': {'Enabled': True}
+                }
+            )['SpotInstanceRequests'][0]
+            await Missile.append_message(msg, 'Waiting for AWS to provide an instance...')
+            spot_info = {"State": ""}
+            while spot_info['State'] != 'active':
+                await asyncio.sleep(5)
+                spot_info = ec2.describe_spot_instance_requests(SpotInstanceRequestIds=
+                                                                [spot_request['SpotInstanceRequestId']])
+                spot_info = spot_info['SpotInstanceRequests'][0]
+            await Missile.append_message(msg, 'AWS has fulfilled our request in '
+                                              f'*{spot_request["LaunchSpecification"]["Placement"]["AvailabilityZone"]}*')
+            instance_id = spot_info['InstanceId']
+            ec2.create_tags(Resources=[instance_id], Tags=[{'Key': 'Name', 'Value': 'bruck3 Spot'}])
+            instance = ec2.describe_instances(InstanceIds=[instance_id])['Reservations'][0]['Instances'][0]
+            await Missile.append_message(msg, f'IP: **{instance["PublicIpAddress"]}**', ', ')
+
         self.albon.add_channel(ctx.channel)
         if self.http_not_started:
             await self.albon.run_server()
             self.http_not_started = False
 
     @commands.command()
+    @cooldown(rate=1, per=600.0, type=BucketType.user)  # Each person can only call this once per 10min
     @Missile.is_guild_cmd_check(tribe.guild_id, 686397146290979003)
     async def start(self, ctx):
-        # Remove this check when Lokeon has finished rewriting.
-        if dimsecret.debug:
-            await ctx.send('⚠DimBot is currently in **DEBUG** mode.'
-                           ' I cannot receive messages from Lokeon, also things may not work as expected!⚠\n')
-        await self.boot_instance(ctx, dimsecret.bruck_instance_id, 'ap-southeast-1')
+        await self.boot_instance(ctx, 'ap-southeast-1')

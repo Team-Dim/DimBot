@@ -5,7 +5,7 @@ from aiohttp import web
 
 class Albon:
     """HTTP server sub-project used by Verstapen
-    Version 1.2.1"""
+    Version 1.2.2"""
 
     def __init__(self, logger):
         self._channels = []
@@ -63,7 +63,8 @@ class Albon:
             if name == '':
                 for channel in self.get_channels:
                     asyncio.get_running_loop().create_task(channel.send(
-                        ':angry: Minecraft server has been idle for 15 minutes. **玩完記得喺MINECRAFT入面/STOP!!!**'))
+                        ':angry: Minecraft server has been idle for 15 minutes. '
+                        '**Please /stop in Minecraft when you are done!!!**'))
             self.logger.debug('mcser is shutting down')
             for channel in self._channels:
                 asyncio.get_running_loop().create_task(channel.send(f'** {name}** :axe: Minecraft server'))

@@ -61,7 +61,7 @@ class Aegis(Cog):
             await ikaros.mute(msg, msg.author, 10, 0, reason + ', threat level 1')  # 10s mute
         elif self.count[msg.author.id][1] == 4:  # 4 warns in the past 90s
             await ikaros.kick(msg, msg.author, 0, reason + ', threat level 2')  # Immediate kick
-        elif self.count[msg.author.id][1] == 5:  # 5 warns in the past 90s
+        elif self.count[msg.author.id][1] >= 5:  # >5 warns in the past 90s
             await ikaros.ban(msg, msg.author, 0, 0, reason + ', threat level 3')  # Immediate ban
         await asyncio.sleep(90)  # Reduces total warn count by 1 after 90s
         self.count[msg.author.id][1] -= 1

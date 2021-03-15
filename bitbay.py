@@ -22,6 +22,7 @@ def encode(text: str) -> str:
     encoded: bytes = base64.b64encode(b)
     return encoded.decode()
 
+
 def decode(text: str) -> str:
     b: bytes = text.encode()
     decoded: bytes = base64.b64decode(b)
