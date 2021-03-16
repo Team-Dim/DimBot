@@ -1,6 +1,6 @@
 import asyncio
 from datetime import datetime
-from random import choice
+from random import choice, randint
 from typing import Union
 
 import discord
@@ -26,7 +26,7 @@ bot.default_prefix = 't.' if dimsecret.debug else 'd.'
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = echo.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.7.2"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.8"
 # List of activities that will be randomly displayed every 5 minutes
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -75,9 +75,7 @@ async def on_ready():
         if guild.me.nick != nickname:
             bot.loop.create_task(guild.me.edit(nick=nickname))
     if reborn_channel:
-        epilogue = "Arc-Cor𐑞: Reconnected with Discord, transform complete. Ready to kick some balls!\n" \
-                   "https://data.whicdn.com/images/343444322/original.gif"
-        await bot.get_channel(reborn_channel).send(epilogue)
+        await bot.get_channel(reborn_channel).send("Arc-Cor𐑞: Pandora complete.")
     while True:
         logger.debug('Changed activity')
         await bot.change_presence(activity=choice(activities))
@@ -194,17 +192,17 @@ async def arccore(ctx):
 
 @arccore.command()
 @Missile.is_rainbow_cmd_check()
-async def off(ctx):
+async def stealth(ctx):
     bot.echo.db.commit()
-    await ctx.send('Arc-Cor𐑞: **OFF**\nhttps://pbs.twimg.com/media/ED4Ia8AWkAMcXvK.jpg')
+    await ctx.send('Arc-Cor𐑞: **Stealth**')
     await bot.logout()
 
 
 @arccore.command()
 @Missile.is_rainbow_cmd_check()
-async def transform(ctx):
+async def pandora(ctx):
     bot.echo.db.commit()
-    await ctx.send('Arc-Cor𐑞: **TRANSFORM**\nInitiating update and restart operations!')
+    await ctx.send('Arc-Cor𐑞: **PANDORA**\nInitiating update and restart operations!')
     with open('final', 'w') as death_note:
         death_note.write(str(ctx.channel.id))
     logger.critical('RESTARTING')
@@ -244,8 +242,10 @@ async def hug(ctx):
 
 
 @bot.command(aliases=['color'])
-async def colour(ctx, a: str, *args):
+async def colour(ctx, a: str = None, *args):
     """Shows info about the color"""
+    if not a:
+        a = str(randint(1, 0xFFFFFF))
     try:
         is_hex = a[0] == '#'
         if is_hex:
@@ -260,7 +260,7 @@ async def colour(ctx, a: str, *args):
                                              int(Missile.ensure_index_value(args, 2, 0)))
         else:
             colour = discord.Colour(int(a))
-        emb = discord.Embed(title=a if is_hex else f'{colour.value:X}', color=colour)
+        emb = discord.Embed(title=a if is_hex else f'#{colour.value:X}', color=colour)
         emb.add_field(name='R', value=colour.r)
         emb.add_field(name='G', value=colour.g)
         emb.add_field(name='B', value=colour.b)

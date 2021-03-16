@@ -73,7 +73,7 @@ class BitBay(Cog):
                         await msg.reply("<#731478871823613962>")
                     elif re.search(r"(.* |^)firmware", match, re.IGNORECASE):
                         await msg.reply("Yuzu doesn't need firmware. Unsubscribe the guy that said it.\nSwitch firmware"
-                                        "link is in the oldest pin at <#718990080387317850> but I PMed you")
+                                        " link is in the oldest pin at <#718990080387317850> but I PMed you")
                         await msg.author.send(decode('aHR0cHM6Ly9kYXJ0aHN0ZXJuaWUubmV0L3N3aXRjaC1maXJtd2FyZXMv'))
                 elif re.search(r"(.* |^)(cemu|wii ?u)", match, re.IGNORECASE):
                     await msg.reply("May I suggest you <#718989936837263450> pins?")
