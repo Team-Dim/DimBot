@@ -21,7 +21,8 @@ class Verstapen(commands.Cog):
         self.albon = Albon(bot.missile.get_logger('Albon'))
 
     async def boot_instance(self, ctx, region_id: str, level: int):
-        msg = await ctx.send('Tips: If you think the server is overloading, /stop in mc then send `d.start 1`\n'
+        msg = await ctx.send('Tips: If you think the server crashes due to not enough RAM, /stop in mc then send '
+                             '`d.start 1`. If the server tps is always below 10, `d.start 2`\n'
                              'Connecting to Amazon Web Service...')
         self.logger.info('Connecting to AWS')
         session = boto3.session.Session(
@@ -42,7 +43,7 @@ class Verstapen(commands.Cog):
                 }
             ]
         )
-        if not instance['Reservations']:
+        if not instance['Reservations']:  # There are no active bruck servers
             ami = ec2.describe_images(
                 Filters=[{
                     'Name': 'tag:Name',
@@ -54,7 +55,7 @@ class Verstapen(commands.Cog):
                 await Missile.append_message(msg, '⚠No AMI! Please ask Dim for help!')
                 return
             ami = ami[0]
-            inst_type = {0: 't4g.small', 1: 'c6g.large'}
+            inst_type = {0: 't4g.small', 1: 't4g.medium', 2: 'c6g.large'}
             await Missile.append_message(msg, f"Requesting a new instance with AMI **{ami['Name']}**, "
                                               f"type **{inst_type[level]}**")
             spot_request = ec2.request_spot_instances(
@@ -87,8 +88,7 @@ class Verstapen(commands.Cog):
         instance = instance['Reservations'][0]['Instances'][0]
         await Missile.append_message(msg, f'IP: **{instance["PublicIpAddress"]}**')
 
-        if ctx.channel not in self.albon.get_channels:
-            self.albon.add_channel(ctx.channel)
+        self.albon.add_channel(ctx.channel)
         if self.http_not_started:
             await self.albon.run_server()
             self.http_not_started = False

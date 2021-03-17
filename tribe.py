@@ -6,38 +6,45 @@ guild_id = 285366651312930817
 
 class Hamilton(Cog):
     """Dim's guild specific features
-    Version 1.3.1"""
+    Version 1.3.2"""
 
     def __init__(self, bot):
         self.bot = bot
-        self.logger = bot.missile.get_logger('Hamilton')
-        self.invites = []
-        self.bbm_role = None
+        self.invites = {}
 
     async def get_join_invite(self) -> discord.Invite:
         """Returns the invite used by a member.This is done by first caching self.invites in on_ready() then compare
         each invite count on on_member_join()"""
-        invites = await self.bot.missile.guild.invites()
-        for i, invite in enumerate(invites):
-            if invite.uses != self.invites[i].uses:
+        invites = await self.get_invites_dict()
+        for code in invites.keys():
+            if code in self.invites:
+                if invites[code] != self.invites[code]:
+                    self.invites = invites
+                    return code
+            elif invites[code]:
                 self.invites = invites
-                return invite
+                return code
+
+    async def get_invites_dict(self) -> dict:
+        invites = await self.bot.missile.guild.invites()
+        d = {}
+        for invite in invites:
+            d[invite.code] = invite.uses
+        return d
 
     @Cog.listener()
     async def on_ready(self):
-        # Caches invites
-        self.invites = await self.bot.missile.guild.invites()
+        self.invites = await self.get_invites_dict()  # Caches invites
 
     @Cog.listener()
     async def on_member_join(self, member: discord.Member):
         if member.guild == self.bot.missile.guild:  # Only activates if its in my server
             invite = await self.get_join_invite()
-            await self.bot.missile.logs.send(f"{member.mention} ({member}) joined via code `{invite.code}` "
-                                             f"{invite.channel.mention}")
-            if invite.code == 'g6Yrteq':  # Joined via BBM invite
+            await self.bot.missile.logs.send(f"{member.mention} ({member}) joined via code `{invite}`")
+            if invite == 'g6Yrteq':  # Joined via BBM invite
                 role = self.bot.missile.guild.get_role(664210105318768661)
                 await member.add_roles(role)
-                ch = self.bot.missile.bottyland
+                ch = self.bot.get_channel(372386868236386307)  # Bottyland
                 await ch.send(
                     f'Welcome {member.mention}! You are automatically added to the role {role.name} '
                     f'for related announcements.'

@@ -23,7 +23,6 @@ class Missile:
         else:
             self.lvl = logging.INFO
         self.guild = None  # My own server
-        self.bottyland: discord.TextChannel = None  # A TextChannel in my server used for debugging
         self.announcement: discord.TextChannel = None  # Announcement channel in my server
         self.logs: discord.TextChannel = None  # Log channel in my server
         # Stores the message for snipe command

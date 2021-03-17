@@ -12,7 +12,7 @@ class Albon:
         self.logger = logger
 
     @property
-    def get_channels(self):
+    def channels(self):
         return self._channels
 
     def add_channel(self, channel):
@@ -23,11 +23,8 @@ class Albon:
         app = web.Application()
         app.add_routes(routes)
         runner = web.AppRunner(app)
-        self.logger.debug('Setup runner...')
         await runner.setup()
-        self.logger.debug('Runner has been set up.')
         site = web.TCPSite(runner, '0.0.0.0', 80)
-        self.logger.debug('Starting website...')
         await site.start()
         self.logger.info('Site now running')
 
@@ -37,7 +34,7 @@ class Albon:
         @routes.get('/hook')
         async def hook(request: web.Request):
             self.logger.debug('Received Lokeon hook')
-            for channel in self.get_channels:
+            for channel in self.channels:
                 asyncio.get_running_loop().create_task(channel.send("Minecraft server :handshake: DimBot"))
             return web.Response()
 
@@ -45,7 +42,7 @@ class Albon:
         async def join(request: web.Request):
             self.logger.debug('Received PlayerJoinEvent')
             data = await request.text()
-            for channel in self.get_channels:
+            for channel in self.channels:
                 asyncio.get_running_loop().create_task(channel.send(f'**{data}** :handshake: Minecraft server'))
             return web.Response()
 
@@ -53,7 +50,7 @@ class Albon:
         async def player_quit(request: web.Request):
             self.logger.debug('Received PlayerQuitEvent')
             data = await request.text()
-            for channel in self.get_channels:
+            for channel in self.channels:
                 asyncio.get_running_loop().create_task(channel.send(f'**{data}** :wave: Minecraft server'))
             return web.Response()
 
@@ -61,7 +58,7 @@ class Albon:
         async def shutdown(request: web.Request):
             name = request.rel_url.query['name']
             if name == '':
-                for channel in self.get_channels:
+                for channel in self.channels:
                     asyncio.get_running_loop().create_task(channel.send(
                         ':angry: Minecraft server has been idle for 15 minutes. '
                         '**Please /stop in Minecraft when you are done!!!**'))

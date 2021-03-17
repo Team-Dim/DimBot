@@ -26,7 +26,7 @@ bot.default_prefix = 't.' if dimsecret.debug else 'd.'
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = echo.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.8"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.9"
 # List of activities that will be randomly displayed every 5 minutes
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -41,7 +41,8 @@ activities = [
     discord.Activity(name='Terry coughing', type=discord.ActivityType.listening),
     discord.Activity(name='Bruck sleeps', type=discord.ActivityType.watching),
     discord.Activity(name='Try not to crash', type=discord.ActivityType.competing),
-    discord.Activity(name='Muzen train', type=discord.ActivityType.watching)
+    discord.Activity(name='Muzen train', type=discord.ActivityType.watching),
+    discord.Activity(name="Heaven's Lost Property", type=discord.ActivityType.watching)
 ]
 logger = bot.missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip>'
@@ -270,12 +271,15 @@ async def colour(ctx, a: str = None, *args):
                         'combination `rgb/hsv <> <> <>`')
 
 
-bot.add_cog(raceline.Ricciardo(bot))
-bot.add_cog(tribe.Hamilton(bot))
-bot.add_cog(Verstapen(bot))
-bot.add_cog(bot.echo)
-bot.add_cog(BitBay(bot))
-bot.add_cog(dimond.Dimond(bot))
-bot.add_cog(Ikaros(bot))
-bot.add_cog(Aegis(bot))
+async def ready_tasks():
+    bot.add_cog(raceline.Ricciardo(bot))
+    bot.add_cog(Verstapen(bot))
+    bot.add_cog(bot.echo)
+    bot.add_cog(BitBay(bot))
+    bot.add_cog(dimond.Dimond(bot))
+    bot.add_cog(Ikaros(bot))
+    bot.add_cog(Aegis(bot))
+    # await bot.wait_until_ready()
+    bot.add_cog(tribe.Hamilton(bot))
+bot.loop.create_task(ready_tasks())
 bot.run(dimsecret.discord)
