@@ -26,7 +26,7 @@ bot.default_prefix = 't.' if dimsecret.debug else 'd.'
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = echo.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.9"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.10"
 # List of activities that will be randomly displayed every 5 minutes
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -62,7 +62,6 @@ except FileNotFoundError:
 async def on_ready():
     """Event handler when the bot has connected to the Discord endpoint"""
     # First, fetch all the special objects
-    bot.missile.guild = bot.get_guild(tribe.guild_id)
     bot.missile.bottyland = bot.get_channel(372386868236386307)
     if dimsecret.debug:
         bot.missile.announcement = bot.missile.bottyland  # In debug mode, rss,yt should send in bottyland
@@ -203,7 +202,7 @@ async def stealth(ctx):
 @Missile.is_rainbow_cmd_check()
 async def pandora(ctx):
     bot.echo.db.commit()
-    await ctx.send('Arc-Cor𐑞: **PANDORA**\nInitiating update and restart operations!')
+    await ctx.send('Arc-Cor𐑞: **PANDORA**, self-evolving!')
     with open('final', 'w') as death_note:
         death_note.write(str(ctx.channel.id))
     logger.critical('RESTARTING')
@@ -279,7 +278,7 @@ async def ready_tasks():
     bot.add_cog(dimond.Dimond(bot))
     bot.add_cog(Ikaros(bot))
     bot.add_cog(Aegis(bot))
-    # await bot.wait_until_ready()
+    await bot.wait_until_ready()
     bot.add_cog(tribe.Hamilton(bot))
 bot.loop.create_task(ready_tasks())
 bot.run(dimsecret.discord)

@@ -31,8 +31,9 @@ class Aegis(Cog):
             self.count[msg.author.id] = [[], 0]  # [Tracked messages, warn count]
         raw_mention_count = len(msg.raw_mentions)
         if raw_mention_count >= 5:  # Mass ping
-            self.count[msg.author.id][1] += 1
-            await send(msg.channel, f'Detected mass ping ({raw_mention_count}). Warn: {self.count[msg.author.id][1]}')
+            self.count[msg.author.id][1] += 3
+            await send(msg.channel, f'Detected mass ping ({raw_mention_count}) by {msg.author.mention}. '
+                                    f'Warn: {self.count[msg.author.id][1]}')
             self.bot.loop.create_task(self.act(msg, 'Aegis: Mass ping'))
         else:
             ml = len(self.count[msg.author.id][0])
@@ -40,7 +41,8 @@ class Aegis(Cog):
                 if (msg.created_at - self.count[msg.author.id][0][0]).total_seconds() < 5:  # 5 msg in 5s
                     self.count[msg.author.id][1] += 1
                     self.count[msg.author.id][0] = []
-                    await send(msg.channel, 'Detected spam, type V. Warn: ' + str(self.count[msg.author.id][1]))
+                    await send(msg.channel, f'Detected spam by {msg.author.mention}, type V. '
+                                            f'Warn: {self.count[msg.author.id][1]}')
                     self.bot.loop.create_task(self.act(msg, 'Aegis: Spam, type V'))
                 else:
                     self.count[msg.author.id][0].pop(0)  # We only track up to 5 previous messages
@@ -48,7 +50,8 @@ class Aegis(Cog):
             if ml > 1 > (msg.created_at - self.count[msg.author.id][0][ml - 2]).total_seconds():  # 3 msg in 1s
                 self.count[msg.author.id][1] += 1
                 self.count[msg.author.id][0] = []
-                await send(msg.channel, 'Detected spam, type I. Warn: ' + str(self.count[msg.author.id][1]))
+                await send(msg.channel, f'Detected spam by {msg.author.mention}, type I. '
+                                        f'Warn: {self.count[msg.author.id][1]}')
                 self.bot.loop.create_task(self.act(msg, 'Aegis: Spam, type I'))
             for t in self.count[msg.author.id][0]:  # If previous messages are >5s older than current, purge cache
                 if (msg.created_at - t).total_seconds() >= 5:

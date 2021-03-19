@@ -1,4 +1,9 @@
 # DimBot
+Minimum Python version: `3.6`
+
+Recommended Python version: `3.9.2+`
+
+For `Albon` to work, you need root/sudo in Linux as it uses port 80 for HTTP server port
 ### dimsecret.py
 In order to run the bot, you have to provide some tokens for it to work.
 They should be stored inside `dimsecret.py` in the root directory.

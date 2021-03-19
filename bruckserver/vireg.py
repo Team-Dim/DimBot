@@ -21,9 +21,8 @@ class Verstapen(commands.Cog):
         self.albon = Albon(bot.missile.get_logger('Albon'))
 
     async def boot_instance(self, ctx, region_id: str, level: int):
-        msg = await ctx.send('Tips: If you think the server crashes due to not enough RAM, /stop in mc then send '
-                             '`d.start 1`. If the server tps is always below 10, `d.start 2`\n'
-                             'Connecting to Amazon Web Service...')
+        msg = await ctx.send('Tips: If server always restart, /stop in mc then send `d.start 1`. '
+                             'If server tps always below 10, `d.start 2`\nConnecting to Amazon Web Service...')
         self.logger.info('Connecting to AWS')
         session = boto3.session.Session(
             region_name=region_id,

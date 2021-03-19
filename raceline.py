@@ -46,6 +46,7 @@ class Ricciardo(commands.Cog):
         self.bot.echo.cursor.execute(f"DELETE FROM YtSub WHERE ytChID IN ({q_marks})", (ch_ids,))
         self.bot.echo.cursor.execute("DELETE FROM YtData WHERE channelID NOT IN (SELECT channelID FROM YtSub)")
 
+    # noinspection PyBroadException
     async def raceline_task(self):
         """Dispatches RSS, BBM and YouTube update detectors"""
         bbm_futures = {}
@@ -74,10 +75,16 @@ class Ricciardo(commands.Cog):
                 default_msg = f"<@&{row['roleID']}>\n"
             msg = default_msg
             for addon in bbm_addon:
-                msg += bbm_futures[addon[0]].result()  # Adds actual BBM update message
+                try:
+                    msg += bbm_futures[addon[0]].result()  # Adds actual BBM update message
+                except Exception as e:
+                    self.logger.critical(e.with_traceback(None))
             if msg != default_msg:  # Only send if there are BBM updates
                 self.bot.loop.create_task(self.bot.get_channel(row[0]).send(msg))
-        await asyncio.wait(resultless_futures)  # Wait for all tasks to be finished
+        try:
+            await asyncio.wait(resultless_futures)  # Wait for all tasks to be finished
+        except Exception as e:
+            self.logger.critical(e.with_traceback(None))
         self.logger.debug('Synced')
         self.bot.echo.db.commit()
 
