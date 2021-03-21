@@ -55,8 +55,7 @@ class Verstapen(commands.Cog):
                 return
             ami = ami[0]
             inst_type = {0: 't4g.small', 1: 't4g.medium', 2: 'c6g.large'}
-            await Missile.append_message(msg, f"Requesting a new instance with AMI **{ami['Name']}**, "
-                                              f"type **{inst_type[level]}**")
+            await Missile.append_message(msg, f"Requesting new **{inst_type[level]}** instance")
             spot_request = ec2.request_spot_instances(
                 LaunchSpecification={
                     'SecurityGroups': ['default'],

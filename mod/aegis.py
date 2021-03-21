@@ -60,13 +60,15 @@ class Aegis(Cog):
 
     async def act(self, msg: discord.Message, reason: str):
         """Takes action"""
-        if self.count[msg.author.id][1] == 3:  # 3 warns in the past 90s
+        if self.count[msg.author.id][1] == 2:  # 3 warns in the past 90s
             await ikaros.mute(msg, msg.author, 10, 0, reason + ', threat level 1')  # 10s mute
+        elif self.count[msg.author.id][1] == 3:  # 3 warns in the past 90s
+            await ikaros.mute(msg, msg.author, 3600, 0, reason + ', threat level 2')  # 1h mute
         elif self.count[msg.author.id][1] == 4:  # 4 warns in the past 90s
-            await ikaros.kick(msg, msg.author, 0, reason + ', threat level 2')  # Immediate kick
+            await ikaros.kick(msg, msg.author, 0, reason + ', threat level 3')  # Immediate kick
         elif self.count[msg.author.id][1] >= 5:  # >5 warns in the past 90s
-            await ikaros.ban(msg, msg.author, 0, 0, reason + ', threat level 3')  # Immediate ban
-        await asyncio.sleep(90)  # Reduces total warn count by 1 after 90s
+            await ikaros.ban(msg, msg.author, 0, 0, reason + ', threat level 4')  # Immediate ban
+        await asyncio.sleep(7200)  # Reduces total warn count by 1 after 2h
         self.count[msg.author.id][1] -= 1
 
     @Cog.listener()

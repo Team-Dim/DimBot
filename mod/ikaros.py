@@ -45,7 +45,7 @@ async def ban(msg: discord.Message, target: discord.Member, length: int, countdo
     try:
         await ensure_target(msg, target, countdown)
         await target.ban(delete_message_days=0, reason=reason)
-        await send(msg, target.mention + ' has been banned.')
+        await send(msg, f'Banning {target.mention} for {length}s')
         if length:  # Unbans if there is a ban time length
             await asyncio.sleep(length)
             await unban(msg, target, 'Deactivating ' + reason)
@@ -72,7 +72,7 @@ async def mute(msg: discord.Message, target: discord.Member, length: int, countd
             role = msg.guild.get_role(474578007156326412)  # Asteroid Belt
         if role:
             await target.add_roles(role, reason=reason)
-            await send(msg, 'Muted' + target.mention)
+            await send(msg, f'Muting {target.mention} for {length}s')
             if length:  # Unmutes if there is a mute time length
                 await asyncio.sleep(length)
                 await target.remove_roles(role, reason='Deactivating ' + reason)

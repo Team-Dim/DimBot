@@ -5,7 +5,7 @@ from aiohttp import web
 
 class Albon:
     """HTTP server sub-project used by Verstapen
-    Version 1.2.2"""
+    Version 1.2.3"""
 
     def __init__(self, logger):
         self._channels = []
@@ -64,8 +64,14 @@ class Albon:
                         '**Please /stop in Minecraft when you are done!!!**'))
             self.logger.debug('mcser is shutting down')
             for channel in self._channels:
-                asyncio.get_running_loop().create_task(channel.send(f'** {name}** :axe: Minecraft server'))
+                asyncio.get_running_loop().create_task(channel.send(f'**{name}** :axe: Minecraft server'))
             self._channels = []
             return web.Response()
+
+        @routes.get('/exitcode')
+        async def exit_code(request: web.Request):
+            code = request.rel_url.query['code']
+            for channel in self._channels:
+                asyncio.get_running_loop().create_task(channel.send('server.jar exited with code ' + code))
 
         await self._setup_server(routes)
