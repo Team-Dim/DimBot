@@ -26,7 +26,7 @@ bot.default_prefix = 't.' if dimsecret.debug else 'd.'
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = echo.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.11"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.11.1"
 # List of activities that will be randomly displayed every 5 minutes
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -34,9 +34,9 @@ activities = [
     discord.Activity(name='Sam yawning', type=discord.ActivityType.listening),
     discord.Activity(name='Lokeon', type=discord.ActivityType.listening),
     discord.Activity(name='Ricizus screaming', type=discord.ActivityType.listening),
-    discord.Activity(name='Rainbow codes', type=discord.ActivityType.watching),
+    discord.Activity(name='Dim codes', type=discord.ActivityType.watching),
     discord.Activity(name='Matt plays R6', type=discord.ActivityType.watching),
-    discord.Activity(name='Rainbow laughs', type=discord.ActivityType.watching),
+    discord.Activity(name='Dim laughs', type=discord.ActivityType.watching),
     discord.Activity(name='comics', type=discord.ActivityType.watching),
     discord.Activity(name='Terry coughing', type=discord.ActivityType.listening),
     discord.Activity(name='Bruck sleeps', type=discord.ActivityType.watching),
