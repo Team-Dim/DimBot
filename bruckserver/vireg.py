@@ -94,4 +94,11 @@ class Verstapen(commands.Cog):
     @cooldown(rate=1, per=600.0, type=BucketType.user)  # Each person can only call this once per 10min
     @Missile.is_guild_cmd_check(tribe.guild_id, 686397146290979003)
     async def start(self, ctx, level: int = 0):
-        await self.boot_instance(ctx, 'ap-southeast-1', level)
+        if level < 0:
+            msg = await ctx.send('Enabling Albon for debug purposes...')
+            if self.http_not_started:
+                await self.albon.run_server()
+                self.http_not_started = False
+                await Missile.append_message(msg, 'Albon activated.')
+        elif level < 3:
+            await self.boot_instance(ctx, 'ap-southeast-1', level)

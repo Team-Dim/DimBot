@@ -31,7 +31,7 @@ class Albon:
     async def run_server(self):
         routes = web.RouteTableDef()
 
-        @routes.get('/hook')
+        @routes.post('/hook')
         async def hook(request):
             self.logger.debug('Received Lokeon hook')
             for channel in self.channels:
@@ -54,9 +54,9 @@ class Albon:
                 asyncio.get_running_loop().create_task(channel.send(f'**{data}** 👋 Minecraft server'))
             return web.Response()
 
-        @routes.get('/shutdown')
+        @routes.post('/shutdown')
         async def shutdown(request: web.Request):
-            name = request.rel_url.query['name']
+            name = await request.text()
             if name == '':
                 for channel in self.channels:
                     asyncio.get_running_loop().create_task(channel.send(
@@ -68,18 +68,18 @@ class Albon:
             self._channels = []
             return web.Response()
 
-        @routes.get('/exitcode')
+        @routes.post('/exit')
         async def exit_code(request: web.Request):
-            code = request.rel_url.query['code']
+            code = await request.text()
+            msg = 'Minecraft server exited with code ' + code
+            if code == '137':
+                msg += '\n💥 Server crashed due to not enough RAM. ' \
+                       '/stop in game and send `d.start 1` if this continues.'
             for channel in self._channels:
-                msg = 'Minecraft server exited with code ' + code
-                if code == '137':
-                    msg += '\n💥 Server crashed due to not enough RAM. ' \
-                           '/stop in game and send `d.start 1` if this continues.'
                 asyncio.get_running_loop().create_task(channel.send(msg))
             return web.Response()
 
-        @routes.get('/boot')
+        @routes.post('/boot')
         async def boot(request):
             for channel in self._channels:
                 asyncio.get_running_loop().create_task(channel.send('Linux 🤝 DimBot. Please wait for Minecraft server '
