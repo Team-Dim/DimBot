@@ -64,7 +64,7 @@ class Albon:
                         '**Please /stop in Minecraft when you are done!!!**'))
             self.logger.debug('mcser is shutting down')
             for channel in self._channels:
-                asyncio.get_running_loop().create_task(channel.send(f'**{name}** 🪓 Minecraft server'))
+                asyncio.get_running_loop().create_task(channel.send(f'** {name}**🪓 Minecraft server'))
             self._channels = []
             return web.Response()
 
@@ -74,7 +74,7 @@ class Albon:
             for channel in self._channels:
                 msg = 'Minecraft server exited with code ' + code
                 if code == '137':
-                    msg += '💥 Server crashed due to not enough RAM.\n' \
+                    msg += '\n💥 Server crashed due to not enough RAM. ' \
                            '/stop in game and send `d.start 1` if this continues.'
                 asyncio.get_running_loop().create_task(channel.send(msg))
             return web.Response()
@@ -82,7 +82,7 @@ class Albon:
         @routes.get('/boot')
         async def boot(request):
             for channel in self._channels:
-                asyncio.get_running_loop().create_task(channel.send('Linux 🤝 DimBot. Please wait for Minecraft server'
+                asyncio.get_running_loop().create_task(channel.send('Linux 🤝 DimBot. Please wait for Minecraft server '
                                                                     'to boot.'))
             return web.Response()
 
