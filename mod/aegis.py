@@ -15,7 +15,7 @@ async def send(ch: discord.TextChannel, content: str):
 
 class Aegis(Cog):
     """AutoMod system
-    Version 0.4"""
+    Version 0.4.1"""
 
     def __init__(self, bot):
         self.bot = bot
@@ -36,7 +36,7 @@ class Aegis(Cog):
                                            f'Detected mass ping ({raw_mention_count}) by {msg.author.mention}. '
                                            f'Warn: {self.count[msg.author.id][1]}'))
             self.bot.loop.create_task(self.act(msg, 'Aegis: Mass ping'))
-        elif msg.channel.id in (bitbay.spam_ch_id, bitbay.bot_ch_id):  # Checks whether channel ignores spam
+        elif msg.channel.id not in (bitbay.spam_ch_id, bitbay.bot_ch_id):  # Checks whether channel ignores spam
             ml = len(self.count[msg.author.id][0])
             if ml == 4:  # There are 4 previous messages
                 if (msg.created_at - self.count[msg.author.id][0][0]).total_seconds() < 5:  # 5 msg in 5s
