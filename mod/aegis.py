@@ -25,7 +25,7 @@ class Aegis(Cog):
     @Cog.listener()
     async def on_message(self, msg: discord.Message):
         # Check whether message needs to be scanned by Aegis
-        if not msg.guild:
+        if not msg.guild or msg.author == msg.guild.me:
             return
         if msg.author.id not in self.count:  # Creates record for the message author
             self.count[msg.author.id] = [[], 0]  # [Tracked messages, warn count]
@@ -38,24 +38,32 @@ class Aegis(Cog):
             self.bot.loop.create_task(self.act(msg, 'Aegis: Mass ping'))
         elif msg.channel.id not in (bitbay.spam_ch_id, bitbay.bot_ch_id):  # Checks whether channel ignores spam
             ml = len(self.count[msg.author.id][0])
-            if ml == 4:  # There are 4 previous messages
-                if (msg.created_at - self.count[msg.author.id][0][0]).total_seconds() < 5:  # 5 msg in 5s
+            if ml == 9:  # There are 9 previous messages:
+                if (msg.created_at - self.count[msg.author.id][0][0]).total_seconds() < 10:  # 10 msg in 10s
                     self.count[msg.author.id][1] += 1
                     self.count[msg.author.id][0] = []
-                    self.bot.loop.create_task(send(msg.channel, f'Detected spam by {msg.author.mention}, type V. '
+                    self.bot.loop.create_task(send(msg.channel, f'Detected spam by {msg.author.mention}, type X. '
                                                                 f'Warn: {self.count[msg.author.id][1]}'))
-                    self.bot.loop.create_task(self.act(msg, 'Aegis: Spam, type V'))
+                    self.bot.loop.create_task(self.act(msg, 'Aegis: Spam, type X'))
                 else:
-                    self.count[msg.author.id][0].pop(0)  # We only track up to 5 previous messages
-            ml = len(self.count[msg.author.id][0])
-            if ml > 1 > (msg.created_at - self.count[msg.author.id][0][ml - 2]).total_seconds():  # 3 msg in 1s
-                self.count[msg.author.id][1] += 1
-                self.count[msg.author.id][0] = []
-                self.bot.loop.create_task(send(msg.channel, f'Detected spam by {msg.author.mention}, type I. '
-                                                            f'Warn: {self.count[msg.author.id][1]}'))
-                self.bot.loop.create_task(self.act(msg, 'Aegis: Spam, type I'))
-            for t in self.count[msg.author.id][0]:  # If previous messages are >5s older than current, purge cache
-                if (msg.created_at - t).total_seconds() >= 5:
+                    self.count[msg.author.id][0].pop(0)  # We only track up to 10 previous messages
+            if not msg.author.bot:
+                if ml >= 4:  # There are 4 previous messages
+                    if (msg.created_at - self.count[msg.author.id][0][ml - 4]).total_seconds() < 5:  # 5 msg in 5s
+                        self.count[msg.author.id][1] += 1
+                        self.count[msg.author.id][0] = []
+                        self.bot.loop.create_task(send(msg.channel, f'Detected spam by {msg.author.mention}, type V. '
+                                                                    f'Warn: {self.count[msg.author.id][1]}'))
+                        self.bot.loop.create_task(self.act(msg, 'Aegis: Spam, type V'))
+                # ml = len(self.count[msg.author.id][0])
+                elif ml > 1 > (msg.created_at - self.count[msg.author.id][0][ml - 2]).total_seconds():  # 3 msg in 1s
+                    self.count[msg.author.id][1] += 1
+                    self.count[msg.author.id][0] = []
+                    self.bot.loop.create_task(send(msg.channel, f'Detected spam by {msg.author.mention}, type I. '
+                                                                f'Warn: {self.count[msg.author.id][1]}'))
+                    self.bot.loop.create_task(self.act(msg, 'Aegis: Spam, type I'))
+            for t in self.count[msg.author.id][0]:  # If previous messages are >10s older than current, purge cache
+                if (msg.created_at - t).total_seconds() >= 10:
                     self.count[msg.author.id][0].pop(0)
             self.count[msg.author.id][0].append(msg.created_at)  # Add current message for tracking
 
