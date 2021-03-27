@@ -296,10 +296,10 @@ class BitBay(Cog):
     @pp.command()
     async def cutabd(self, ctx: Context):
         """Cuts Abd's pp"""
-        pp = self.get_pp(825342893802651728)  # Abd pp
+        pp = self.get_pp(701252630344761445)  # Abd pp
         if pp:
-            self.organs.pop(825342893802651728)
-            user = self.bot.get_user(825342893802651728)
+            self.organs.pop(701252630344761445)
+            user = self.bot.get_user(701252630344761445)
             await ctx.send(embed=discord.Embed(title=user.display_name + "'s penis",
                                                description=f"8\n{'=' * pp.size}D", colour=discord.Colour.red()))
         else:
