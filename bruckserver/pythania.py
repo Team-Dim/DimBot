@@ -5,7 +5,7 @@ from aiohttp import web
 
 class Albon:
     """HTTP server sub-project used by Verstapen
-    Version 1.2.4"""
+    Version 1.3"""
 
     def __init__(self, logger):
         self._channels = []
@@ -58,13 +58,14 @@ class Albon:
         async def shutdown(request: web.Request):
             name = await request.text()
             if name == '':
-                for channel in self.channels:
-                    asyncio.get_running_loop().create_task(channel.send(
-                        ':angry: Minecraft server has been idle for 15 minutes. '
-                        '**Please /stop in Minecraft when you are done!!!**'))
+                msg = ':angry: Minecraft server has been idle for 15 minutes. ' \
+                      '**Please /stop in Minecraft when you are done!!!**\n'
+            else:
+                msg = f'**{name}** '
+            msg += '🪓 Minecraft server'
             self.logger.debug('mcser is shutting down')
             for channel in self._channels:
-                asyncio.get_running_loop().create_task(channel.send(f'** {name}**🪓 Minecraft server'))
+                asyncio.get_running_loop().create_task(channel.send(msg))
             self._channels = []
             return web.Response()
 

@@ -15,7 +15,7 @@ async def send(ch: discord.TextChannel, content: str):
 
 class Aegis(Cog):
     """AutoMod system
-    Version 0.3"""
+    Version 0.4"""
 
     def __init__(self, bot):
         self.bot = bot
@@ -25,24 +25,25 @@ class Aegis(Cog):
     @Cog.listener()
     async def on_message(self, msg: discord.Message):
         # Check whether message needs to be scanned by Aegis
-        if not msg.guild or msg.author.bot or msg.channel.id in (bitbay.spam_ch_id, bitbay.bot_ch_id):
+        if not msg.guild:
             return
         if msg.author.id not in self.count:  # Creates record for the message author
             self.count[msg.author.id] = [[], 0]  # [Tracked messages, warn count]
         raw_mention_count = len(msg.raw_mentions)
         if raw_mention_count >= 5:  # Mass ping
             self.count[msg.author.id][1] += 3
-            await send(msg.channel, f'Detected mass ping ({raw_mention_count}) by {msg.author.mention}. '
-                                    f'Warn: {self.count[msg.author.id][1]}')
+            self.bot.loop.create_task(send(msg.channel,
+                                           f'Detected mass ping ({raw_mention_count}) by {msg.author.mention}. '
+                                           f'Warn: {self.count[msg.author.id][1]}'))
             self.bot.loop.create_task(self.act(msg, 'Aegis: Mass ping'))
-        else:
+        elif msg.channel.id in (bitbay.spam_ch_id, bitbay.bot_ch_id):  # Checks whether channel ignores spam
             ml = len(self.count[msg.author.id][0])
             if ml == 4:  # There are 4 previous messages
                 if (msg.created_at - self.count[msg.author.id][0][0]).total_seconds() < 5:  # 5 msg in 5s
                     self.count[msg.author.id][1] += 1
                     self.count[msg.author.id][0] = []
-                    await send(msg.channel, f'Detected spam by {msg.author.mention}, type V. '
-                                            f'Warn: {self.count[msg.author.id][1]}')
+                    self.bot.loop.create_task(send(msg.channel, f'Detected spam by {msg.author.mention}, type V. '
+                                                                f'Warn: {self.count[msg.author.id][1]}'))
                     self.bot.loop.create_task(self.act(msg, 'Aegis: Spam, type V'))
                 else:
                     self.count[msg.author.id][0].pop(0)  # We only track up to 5 previous messages
@@ -50,8 +51,8 @@ class Aegis(Cog):
             if ml > 1 > (msg.created_at - self.count[msg.author.id][0][ml - 2]).total_seconds():  # 3 msg in 1s
                 self.count[msg.author.id][1] += 1
                 self.count[msg.author.id][0] = []
-                await send(msg.channel, f'Detected spam by {msg.author.mention}, type I. '
-                                        f'Warn: {self.count[msg.author.id][1]}')
+                self.bot.loop.create_task(send(msg.channel, f'Detected spam by {msg.author.mention}, type I. '
+                                                            f'Warn: {self.count[msg.author.id][1]}'))
                 self.bot.loop.create_task(self.act(msg, 'Aegis: Spam, type I'))
             for t in self.count[msg.author.id][0]:  # If previous messages are >5s older than current, purge cache
                 if (msg.created_at - t).total_seconds() >= 5:
@@ -60,13 +61,23 @@ class Aegis(Cog):
 
     async def act(self, msg: discord.Message, reason: str):
         """Takes action"""
-        if self.count[msg.author.id][1] == 2:  # 3 warns in the past 90s
+        if type(msg.author) == discord.User:
+            await msg.channel.send('⚠DETECTED UNUSUAL WEBHOOK ACTIVITIES, DELETING THE WEBHOOK\nPlease notify'
+                                   'admins in this server!')
+            webhooks = await msg.channel.webhooks()
+            for webhook in webhooks:
+                if webhook.id == msg.author.id:
+                    webhook.delete(reason='Aegis: Unusual webhook activities')
+                    await msg.channel.send(f'Deleted webhook <@{webhook.id}>')
+                    return
+            return
+        if self.count[msg.author.id][1] == 2:  # 3 warns in the past 2h
             await ikaros.mute(msg, msg.author, 10, 0, reason + ', threat level 1')  # 10s mute
-        elif self.count[msg.author.id][1] == 3:  # 3 warns in the past 90s
+        elif self.count[msg.author.id][1] == 3:  # 3 warns in the past 2h
             await ikaros.mute(msg, msg.author, 3600, 0, reason + ', threat level 2')  # 1h mute
-        elif self.count[msg.author.id][1] == 4:  # 4 warns in the past 90s
+        elif self.count[msg.author.id][1] == 4:  # 4 warns in the past 2h
             await ikaros.kick(msg, msg.author, 0, reason + ', threat level 3')  # Immediate kick
-        elif self.count[msg.author.id][1] >= 5:  # >5 warns in the past 90s
+        elif self.count[msg.author.id][1] >= 5:  # >5 warns in the past 2h
             await ikaros.ban(msg, msg.author, 0, 0, reason + ', threat level 4')  # Immediate ban
         await asyncio.sleep(7200)  # Reduces total warn count by 1 after 2h
         self.count[msg.author.id][1] -= 1

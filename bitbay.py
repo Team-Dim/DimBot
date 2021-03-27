@@ -234,14 +234,16 @@ class BitBay(Cog):
         his = self.get_pp(user.id)
         if my:
             if his:
+                xp = my.size - his.size
                 if my.size > his.size:
                     title = "VICTORY"
+                    gain_msg = f"You gained **{xp}** score!"
                 elif my.size == his.size:
                     title = "TIE"
+                    gain_msg = ''
                 else:
                     title = "LOST"
-                xp = my.size - his.size
-                gain_msg = f"You gained **{xp}** score!"
+                    gain_msg = f"You lost **{-xp}** score!"
                 my.score += xp
             else:
                 title = "WIN...?"  # Should not gain xp if opponent has no pp
@@ -268,10 +270,10 @@ class BitBay(Cog):
     @pp.command()
     async def lb(self, ctx: Context):
         """Shows the pp leaderboard"""
-        v = dict(sorted(self.organs.items(), key=lambda item: item[1].score, reverse=True))  # Sort self.xp by score
+        self.organs = dict(sorted(self.organs.items(), key=lambda item: item[1].score, reverse=True))  # Sort self.xp by score
         base = 'pp score leaderboard:\n'
-        for key in v.keys():
-            base += f"{self.bot.get_user(key).name}: **{v[key].score}** "
+        for key in self.organs.keys():
+            base += f"{self.bot.get_user(key).name}: **{self.organs[key].score}** "
         await ctx.reply(base)
 
     @pp.command()
@@ -290,3 +292,15 @@ class BitBay(Cog):
                 await ctx.reply('Your pp is not ready for it!')
         else:
             await ctx.reply(self.no_pp_msg)
+
+    @pp.command()
+    async def cutabd(self, ctx: Context):
+        """Cuts Abd's pp"""
+        pp = self.get_pp(825342893802651728)  # Abd pp
+        if pp:
+            self.organs.pop(825342893802651728)
+            user = self.bot.get_user(825342893802651728)
+            await ctx.send(embed=discord.Embed(title=user.display_name + "'s penis",
+                                               description=f"8\n{'=' * pp.size}D", colour=discord.Colour.red()))
+        else:
+            await ctx.send('Abd has no pp!')

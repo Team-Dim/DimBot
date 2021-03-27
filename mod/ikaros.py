@@ -23,11 +23,10 @@ async def ensure_target(msg: discord.Message, target: discord.Member, countdown:
     if check_role and (target.top_role >= msg.guild.me.top_role or Missile.is_rainbow(target.id)):
         await Missile.append_message(msg, 'Cannot lock target.')
         raise PermissionError
-    else:
-        await Missile.append_message(msg, 'Target locked.')
-        for i in range(countdown, 0, -1):
-            await Missile.append_message(msg, str(i))
-            await asyncio.sleep(1)
+    await Missile.append_message(msg, 'Target locked.')
+    for i in range(countdown, 0, -1):
+        await Missile.append_message(msg, str(i))
+        await asyncio.sleep(1)
 
 
 async def kick(msg: discord.Message, target: discord.Member, countdown: int, reason: str):
