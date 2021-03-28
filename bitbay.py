@@ -292,15 +292,3 @@ class BitBay(Cog):
                 await ctx.reply('Your pp is not ready for it!')
         else:
             await ctx.reply(self.no_pp_msg)
-
-    @pp.command()
-    async def cutabd(self, ctx: Context):
-        """Cuts Abd's pp"""
-        pp = self.get_pp(701252630344761445)  # Abd pp
-        if pp:
-            self.organs.pop(701252630344761445)
-            user = self.bot.get_user(701252630344761445)
-            await ctx.send(embed=discord.Embed(title=user.display_name + "'s penis",
-                                               description=f"8\n{'=' * pp.size}D", colour=discord.Colour.red()))
-        else:
-            await ctx.send('Abd has no pp!')

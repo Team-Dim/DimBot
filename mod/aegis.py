@@ -15,7 +15,7 @@ async def send(ch: discord.TextChannel, content: str):
 
 class Aegis(Cog):
     """AutoMod system
-    Version 0.4.1"""
+    Version 0.4.2"""
 
     def __init__(self, bot):
         self.bot = bot
@@ -43,26 +43,27 @@ class Aegis(Cog):
                                            f'Detected mass ping ({raw_mention_count}) by {msg.author.mention}. '
                                            f'Warn: {self.count[msg.author.id][1]}'))
             self.bot.loop.create_task(self.act(msg, 'Aegis: Mass ping'))
-        elif len(msg.content) >= 350 and not msg.author.bot:  # Message too long
-            self.act_wrap(msg, 'L')
         elif msg.channel.id not in (bitbay.spam_ch_id, bitbay.bot_ch_id):  # Checks whether channel ignores spam
-            ml = len(self.count[msg.author.id][0])
-            if ml == 9:  # There are 9 previous messages:
-                if (msg.created_at - self.count[msg.author.id][0][0]).total_seconds() < 10:  # 10 msg in 10s
-                    self.act_wrap(msg, 'X')
-                else:
-                    self.count[msg.author.id][0].pop(0)  # We only track up to 10 previous messages
-            if not msg.author.bot:
-                if ml >= 4:  # There are 4 previous messages
-                    if (msg.created_at - self.count[msg.author.id][0][ml - 4]).total_seconds() < 5:  # 5 msg in 5s
-                        self.act_wrap(msg, 'V')
-                # ml = len(self.count[msg.author.id][0])
-                elif ml > 1 > (msg.created_at - self.count[msg.author.id][0][ml - 2]).total_seconds():  # 3 msg in 1s
-                    self.act_wrap(msg, 'I')
-            for t in self.count[msg.author.id][0]:  # If previous messages are >10s older than current, purge cache
-                if (msg.created_at - t).total_seconds() >= 10:
-                    self.count[msg.author.id][0].pop(0)
-            self.count[msg.author.id][0].append(msg.created_at)  # Add current message for tracking
+            if len(msg.content) >= 500 and not msg.author.bot:  # Message too long
+                self.act_wrap(msg, 'L')
+            else:
+                ml = len(self.count[msg.author.id][0])
+                if ml == 9:  # There are 9 previous messages:
+                    if (msg.created_at - self.count[msg.author.id][0][0]).total_seconds() < 10:  # 10 msg in 10s
+                        self.act_wrap(msg, 'X')
+                    else:
+                        self.count[msg.author.id][0].pop(0)  # We only track up to 10 previous messages
+                if not msg.author.bot:
+                    if ml >= 4:  # There are 4 previous messages
+                        if (msg.created_at - self.count[msg.author.id][0][ml - 4]).total_seconds() < 5:  # 5 msg in 5s
+                            self.act_wrap(msg, 'V')
+                    # ml = len(self.count[msg.author.id][0])
+                    elif ml > 1 > (msg.created_at - self.count[msg.author.id][0][ml - 2]).total_seconds():  # 3 msg in 1s
+                        self.act_wrap(msg, 'I')
+                for t in self.count[msg.author.id][0]:  # If previous messages are >10s older than current, purge cache
+                    if (msg.created_at - t).total_seconds() >= 10:
+                        self.count[msg.author.id][0].pop(0)
+                self.count[msg.author.id][0].append(msg.created_at)  # Add current message for tracking
 
     async def act(self, msg: discord.Message, reason: str):
         """Takes action"""

@@ -26,7 +26,8 @@ bot.default_prefix = 't.' if dimsecret.debug else 'd.'
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = echo.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.13.1"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.13.2"
+nickname = 'Abd is life'
 # List of activities that will be randomly displayed every 5 minutes
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
