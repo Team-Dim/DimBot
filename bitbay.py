@@ -52,6 +52,9 @@ class BitBay(Cog):
     async def on_message(self, msg: discord.Message):
         """Message Pattern Matching logic"""
         if msg.guild and (msg.guild.id == guild_id or debug) and self.mpm and not msg.author.bot:
+            if re.search(r".*BSoD", msg.content):
+                await msg.reply('https://discord.com/channels/675477913411518485/675477914019430423/825823145315270687')
+                return
             match = re.search(r".*(where|how) .*?(get|download|find|obtain|acquire) ", msg.content, re.IGNORECASE)
             if match:  # Download-related
                 match = msg.content
@@ -270,7 +273,8 @@ class BitBay(Cog):
     @pp.command()
     async def lb(self, ctx: Context):
         """Shows the pp leaderboard"""
-        self.organs = dict(sorted(self.organs.items(), key=lambda item: item[1].score, reverse=True))  # Sort self.xp by score
+        self.organs = dict(
+            sorted(self.organs.items(), key=lambda item: item[1].score, reverse=True))  # Sort self.xp by score
         base = 'pp score leaderboard:\n'
         for key in self.organs.keys():
             base += f"{self.bot.get_user(key).name}: **{self.organs[key].score}** "
