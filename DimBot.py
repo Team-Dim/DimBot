@@ -26,7 +26,8 @@ bot.default_prefix = 't.' if dimsecret.debug else 'd.'
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = echo.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.13.3"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.14"
+nickname = 'Cough'
 # List of activities that will be randomly displayed every 5 minutes
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -56,6 +57,33 @@ try:
     os.remove('final')
 except FileNotFoundError:
     logger.info('No previous final file found')
+
+
+@bot.event
+async def on_message(msg: discord.Message):
+    dim = msg.guild.get_member(dim_id)
+    if dim and dim.status != discord.Status.online and dim in msg.mentions:
+        await msg.reply('My master is away atm.')
+    role = discord.utils.get(msg.guild.roles, name='Covid')
+    new_hash = bin(hash(f"{msg.content}{msg.author}{msg.created_at}")).ljust(65, '0')
+    x = sum(c1 != c2 for c1, c2 in zip(new_hash, bot.missile.hash))
+    if role not in msg.author.roles:
+        if bot.missile.last_hash_count == x and bot.missile.last_msg and msg.author != bot.missile.last_msg.author:
+            await msg.reply(f'OH FUCK! You are infected by {bot.missile.last_msg.author}!')
+            await msg.author.add_roles(role)
+            if bot.missile.last_msg.author.id in bot.missile.covid.keys():
+                bot.missile.covid[bot.missile.last_msg.author.id].append(msg.author.id)
+            else:
+                bot.missile.covid[bot.missile.last_msg.author.id] = [msg.author.id]
+        elif bot.missile.last_hash_count >= 39:
+            await msg.reply(f"Your body just somehow mutated Covid by itself. Smh my head.")
+            await msg.author.add_roles(role)
+            bot.missile.covid[0].append(msg.author.id)
+
+    bot.missile.hash = new_hash
+    bot.missile.last_hash_count = x
+    bot.missile.last_msg = msg
+    await bot.process_commands(msg)
 
 
 @bot.event
@@ -196,6 +224,9 @@ async def arccore(ctx):
 async def stealth(ctx):
     bot.echo.db.commit()
     await ctx.send('Arc-Cor𐑞: **Stealth**')
+    with open('covid.json', 'w') as f:
+        import json
+        json.dump(bot.missile.covid, f)
     await bot.logout()
 
 
@@ -203,6 +234,9 @@ async def stealth(ctx):
 @Missile.is_rainbow_cmd_check()
 async def pandora(ctx):
     bot.echo.db.commit()
+    with open('covid.json', 'w') as f:
+        import json
+        json.dump(bot.missile.covid, f)
     await ctx.send('Arc-Cor𐑞: **PANDORA**, self-evolving!')
     with open('final', 'w') as death_note:
         death_note.write(str(ctx.channel.id))

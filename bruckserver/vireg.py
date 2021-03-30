@@ -2,7 +2,6 @@ import asyncio
 
 import boto3
 from discord.ext import commands
-from discord.ext.commands import cooldown, BucketType
 
 import dimsecret
 import tribe
@@ -91,7 +90,6 @@ class Verstapen(commands.Cog):
             self.http_not_started = False
 
     @commands.command()
-    @cooldown(rate=1, per=300.0, type=BucketType.user)  # Each person can only call this once per 10min
     @Missile.is_guild_cmd_check(tribe.guild_id, 686397146290979003)
     async def start(self, ctx, level: int = 0):
         if level < 0:

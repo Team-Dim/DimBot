@@ -43,8 +43,8 @@ class Aegis(Cog):
                                            f'Detected mass ping ({raw_mention_count}) by {msg.author.mention}. '
                                            f'Warn: {self.count[msg.author.id][1]}'))
             self.bot.loop.create_task(self.act(msg, 'Aegis: Mass ping'))
-        elif msg.channel.id not in (bitbay.spam_ch_id, bitbay.bot_ch_id):  # Checks whether channel ignores spam
-            if len(msg.content) >= 500 and not msg.author.bot:  # Message too long
+        elif msg.channel.id not in (bitbay.spam_ch_id, bitbay.bot_ch_id, 826418682154188851):  # Checks whether channel ignores spam
+            if len(msg.content) >= 750 and not msg.author.bot:  # Message too long
                 self.act_wrap(msg, 'L')
             else:
                 ml = len(self.count[msg.author.id][0])
