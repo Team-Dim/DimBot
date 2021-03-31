@@ -32,7 +32,6 @@ class Missile:
         self.hash = bin(hash('')).ljust(65, '0')
         self.last_msg = None
         self.last_hash_count = 0
-        self.covid = {0: []}
 
     def get_logger(self, name: str) -> logging.Logger:
         """Returns a logger with the module name"""

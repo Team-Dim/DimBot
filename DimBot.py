@@ -1,5 +1,4 @@
 import asyncio
-import json
 from datetime import datetime
 from random import choice, randint
 from typing import Union
@@ -29,8 +28,6 @@ bot.missile = Missile(bot)
 bot.echo = echo.Bottas(bot)
 nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.14"
 nickname = 'Cough'
-with open('covid.json', 'r') as f:
-    bot.missile.covid = json.load(f)
 # List of activities that will be randomly displayed every 5 minutes
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -76,15 +73,10 @@ async def on_message(msg: discord.Message):
                 role in bot.missile.last_msg.author.roles:
             await msg.reply(f'OH FUCK! You are infected by {bot.missile.last_msg.author}!\nBuy masks via `d.sponsor`!')
             await msg.author.add_roles(role)
-            if bot.missile.last_msg.author.id in bot.missile.covid.keys():
-                bot.missile.covid[bot.missile.last_msg.author.id].append(msg.author.id)
-            else:
-                bot.missile.covid[bot.missile.last_msg.author.id] = [msg.author.id]
-        elif x >= 39:
-            await msg.reply(f"Your body just somehow mutated Covid by itself. Smh my head.\nBuy masks via `d.sponsor`!")
+        elif x >= 52:
+            await msg.reply(f"Your body just somehow mutated covid by itself. Smh my head.\nBuy masks via `d.sponsor`!")
             await msg.author.add_roles(role)
-            bot.missile.covid[0].append(msg.author.id)
-    elif x < 30:
+    elif x <= 13:
         await msg.reply("You have been cured.")
         await msg.author.remove_roles(role)
 
@@ -232,8 +224,6 @@ async def arccore(ctx):
 async def stealth(ctx):
     bot.echo.db.commit()
     await ctx.send('Arc-Cor𐑞: **Stealth**')
-    with open('covid.json', 'w') as f:
-        json.dump(bot.missile.covid, f)
     await bot.logout()
 
 
@@ -241,8 +231,6 @@ async def stealth(ctx):
 @Missile.is_rainbow_cmd_check()
 async def pandora(ctx):
     bot.echo.db.commit()
-    with open('covid.json', 'w') as f:
-        json.dump(bot.missile.covid, f)
     await ctx.send('Arc-Cor𐑞: **PANDORA**, self-evolving!')
     with open('final', 'w') as death_note:
         death_note.write(str(ctx.channel.id))
