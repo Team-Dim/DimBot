@@ -128,10 +128,7 @@ class Missile:
                 return tag_mention.group(0)  # Only I can use 'DimBot, xxx' or '@DimBot , xxx'
             else:
                 await msg.reply('Only my little pog champ can use authoritative orders!')
-        if msg.content.startswith(bot.default_prefix):
-            await msg.reply('No bot for you')
-        # return bot.default_prefix
-        return '375867038945760398457609835470689345706983547'
+        return bot.default_prefix
 
     async def ask_reaction(self, ctx: commands.Context, ask: str, emoji: str = '✅') -> bool:
         q = await ctx.send(ask)

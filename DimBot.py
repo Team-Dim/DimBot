@@ -17,6 +17,15 @@ from missile import Missile, dim_id
 from mod.aegis import Aegis
 from mod.ikaros import Ikaros
 
+
+async def binvk(ctx: commands.Context):
+    a = randint(1, 10000)
+    b = randint(1, 10000)
+    ans = str(a + b)
+    resp = await ctx.bot.missile.ask_msg(ctx, f'What is {a} + {b}?')
+    if resp != ans:
+        raise ValueError
+
 # Variables needed for initialising the bot
 intent = discord.Intents.none()
 intent.guilds = intent.members = intent.messages = intent.reactions = intent.voice_states = intent.typing = True
@@ -26,8 +35,9 @@ bot.default_prefix = 't.' if dimsecret.debug else 'd.'
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = echo.Bottas(bot)
+bot.before_invoke(binvk)
 nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.14"
-nickname = 'No bot for you'
+nickname = '?_?'
 # List of activities that will be randomly displayed every 5 minutes
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -62,7 +72,7 @@ except FileNotFoundError:
 @bot.event
 async def on_message(msg: discord.Message):
     dim = msg.guild.get_member(dim_id)
-    if dim and dim.status != discord.Status.online and dim in msg.mentions:
+    if dim and not msg.author.bot and dim.status != discord.Status.online and dim in msg.mentions:
         await msg.reply('My master is away atm.')
     await bot.process_commands(msg)
 
