@@ -1,4 +1,5 @@
 import asyncio
+import json
 from datetime import datetime
 from random import choice, randint
 from typing import Union
@@ -28,6 +29,8 @@ bot.missile = Missile(bot)
 bot.echo = echo.Bottas(bot)
 nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.14"
 nickname = 'Cough'
+with open('covid.json', 'r') as f:
+    bot.missile.covid = json.load(f)
 # List of activities that will be randomly displayed every 5 minutes
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -45,6 +48,7 @@ activities = [
     discord.Activity(name='Muzen train', type=discord.ActivityType.watching),
     discord.Activity(name="Heaven's Lost Property", type=discord.ActivityType.watching)
 ]
+activities = [discord.Activity(name='people spread covid', type=discord.ActivityType.watching)]
 logger = bot.missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip>'
 reborn_channel = None
@@ -68,17 +72,21 @@ async def on_message(msg: discord.Message):
     new_hash = bin(hash(f"{msg.content}{msg.author}{msg.created_at}")).ljust(65, '0')
     x = sum(c1 != c2 for c1, c2 in zip(new_hash, bot.missile.hash))
     if role not in msg.author.roles:
-        if bot.missile.last_hash_count == x and bot.missile.last_msg and msg.author != bot.missile.last_msg.author:
-            await msg.reply(f'OH FUCK! You are infected by {bot.missile.last_msg.author}!')
+        if bot.missile.last_hash_count == x and bot.missile.last_msg and msg.author != bot.missile.last_msg.author and \
+                role in bot.missile.last_msg.author.roles:
+            await msg.reply(f'OH FUCK! You are infected by {bot.missile.last_msg.author}!\nBuy masks via `d.sponsor`!')
             await msg.author.add_roles(role)
             if bot.missile.last_msg.author.id in bot.missile.covid.keys():
                 bot.missile.covid[bot.missile.last_msg.author.id].append(msg.author.id)
             else:
                 bot.missile.covid[bot.missile.last_msg.author.id] = [msg.author.id]
-        elif bot.missile.last_hash_count >= 39:
-            await msg.reply(f"Your body just somehow mutated Covid by itself. Smh my head.")
+        elif x >= 39:
+            await msg.reply(f"Your body just somehow mutated Covid by itself. Smh my head.\nBuy masks via `d.sponsor`!")
             await msg.author.add_roles(role)
             bot.missile.covid[0].append(msg.author.id)
+    elif x < 30:
+        await msg.reply("You have been cured.")
+        await msg.author.remove_roles(role)
 
     bot.missile.hash = new_hash
     bot.missile.last_hash_count = x
@@ -225,7 +233,6 @@ async def stealth(ctx):
     bot.echo.db.commit()
     await ctx.send('Arc-Cor𐑞: **Stealth**')
     with open('covid.json', 'w') as f:
-        import json
         json.dump(bot.missile.covid, f)
     await bot.logout()
 
@@ -235,7 +242,6 @@ async def stealth(ctx):
 async def pandora(ctx):
     bot.echo.db.commit()
     with open('covid.json', 'w') as f:
-        import json
         json.dump(bot.missile.covid, f)
     await ctx.send('Arc-Cor𐑞: **PANDORA**, self-evolving!')
     with open('final', 'w') as death_note:
