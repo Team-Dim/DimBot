@@ -29,9 +29,6 @@ class Missile:
                                                   color=Missile.random_rgb())
         self.sch = None
         self.eggy: discord.User = None  # Special Discord user for hug
-        self.hash = bin(hash('')).ljust(65, '0')
-        self.last_msg = None
-        self.last_hash_count = 0
 
     def get_logger(self, name: str) -> logging.Logger:
         """Returns a logger with the module name"""
@@ -131,7 +128,10 @@ class Missile:
                 return tag_mention.group(0)  # Only I can use 'DimBot, xxx' or '@DimBot , xxx'
             else:
                 await msg.reply('Only my little pog champ can use authoritative orders!')
-        return bot.default_prefix
+        if msg.content.startswith(bot.default_prefix):
+            await msg.reply('No bot for you')
+        # return bot.default_prefix
+        return '375867038945760398457609835470689345706983547'
 
     async def ask_reaction(self, ctx: commands.Context, ask: str, emoji: str = '✅') -> bool:
         q = await ctx.send(ask)

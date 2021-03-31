@@ -27,7 +27,7 @@ bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = echo.Bottas(bot)
 nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.14"
-nickname = 'Cough'
+nickname = 'No bot for you'
 # List of activities that will be randomly displayed every 5 minutes
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -45,7 +45,6 @@ activities = [
     discord.Activity(name='Muzen train', type=discord.ActivityType.watching),
     discord.Activity(name="Heaven's Lost Property", type=discord.ActivityType.watching)
 ]
-activities = [discord.Activity(name='people spread covid', type=discord.ActivityType.watching)]
 logger = bot.missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip>'
 reborn_channel = None
@@ -65,24 +64,6 @@ async def on_message(msg: discord.Message):
     dim = msg.guild.get_member(dim_id)
     if dim and dim.status != discord.Status.online and dim in msg.mentions:
         await msg.reply('My master is away atm.')
-    role = discord.utils.get(msg.guild.roles, name='Covid')
-    new_hash = bin(hash(f"{msg.content}{msg.author}{msg.created_at}")).ljust(65, '0')
-    x = sum(c1 != c2 for c1, c2 in zip(new_hash, bot.missile.hash))
-    if role not in msg.author.roles:
-        if bot.missile.last_hash_count == x and bot.missile.last_msg and msg.author != bot.missile.last_msg.author and \
-                role in bot.missile.last_msg.author.roles:
-            await msg.reply(f'OH FUCK! You are infected by {bot.missile.last_msg.author}!\nBuy masks via `d.sponsor`!')
-            await msg.author.add_roles(role)
-        elif x >= 52:
-            await msg.reply(f"Your body just somehow mutated covid by itself. Smh my head.\nBuy masks via `d.sponsor`!")
-            await msg.author.add_roles(role)
-    elif x <= 13:
-        await msg.reply("You have been cured.")
-        await msg.author.remove_roles(role)
-
-    bot.missile.hash = new_hash
-    bot.missile.last_hash_count = x
-    bot.missile.last_msg = msg
     await bot.process_commands(msg)
 
 
