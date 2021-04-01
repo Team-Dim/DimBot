@@ -2,8 +2,10 @@ import asyncio
 
 import discord
 from discord.ext.commands import Cog, command, Context, has_any_role, has_permissions, bot_has_permissions, \
-    has_guild_permissions, bot_has_guild_permissions
+    has_guild_permissions, bot_has_guild_permissions, group
 
+import bitbay
+import tribe
 from missile import Missile
 
 
@@ -149,7 +151,7 @@ class Ikaros(Cog):
     @command(name='mute')
     @has_guild_permissions(mute_members=True)
     @bot_has_guild_permissions(manage_roles=True)
-    @Missile.guild_only()
+    @Missile.is_guild_cmd_check(bitbay.guild_id, tribe.guild_id)
     async def mute_cmd(self, ctx: Context, target: discord.Member, countdown: int = 3, length: int = None):
         """Mutes a member. Can define a time to auto unmute"""
         await mute(ctx.message, target, length, countdown, f'Ikaros: Muted by {ctx.author}')
@@ -157,7 +159,7 @@ class Ikaros(Cog):
     @command(name='unmute')
     @has_guild_permissions(mute_members=True)
     @bot_has_guild_permissions(manage_roles=True)
-    @Missile.guild_only()
+    @Missile.is_guild_cmd_check(bitbay.guild_id, tribe.guild_id)
     async def unmute_cmd(self, ctx: Context, target: discord.Member):
         """Unmutes a member"""
         await unmute(ctx.message, target, f'Ikaros: Unmuted by {ctx.author}')
@@ -169,3 +171,11 @@ class Ikaros(Cog):
         await ctx.message.delete()
         await ensure_target(ctx.message, target, countdown, False)
         await ctx.send('🥳 Surprise')
+
+    @group(invoke_without_command=True)
+    @has_guild_permissions(manage_messages=True)
+    @bot_has_guild_permissions(manage_messages=True, read_message_history=True)
+    @Missile.guild_only()
+    async def purge(self, ctx: Context, amount: int):
+        msgs = await ctx.channel.purge(limit=amount)
+        await ctx.reply(f'Purged {len(msgs)} messages.')
