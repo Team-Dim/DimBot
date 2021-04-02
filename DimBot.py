@@ -17,15 +17,6 @@ from missile import Missile, dim_id
 from mod.aegis import Aegis
 from mod.ikaros import Ikaros
 
-
-async def binvk(ctx: commands.Context):
-    a = randint(1, 100)
-    if a <= 10:
-        if a == 1:
-            await bot.get_command('sponsor')(ctx)
-        else:
-            await ctx.send('Rest in peace for those who lost their lives in the Taiwan train derail accident.')
-
 # Variables needed for initialising the bot
 intent = discord.Intents.none()
 intent.guilds = intent.members = intent.messages = intent.reactions = intent.voice_states = intent.typing = True
@@ -35,8 +26,7 @@ bot.default_prefix = 't.' if dimsecret.debug else 'd.'
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = echo.Bottas(bot)
-bot.before_invoke(binvk)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.14"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.15"
 # List of activities that will be randomly displayed every 5 minutes
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -57,12 +47,35 @@ activities = [
 logger = bot.missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip>'
 reborn_channel = None
+
+
+async def binvk(ctx: commands.Context):
+    a = randint(1, 100)
+    if a <= 10:
+        if a == 1:
+            await ctx.send(sponsor_txt)
+        else:
+            await ctx.send('Rest in peace for those who lost their lives in the Taiwan train derail accident.')
+    bot.missile.time = datetime.now()
+
+
+bot.before_invoke(binvk)
+
+
+async def ainvk(ctx: commands.Context):
+    timedelta = (datetime.now() - bot.missile.time).total_seconds() * 1000
+    await ctx.send(f'**Barbados**: {timedelta}ms')
+
+
+bot.after_invoke(ainvk)
+
 try:
     # If the bot is restarting, read the channel ID that invoked the restart command
     with open('final', 'r') as fi:
         logger.info('Found final file')
         reborn_channel = int(fi.readline())
     import os
+
     os.remove('final')
 except FileNotFoundError:
     logger.info('No previous final file found')
@@ -70,9 +83,10 @@ except FileNotFoundError:
 
 @bot.event
 async def on_message(msg: discord.Message):
-    dim = msg.guild.get_member(dim_id)
-    if dim and not msg.author.bot and dim.status != discord.Status.online and dim in msg.mentions:
-        await msg.reply('My master is away atm.')
+    if msg.guild:
+        dim = msg.guild.get_member(dim_id)
+        if dim and not msg.author.bot and dim.status != discord.Status.online and dim in msg.mentions:
+            await msg.reply('My master is away atm.')
     await bot.process_commands(msg)
 
 
@@ -128,7 +142,8 @@ async def on_command_error(ctx, error):
     # Human error
     if isinstance(error, commands.errors.MissingRequiredArgument) or isinstance(error, commands.errors.MissingAnyRole) \
             or isinstance(error, commands.errors.CommandOnCooldown) or isinstance(error, commands.errors.UserNotFound) \
-            or isinstance(error, commands.errors.MemberNotFound) or isinstance(error, commands.errors.MissingPermissions):
+            or isinstance(error, commands.errors.MemberNotFound) or isinstance(error,
+                                                                               commands.errors.MissingPermissions):
         await ctx.reply(str(error))
         return
     if isinstance(error, commands.errors.ChannelNotFound):  # Human error
@@ -148,12 +163,19 @@ async def on_command_error(ctx, error):
 async def info(ctx):
     """Displays bot information"""
     from platform import python_version
-    await ctx.send(
-        f'Guild count: **{len(bot.guilds)}** | Python: `{python_version()}` | Discord.py: `{discord.__version__}` \n'
-        'Bot source code: https://github.com/TCLRainbow/DimBot\n'
-        f'Bot module descriptions have been moved to `{bot.default_prefix}help <module name>`\n'
-        f'Devblog: Instagram @techdim\nDiscord server: `6PjhjCD`\n\n{sponsor_txt}'
-    )
+    embed = discord.Embed(title=sponsor_txt,
+                          description='Bot module descriptions have been moved to '
+                                      f'`{bot.default_prefix}help <module name>`',
+                          color=discord.Colour.random())
+    embed.add_field(name='Guild count', value=str(len(bot.guilds)))
+    embed.add_field(name='Uptime', value=datetime.now() - bot.missile.boot_time)
+    embed.add_field(name='Python', value=python_version())
+    embed.add_field(name='Discord.py', value=discord.__version__)
+    embed.add_field(name='Codename', value='Barbados')
+    embed.add_field(name='Devblog', value='[Instagram](http://www.instagram.com/techdim)')
+    embed.add_field(name='Source code', value='[GitHub](http://github.com/TCLRainbow/DimBot)')
+    embed.add_field(name='Discord server', value='[6PjhjCD](http://discord.gg/6PjhjCD)')
+    await ctx.send(embed=embed)
 
 
 @bot.command()
@@ -295,5 +317,7 @@ async def ready_tasks():
     bot.add_cog(Aegis(bot))
     await bot.wait_until_ready()
     bot.add_cog(tribe.Hamilton(bot))
+
+
 bot.loop.create_task(ready_tasks())
 bot.run(dimsecret.discord)

@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import re
+from datetime import datetime
 from typing import Optional
 
 import discord
@@ -29,6 +30,8 @@ class Missile:
                                                   color=Missile.random_rgb())
         self.sch = None
         self.eggy: discord.User = None  # Special Discord user for hug
+        self.time = None
+        self.boot_time = datetime.now()
 
     def get_logger(self, name: str) -> logging.Logger:
         """Returns a logger with the module name"""
