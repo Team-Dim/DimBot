@@ -204,14 +204,14 @@ async def snipe(ctx):
     await ctx.send(embed=bot.missile.snipe)
 
 
-@bot.group(invoke_without_command=True)
+@bot.group()
 @Missile.is_rainbow_cmd_check()
 async def arccore(ctx):
+    """Confidential"""
     pass
 
 
 @arccore.command()
-@Missile.is_rainbow_cmd_check()
 async def stealth(ctx):
     bot.echo.db.commit()
     await ctx.send('Arc-Cor𐑞: **Stealth**')
@@ -219,7 +219,6 @@ async def stealth(ctx):
 
 
 @arccore.command()
-@Missile.is_rainbow_cmd_check()
 async def pandora(ctx):
     bot.echo.db.commit()
     await ctx.send('Arc-Cor𐑞: **PANDORA**, self-evolving!')
@@ -230,20 +229,17 @@ async def pandora(ctx):
     subprocess.Popen(['sudo systemctl restart dimbot'], shell=True)
 
 
-@bot.command()
-@Missile.is_rainbow_cmd_check()
+@arccore.command()
 async def sch(ctx, ch: Union[discord.TextChannel, discord.User]):
     bot.missile.sch = ch
 
 
-@bot.command()
-@Missile.is_rainbow_cmd_check()
+@arccore.command()
 async def say(ctx, *, msg: str):
     await bot.missile.sch.send(msg)
 
 
-@bot.command()
-@Missile.is_rainbow_cmd_check()
+@arccore.command()
 async def shadow(c, *, cmd: str):
     msg = await bot.missile.sch.send('⠀')
     msg.content = bot.default_prefix + cmd

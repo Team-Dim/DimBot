@@ -177,5 +177,15 @@ class Ikaros(Cog):
     @bot_has_guild_permissions(manage_messages=True, read_message_history=True)
     @Missile.guild_only()
     async def purge(self, ctx: Context, amount: int):
-        msgs = await ctx.channel.purge(limit=amount)
-        await ctx.reply(f'Purged {len(msgs)} messages.')
+        """Purges messages (excluding the command)"""
+        msgs = await ctx.channel.purge(limit=amount, before=ctx.message)
+        await send(ctx.message, f'Purged {len(msgs)} messages.')
+
+    @purge.command()
+    @has_guild_permissions(manage_messages=True)
+    @bot_has_guild_permissions(manage_messages=True, read_message_history=True)
+    @Missile.guild_only()
+    async def by(self, ctx: Context, sender: discord.User, amount: int):
+        """d.purge but only deletes up to the specified amount of the sender's messages"""
+        msgs = await ctx.channel.purge(check=lambda m: m.author == sender, limit=amount, before=ctx.message)
+        await send(ctx.message, f'Purged {len(msgs)} messages.')

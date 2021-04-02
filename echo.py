@@ -10,11 +10,11 @@ from missile import Missile
 
 # TODO: instead of hardcoded queries like execute('DELETE FROM'), use object oriented approaches like table.delete()
 class Bottas(commands.Cog):
-    """Quote database.
-    Version 1.4"""
+    """Storing messages.
+    Version 2.0"""
 
     def __init__(self, bot):
-        self.bot = bot
+        self.bot: commands.Bot = bot
         self.logger = bot.missile.get_logger('Bottas')
         # Initialise database connection
         self.db: sqlite3.Connection = sqlite3.connect('DimBot.db', check_same_thread=False,
@@ -50,7 +50,7 @@ class Bottas(commands.Cog):
         quote = self.get_quote(index)
         content = ''
         if not quote:  # Provided Quote ID is invalid
-            count = self.cursor.execute('SELECT MAX(ROWID) FROM Quote').fetchone()[0]
+            count = self.cursor.execute('SELECT COUNT(ROWID) FROM Quote').fetchone()[0]
             content = f'That quote ID is invalid. There are **{count}** quotes in the database. This is a random one:\n'
             while not quote:  # Randomly generates a valid quote
                 index = random.randint(1, count)
@@ -191,9 +191,64 @@ class Bottas(commands.Cog):
                     if '\n' in quoter:
                         await ctx.send("The quote should be only one line!")
                         return
-                    self.cursor.execute("UPDATE Quote SET msg = ?, quoter = ? WHERE ROWID = ?", (content, quoter, index))
+                    self.cursor.execute("UPDATE Quote SET msg = ?, quoter = ? WHERE ROWID = ?",
+                                        (content, quoter, index))
                 else:
                     self.cursor.execute("UPDATE Quote SET msg = ? WHERE ROWID = ?", (content, index))
                 await ctx.reply('Quote updated')
         else:
             await ctx.reply("You can't edit this quote!")
+
+    @commands.group(invoke_without_command=True)
+    async def tag(self, ctx: commands.Context, name: str = ''):
+        """Commands related to tags. If a subcommand is provided, d.tag runs the subcommand. If the provided argument
+        is not a subcommand, d.tag shows the content of the provided tag. If no arguments are provided, d.tag lists all
+        tags within the server."""
+        if name:
+            await self.bot.get_command('tag s')(ctx, name)
+        else:
+            await self.bot.get_command('tag l')(ctx)
+
+    @tag.command(aliases=['s'])
+    async def show(self, ctx: commands.Context, name: str):
+        """Shows a tag"""
+        tag = self.cursor.execute("SELECT content FROM Tag WHERE name = ? AND guildID = ?",
+                                  (name, ctx.guild.id)).fetchone()
+        if tag:
+            await ctx.reply(tag[0])
+        else:
+            await ctx.reply(f"Tag `{name}` not found.")
+
+    @tag.command(aliases=['a'])
+    @commands.has_permissions(manage_messages=True)
+    async def add(self, ctx: commands.Context, name: str, url: str):
+        """Adds a tag."""
+        if not Missile.regex_is_url(url):
+            await ctx.reply('Tag content must be a HTTP WWW link!')
+            return
+        if self.cursor.execute("SElECT EXISTS(SELECT 1 FROM Tag WHERE (name = ? OR content = ?) AND guildID = ?)",
+                               (name, url, ctx.guild.id)).fetchone()[0]:
+            await ctx.reply('A tag with the same name/link already exists!')
+            return
+        if '<@' in name:
+            await ctx.reply('Why are you mentioning people in tag names?')
+            return
+        self.cursor.execute("INSERT INTO Tag VALUES (?, ?, ?)", (name, url, ctx.guild.id))
+        await ctx.reply('Your tag has been created!')
+
+    @tag.command(aliases=['d'])
+    @commands.has_permissions(manage_messages=True)
+    async def delete(self, ctx: commands.Context, name: str):
+        """Deletes a tag"""
+        if self.cursor.execute("SELECT EXISTS(SELECT 1 FROM Tag WHERE name = ? AND guildID = ?)",
+                               (name, ctx.guild.id)).fetchone()[0]:
+            self.cursor.execute("DELETE FROM Tag WHERE name = ? AND guildID = ?", (name, ctx.guild.id))
+            await ctx.reply('Deleted tag.')
+        else:
+            await ctx.reply(f"Tag `{name}` not found.")
+
+    @tag.command(aliases=['l'])
+    async def list(self, ctx: commands.Context):
+        """Lists tags"""
+        tags = self.cursor.execute("SELECT name FROM Tag WHERE guildID = ? ORDER BY name", (ctx.guild.id,)).fetchall()
+        await ctx.reply(f"`{', '.join((tag[0] for tag in tags))}`")

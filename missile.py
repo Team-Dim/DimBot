@@ -106,8 +106,11 @@ class Missile:
 
     @staticmethod
     def regex_is_url(url: str):
-        """Uses RegEx to check whether a string is a URL"""
-        return re.search(r"[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&/=]*)", url)
+        """Uses RegEx to check whether a string is a HTTP(s) link"""
+        # https://stackoverflow.com/a/17773849/8314159
+        return re.search(r"(https?://(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9]"
+                         r"[a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?://(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}"
+                         r"|www\.[a-zA-Z0-9]+\.[^\s]{2,})", url)
 
     async def ask_msg(self, ctx, msg: str, timeout: int = 10) -> Optional[str]:
         """Asks a follow-up question"""
