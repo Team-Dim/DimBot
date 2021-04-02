@@ -19,12 +19,12 @@ from mod.ikaros import Ikaros
 
 
 async def binvk(ctx: commands.Context):
-    a = randint(1, 10000)
-    b = randint(1, 10000)
-    ans = str(a + b)
-    resp = await ctx.bot.missile.ask_msg(ctx, f'What is {a} + {b}?')
-    if resp != ans:
-        raise ValueError
+    a = randint(1, 100)
+    if a <= 10:
+        if a == 1:
+            await bot.get_command('sponsor')(ctx)
+        else:
+            await ctx.send('Rest in peace for those who lost their lives in the Taiwan train derail accident.')
 
 # Variables needed for initialising the bot
 intent = discord.Intents.none()
@@ -37,7 +37,6 @@ bot.missile = Missile(bot)
 bot.echo = echo.Bottas(bot)
 bot.before_invoke(binvk)
 nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.14"
-nickname = '?_?'
 # List of activities that will be randomly displayed every 5 minutes
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
