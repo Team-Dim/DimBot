@@ -17,7 +17,7 @@ class Verstapen(commands.Cog):
         self.bot = bot
         self.logger = bot.missile.get_logger('Verstapen')
         self.http_not_started = True
-        self.albon = Albon(bot.missile.get_logger('Albon'))
+        self.albon = Albon(bot)
 
     async def boot_instance(self, ctx, region_id: str, level: int):
         msg = await ctx.send('Tips: If server tps always below 10, `d.start 2`\nConnecting to Amazon Web Service...')
@@ -84,19 +84,20 @@ class Verstapen(commands.Cog):
         instance = instance['Reservations'][0]['Instances'][0]
         await Missile.append_message(msg, f'IP: **{instance["PublicIpAddress"]}**')
 
-        self.albon.add_channel(ctx.channel)
-        if self.http_not_started:
-            await self.albon.run_server()
-            self.http_not_started = False
-
     @commands.command()
     @Missile.is_guild_cmd_check(tribe.guild_id, 686397146290979003)
     async def start(self, ctx, level: int = 0):
+        self.albon.add_channel(ctx.channel)
+        if self.http_not_started:
+            self.http_not_started = False
+            self.bot.loop.create_task(self.albon.run_server())
         if level < 0:
-            msg = await ctx.send('Enabling Albon for debug purposes...')
-            if self.http_not_started:
-                await self.albon.run_server()
-                self.http_not_started = False
-                await Missile.append_message(msg, 'Albon activated.')
+            await ctx.send('Albon activated.')
         elif level < 3:
             await self.boot_instance(ctx, 'ap-southeast-1', level)
+
+    @commands.command()
+    @Missile.is_rainbow_cmd_check()
+    async def post(self, ctx, path: str):
+        async with self.bot.missile.session.post('http://localhost/' + path) as r:
+            await ctx.reply(f"{r.status}: {await r.text()}")

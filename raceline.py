@@ -20,7 +20,6 @@ class Ricciardo(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logger = bot.missile.get_logger('Ricciardo')
-        self.session = aiohttp.ClientSession()  # A master Session for all requests within this class
         self.addon_ids = [274058, 306357, 274326]  # List of addon IDs for BBM operations
         self.data = {}
         if debug:  # Debug system uses Windows while production server uses Linux
@@ -92,7 +91,7 @@ class Ricciardo(commands.Cog):
         """The main algorithm for RSS feed detector"""
         cursor = self.bot.echo.get_cursor()  # Each thread requires an instance of cursor
         self.logger.info(f"{rowid}: Checking RSS...")
-        async with self.session.get(row['url']) as response:  # Sends a GET request to the URL
+        async with self.bot.missile.session.get(row['url']) as response:  # Sends a GET request to the URL
             self.logger.debug(f"{rowid}: Fetching response...")
             text = await response.text()
         self.logger.debug(f"{rowid}: Parsing response...")
@@ -127,7 +126,7 @@ class Ricciardo(commands.Cog):
                                  (addon_id,)).fetchall()  # Read BBM records from the database
         self.logger.info(f"Checking BBM {addon_id}...")
         # Check for BBM updates
-        async with self.session.get(f'https://addons-ecs.forgesvc.net/api/v2/addon/{addon_id}') as response:
+        async with self.bot.missile.session.get(f'https://addons-ecs.forgesvc.net/api/v2/addon/{addon_id}') as response:
             self.logger.debug(f'Fetching BBM {addon_id}...')
             addon = await response.json()
         self.logger.debug(f'Parsing BBM {addon_id}...')
@@ -142,7 +141,7 @@ class Ricciardo(commands.Cog):
         # All that remains is addons that have updates
         for i, latest_file in enumerate(new):
             # Fetch the changelog of that addon update
-            async with self.session.get(
+            async with self.bot.missile.session.get(
                     f"https://addons-ecs.forgesvc.net/api/v2/addon/{addon_id}/file/{latest_file['id']}/changelog") \
                     as response:
                 change_log = await response.text()
@@ -161,8 +160,9 @@ class Ricciardo(commands.Cog):
         """The main algorithm for detecting YouTube videos"""
         self.logger.info(f"Checking YouTube channel ID {row['channelID']}")
         # Fetch the channel's latest activity
-        async with self.session.get('https://www.googleapis.com/youtube/v3/activities?part=snippet,'
-                                    f"contentDetails&channelId={row['channelID']}&maxResults=1&key={youtube}") \
+        async with self.bot.missile.session.get('https://www.googleapis.com/youtube/v3/activities?part=snippet,'
+                                                f"contentDetails&channelId={row['channelID']}"
+                                                f"&maxResults=1&key={youtube}") \
                 as response:
             activities = await response.json()
             if activities['items'][0]['snippet']['type'] == 'upload':  # The latest activity type is upload
@@ -192,7 +192,7 @@ class Ricciardo(commands.Cog):
         # Above comment suppresses Exception Too Broad for PyCharm.
         # Don't see why we have to check for specific exceptions
         try:  # Checks whether the URL is a RSS feed host
-            async with self.session.get(url) as resp:
+            async with self.bot.missile.session.get(url) as resp:
                 text = await resp.text()
             if not feedparser.parse(text).entries:
                 raise Exception
@@ -292,8 +292,8 @@ class Ricciardo(commands.Cog):
 
     async def get_channel_id(self, query: str):
         """Returns the YouTube channel ID based on query type"""
-        async with self.session.get(f'https://www.googleapis.com/youtube/v3/channels?'
-                                    f'part=id&fields=items/id&{query}&key={youtube}') as r:
+        async with self.bot.missile.session.get(f'https://www.googleapis.com/youtube/v3/channels?'
+                                                f'part=id&fields=items/id&{query}&key={youtube}') as r:
             j: dict = await r.json()
             if j:
                 return j['items'][0]['id']
@@ -303,6 +303,7 @@ class Ricciardo(commands.Cog):
     @Missile.is_channel_owner_cmd_check()
     async def yt_subscribe(self, ctx: Context, ch: str):
         """'Subscribe' to a YouTube channel/user"""
+
         def already_sub(txt: int, yt: str):
             """Checks whether the Discord channel has subscribed to the YouTube channel."""
             return self.bot.echo.cursor.execute('SELECT EXISTS(SELECT 1 FROM YtSub WHERE ytChID = ? AND channelID = ?)',

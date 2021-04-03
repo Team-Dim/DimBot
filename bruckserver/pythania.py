@@ -1,5 +1,3 @@
-import asyncio
-
 from aiohttp import web
 
 
@@ -7,9 +5,10 @@ class Albon:
     """HTTP server sub-project used by Verstapen
     Version 1.3"""
 
-    def __init__(self, logger):
+    def __init__(self, bot):
         self._channels = []
-        self.logger = logger
+        self.bot = bot
+        self.logger = bot.missile.get_logger('Albon')
 
     @property
     def channels(self):
@@ -19,15 +18,6 @@ class Albon:
         if channel not in self._channels:
             self._channels.append(channel)
 
-    async def _setup_server(self, routes):
-        app = web.Application()
-        app.add_routes(routes)
-        runner = web.AppRunner(app)
-        await runner.setup()
-        site = web.TCPSite(runner, '0.0.0.0', 80)
-        await site.start()
-        self.logger.info('Site now running')
-
     async def run_server(self):
         routes = web.RouteTableDef()
 
@@ -35,7 +25,7 @@ class Albon:
         async def hook(request):
             self.logger.debug('Received Lokeon hook')
             for channel in self.channels:
-                asyncio.get_running_loop().create_task(channel.send("Minecraft server 🤝 DimBot"))
+                self.bot.loop.create_task(channel.send("Minecraft server 🤝 DimBot"))
             return web.Response()
 
         @routes.post('/join')
@@ -43,7 +33,7 @@ class Albon:
             self.logger.debug('Received PlayerJoinEvent')
             data = await request.text()
             for channel in self.channels:
-                asyncio.get_running_loop().create_task(channel.send(f'**{data}** 🤝 Minecraft server'))
+                self.bot.loop.create_task(channel.send(f'**{data}** 🤝 Minecraft server'))
             return web.Response()
 
         @routes.post('/quit')
@@ -51,7 +41,7 @@ class Albon:
             self.logger.debug('Received PlayerQuitEvent')
             data = await request.text()
             for channel in self.channels:
-                asyncio.get_running_loop().create_task(channel.send(f'**{data}** 👋 Minecraft server'))
+                self.bot.loop.create_task(channel.send(f'**{data}** 👋 Minecraft server'))
             return web.Response()
 
         @routes.post('/shutdown')
@@ -65,7 +55,7 @@ class Albon:
             msg += '🪓 Minecraft server'
             self.logger.debug('mcser is shutting down')
             for channel in self._channels:
-                asyncio.get_running_loop().create_task(channel.send(msg))
+                self.bot.loop.create_task(channel.send(msg))
             self._channels = []
             return web.Response()
 
@@ -77,14 +67,19 @@ class Albon:
                 msg += '\n💥 Server crashed due to not enough RAM. ' \
                        '/stop in game and send `d.start 1` if this continues.'
             for channel in self._channels:
-                asyncio.get_running_loop().create_task(channel.send(msg))
+                self.bot.loop.create_task(channel.send(msg))
             return web.Response()
 
         @routes.post('/boot')
         async def boot(request):
             for channel in self._channels:
-                asyncio.get_running_loop().create_task(channel.send('Linux 🤝 DimBot. Please wait for Minecraft server '
-                                                                    'to boot.'))
+                self.bot.loop.create_task(channel.send('Linux 🤝 DimBot. Please wait for Minecraft server to boot.'))
             return web.Response()
 
-        await self._setup_server(routes)
+        app = web.Application()
+        app.add_routes(routes)
+        runner = web.AppRunner(app)
+        await runner.setup()
+        site = web.TCPSite(runner, '0.0.0.0', 80)
+        await site.start()
+        self.logger.info('Site now running')

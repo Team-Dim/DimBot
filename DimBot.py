@@ -26,7 +26,7 @@ bot.default_prefix = 't.' if dimsecret.debug else 'd.'
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = echo.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.15"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.16"
 # List of activities that will be randomly displayed every 5 minutes
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -51,20 +51,20 @@ reborn_channel = None
 
 async def binvk(ctx: commands.Context):
     a = randint(1, 100)
-    if a <= 10:
-        if a == 1:
+    if a <= 30:
+        if a <= 10:
             await ctx.send(sponsor_txt)
         else:
             await ctx.send('Rest in peace for those who lost their lives in the Taiwan train derail accident.')
-    bot.missile.time = datetime.now()
+    bot.missile.invoke_time = datetime.now()
 
 
 bot.before_invoke(binvk)
 
 
 async def ainvk(ctx: commands.Context):
-    timedelta = (datetime.now() - bot.missile.time).total_seconds() * 1000
-    await ctx.send(f'**Barbados**: {timedelta}ms')
+    timedelta = (datetime.now() - bot.missile.invoke_time).total_seconds() * 1000
+    await bot.get_channel(666431254312517633).send(f'**{ctx.command}**: {timedelta}ms')
 
 
 bot.after_invoke(ainvk)
@@ -94,14 +94,7 @@ async def on_message(msg: discord.Message):
 async def on_ready():
     """Event handler when the bot has connected to the Discord endpoint"""
     # First, fetch all the special objects
-    bot.missile.bottyland = bot.get_channel(372386868236386307)
-    if dimsecret.debug:
-        bot.missile.announcement = bot.missile.bottyland  # In debug mode, rss,yt should send in bottyland
-    else:
-        bot.missile.announcement = bot.get_channel(425703064733876225)
-    bot.missile.logs = bot.get_channel(384636771805298689)
     bot.missile.eggy = await bot.fetch_user(226664644041768960)
-
     # Then updates the nickname for each server that DimBot is listening to
     for guild in bot.guilds:
         if guild.me.nick != nickname:

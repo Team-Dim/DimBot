@@ -12,6 +12,7 @@ class Hamilton(Cog):
         self.bot = bot
         self.invites = {}
         self.guild = bot.get_guild(guild_id)  # My own server
+        self.logs = bot.get_channel(384636771805298689)  # #logs in my server
 
     async def get_join_invite(self) -> discord.Invite:
         """Returns the invite used by a member.This is done by first caching self.invites in on_ready() then compare
@@ -41,7 +42,7 @@ class Hamilton(Cog):
     async def on_member_join(self, member: discord.Member):
         if member.guild == self.guild:  # Only activates if its in my server
             invite = await self.get_join_invite()
-            await self.bot.missile.logs.send(f"{member.mention} ({member}) joined via code `{invite}`")
+            await self.logs.send(f"{member.mention} ({member}) joined via code `{invite}`")
             if invite == 'g6Yrteq':  # Joined via BBM invite
                 role = self.guild.get_role(664210105318768661)
                 await member.add_roles(role)
@@ -55,7 +56,7 @@ class Hamilton(Cog):
     @Cog.listener()
     async def on_member_left(self, member: discord.Member):
         if member.guild == self.guild:
-            await self.bot.missile.logs.send(f'{member.mention} has left.')
+            await self.logs.send(f'{member.mention} has left.')
 
     @Cog.listener()
     async def on_voice_state_update(self, mem: discord.Member, before, after: discord.VoiceState):

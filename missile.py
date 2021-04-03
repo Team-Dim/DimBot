@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Optional
 
 import discord
+from aiohttp import ClientSession
 from discord.ext import commands
 
 import dimsecret
@@ -23,15 +24,14 @@ class Missile:
             self.lvl = logging.DEBUG
         else:
             self.lvl = logging.INFO
-        self.announcement: discord.TextChannel = None  # Announcement channel in my server
-        self.logs: discord.TextChannel = None  # Log channel in my server
         # Stores the message for snipe command
         self.snipe: discord.Embed = discord.Embed(description='No one has deleted anything yet...',
                                                   color=Missile.random_rgb())
         self.sch = None
         self.eggy: discord.User = None  # Special Discord user for hug
-        self.time = None
+        self.invoke_time = None
         self.boot_time = datetime.now()
+        self.session: ClientSession = ClientSession()
 
     def get_logger(self, name: str) -> logging.Logger:
         """Returns a logger with the module name"""
