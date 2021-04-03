@@ -207,7 +207,9 @@ class Bottas(commands.Cog):
         if name:
             await self.bot.get_command('tag s')(ctx, name)
         else:
-            await self.bot.get_command('tag l')(ctx)
+            tags = self.cursor.execute("SELECT name FROM Tag WHERE guildID = ? ORDER BY name",
+                                       (ctx.guild.id,)).fetchall()
+            await ctx.reply(f"`{', '.join((tag[0] for tag in tags))}`")
 
     @tag.command(aliases=['s'])
     async def show(self, ctx: commands.Context, name: str):
@@ -246,9 +248,3 @@ class Bottas(commands.Cog):
             await ctx.reply('Deleted tag.')
         else:
             await ctx.reply(f"Tag `{name}` not found.")
-
-    @tag.command(aliases=['l'])
-    async def list(self, ctx: commands.Context):
-        """Lists tags"""
-        tags = self.cursor.execute("SELECT name FROM Tag WHERE guildID = ? ORDER BY name", (ctx.guild.id,)).fetchall()
-        await ctx.reply(f"`{', '.join((tag[0] for tag in tags))}`")

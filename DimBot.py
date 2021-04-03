@@ -26,7 +26,7 @@ bot.default_prefix = 't.' if dimsecret.debug else 'd.'
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = echo.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.16"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.17"
 # List of activities that will be randomly displayed every 5 minutes
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -45,13 +45,13 @@ activities = [
     discord.Activity(name="Heaven's Lost Property", type=discord.ActivityType.watching)
 ]
 logger = bot.missile.get_logger('DimBot')
-sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip>'
+sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
 
 
 async def binvk(ctx: commands.Context):
     a = randint(1, 100)
-    if a <= 30:
+    if a <= 20:
         if a <= 10:
             await ctx.send(sponsor_txt)
         else:
@@ -84,9 +84,15 @@ except FileNotFoundError:
 @bot.event
 async def on_message(msg: discord.Message):
     if msg.guild:
+        if msg.content == msg.guild.me.mention:
+            await msg.channel.send(f'My prefix is **{bot.default_prefix}**')
+            return
         dim = msg.guild.get_member(dim_id)
-        if dim and not msg.author.bot and dim.status != discord.Status.online and dim in msg.mentions:
+        if dim and dim in msg.mentions and not msg.author.bot and dim.status != discord.Status.online:
             await msg.reply('My master is away atm.')
+    elif msg.content == bot.user.mention:
+        await msg.channel.send(f'My prefix is **{bot.default_prefix}**')
+        return
     await bot.process_commands(msg)
 
 
