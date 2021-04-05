@@ -20,7 +20,7 @@ class Verstapen(commands.Cog):
         self.albon = Albon(bot)
 
     async def boot_instance(self, ctx, region_id: str, level: int):
-        msg = await ctx.send('Tips: If server tps always below 10, `d.start 2`\nConnecting to Amazon Web Service...')
+        msg = await ctx.send('Connecting to Amazon Web Service...')
         self.logger.info('Connecting to AWS')
         session = boto3.session.Session(
             region_name=region_id,
@@ -52,8 +52,8 @@ class Verstapen(commands.Cog):
                 await Missile.append_message(msg, '⚠No AMI! Please ask Dim for help!')
                 return
             ami = ami[0]
-            inst_type = {0: 't4g.small', 1: 't4g.medium', 2: 'c6g.large'}
-            await Missile.append_message(msg, f"Requesting new **{inst_type[level]}** instance")
+            inst_type = 't4g.medium' if level else 't4g.small'
+            await Missile.append_message(msg, f"Requesting new **{inst_type}** instance")
             spot_request = ec2.request_spot_instances(
                 LaunchSpecification={
                     'SecurityGroups': ['default'],
@@ -87,14 +87,14 @@ class Verstapen(commands.Cog):
     @commands.command()
     @Missile.is_guild_cmd_check(tribe.guild_id, 686397146290979003)
     async def start(self, ctx, level: int = 0):
+        if level == 0 or level == 1:
+            self.bot.loop.create_task(self.boot_instance(ctx, 'ap-southeast-1', level))
+        else:
+            await ctx.send('Activating Albon')
         self.albon.add_channel(ctx.channel)
         if self.http_not_started:
             self.http_not_started = False
-            self.bot.loop.create_task(self.albon.run_server())
-        if level < 0:
-            await ctx.send('Albon activated.')
-        elif level < 3:
-            await self.boot_instance(ctx, 'ap-southeast-1', level)
+            await self.albon.run_server()
 
     @commands.command()
     @Missile.is_rainbow_cmd_check()

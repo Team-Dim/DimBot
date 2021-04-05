@@ -3,7 +3,7 @@ from aiohttp import web
 
 class Albon:
     """HTTP server sub-project used by Verstapen
-    Version 1.3"""
+    Version 1.4"""
 
     def __init__(self, bot):
         self._channels = []
@@ -25,6 +25,7 @@ class Albon:
         @routes.post('/hook')
         async def hook(request):
             self.logger.debug('Received Lokeon hook')
+            self.online = []
             for channel in self.channels:
                 self.bot.loop.create_task(channel.send("Minecraft server 🤝 DimBot"))
             return web.Response()
