@@ -101,3 +101,9 @@ class Verstapen(commands.Cog):
     async def post(self, ctx, path: str):
         async with self.bot.missile.session.post('http://localhost/' + path) as r:
             await ctx.reply(f"{r.status}: {await r.text()}")
+
+    @commands.command()
+    async def players(self, ctx: commands.Context):
+        msg = f"There are **{len(self.albon.online)}** players online:\n"
+        msg += '\n'.join(self.albon.online)
+        await ctx.reply(msg)

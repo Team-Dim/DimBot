@@ -8,6 +8,7 @@ class Albon:
     def __init__(self, bot):
         self._channels = []
         self.bot = bot
+        self.online = []
         self.logger = bot.missile.get_logger('Albon')
 
     @property
@@ -32,6 +33,7 @@ class Albon:
         async def join(request: web.Request):
             self.logger.debug('Received PlayerJoinEvent')
             data = await request.text()
+            self.online.append(data)
             for channel in self.channels:
                 self.bot.loop.create_task(channel.send(f'**{data}** 🤝 Minecraft server'))
             return web.Response()
@@ -40,6 +42,7 @@ class Albon:
         async def player_quit(request: web.Request):
             self.logger.debug('Received PlayerQuitEvent')
             data = await request.text()
+            self.online.remove(data)
             for channel in self.channels:
                 self.bot.loop.create_task(channel.send(f'**{data}** 👋 Minecraft server'))
             return web.Response()
