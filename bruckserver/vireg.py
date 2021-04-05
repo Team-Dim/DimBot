@@ -63,7 +63,7 @@ class Verstapen(commands.Cog):
                     },
                     'ImageId': ami['ImageId'],
                     'KeyName': 'SG',
-                    'InstanceType': inst_type[level],
+                    'InstanceType': inst_type,
                     'EbsOptimized': True,
                     'Monitoring': {'Enabled': True}
                 }
