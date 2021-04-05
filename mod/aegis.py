@@ -13,6 +13,10 @@ async def send(ch: discord.TextChannel, content: str):
     return await ch.send('**Aegis:** ' + content)
 
 
+async def reply(msg: discord.Message, content: str):
+    return await msg.reply('**Aegis:** ' + content)
+
+
 class Aegis(Cog):
     """AutoMod system
     Version 0.4.2"""
@@ -25,8 +29,8 @@ class Aegis(Cog):
     def act_wrap(self, msg: discord.Message, warn_type: str):
         self.count[msg.author.id][1] += 1
         self.count[msg.author.id][0] = []
-        self.bot.loop.create_task(send(msg.channel, f'Detected spam by {msg.author.mention}, type {warn_type}. '
-                                                    f'Warn: {self.count[msg.author.id][1]}'))
+        self.bot.loop.create_task(reply(msg, f'Detected spam by {msg.author.mention}, type {warn_type}. '
+                                             f'Warn: {self.count[msg.author.id][1]}'))
         self.bot.loop.create_task(self.act(msg, f'Aegis: Spam, type {warn_type}'))
 
     @Cog.listener()

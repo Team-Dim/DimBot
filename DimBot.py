@@ -8,11 +8,11 @@ from discord.ext import commands
 
 import dimond
 import dimsecret
-import echo
 import raceline
 import tribe
 from bitbay import BitBay
 from bruckserver.vireg import Verstapen
+from echo import Bottas
 from missile import Missile, dim_id
 from mod.aegis import Aegis
 from mod.ikaros import Ikaros
@@ -25,8 +25,8 @@ bot = commands.Bot(command_prefix=Missile.prefix_process, intents=intent)
 bot.default_prefix = 't.' if dimsecret.debug else 'd.'
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
-bot.echo = echo.Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.18.2"
+bot.echo = Bottas(bot)
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.18.3"
 # List of activities that will be randomly displayed every 5 minutes
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),

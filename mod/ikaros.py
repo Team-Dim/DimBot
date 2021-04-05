@@ -97,7 +97,7 @@ async def unmute(msg: discord.Message, target: discord.Member, reason: str):
 
 
 class Ikaros(Cog):
-    """Moderation commands. For AutoMod please check out Aegis in the future
+    """Moderation commands. For AutoMod please check out Aegis
     Version 0.4"""
 
     def __init__(self, bot):

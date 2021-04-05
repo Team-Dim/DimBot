@@ -79,7 +79,10 @@ class Bottas(commands.Cog):
         quotes = self.cursor.fetchall()
         content = f"The following are quotes uploaded by **{user}**:"
         for quote in quotes:
-            content += f'\n> {quote[0]}. {quote[1]} - {quote[2]}'
+            to_be_added = f'\n> {quote[0]}. {quote[1]} - {quote[2]}'
+            if len(content + to_be_added) >= 2000:
+                break
+            content += to_be_added
         await ctx.send(content)
 
     @quote.command()
