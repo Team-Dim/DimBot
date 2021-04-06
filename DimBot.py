@@ -26,7 +26,7 @@ bot.default_prefix = 't.' if dimsecret.debug else 'd.'
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.18.3"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.18.4"
 # List of activities that will be randomly displayed every 5 minutes
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -83,14 +83,7 @@ except FileNotFoundError:
 
 @bot.event
 async def on_message(msg: discord.Message):
-    if msg.guild:
-        if msg.content == msg.guild.me.mention:
-            await msg.channel.send(f'My prefix is **{bot.default_prefix}**')
-            return
-        dim = msg.guild.get_member(dim_id)
-        if dim and dim in msg.mentions and not msg.author.bot and dim.status != discord.Status.online:
-            await msg.reply('My master is away atm.')
-    elif msg.content == bot.user.mention:
+    if msg.guild and msg.content == msg.guild.me.mention:
         await msg.channel.send(f'My prefix is **{bot.default_prefix}**')
         return
     await bot.process_commands(msg)

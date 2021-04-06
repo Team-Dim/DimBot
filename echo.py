@@ -105,8 +105,8 @@ class Bottas(commands.Cog):
         self.db.commit()
         await ctx.send('Saved')
 
-    @quote.command(aliases=['a'])
-    async def add(self, ctx, *, args):
+    @quote.command(name='add', aliases=['a'])
+    async def quote_add(self, ctx, *, args):
         """Adds a quote"""
         # Quote message validation
         if '<@' in args:
@@ -142,8 +142,8 @@ class Bottas(commands.Cog):
                     self.cursor.execute("INSERT INTO Quote VALUES (?, ?, ?)", (args, quoter, ctx.author.id))
                 await ctx.send(f"Added quote #{self.cursor.lastrowid}")
 
-    @quote.command(aliases=['d', 'del'])
-    async def delete(self, ctx, index: int):
+    @quote.command(name='delete', aliases=['d'])
+    async def quote_delete(self, ctx, index: int):
         """Deletes a quote by its quote ID"""
         quote = self.get_quote(index)  # Checks if the quote exists
         if quote:
@@ -224,9 +224,9 @@ class Bottas(commands.Cog):
         else:
             await ctx.reply(f"Tag `{name}` not found.")
 
-    @tag.command(aliases=['a'])
+    @tag.command(name='add', aliases=['a'])
     @commands.has_permissions(manage_messages=True)
-    async def add(self, ctx: commands.Context, name: str, url: str):
+    async def tag_add(self, ctx: commands.Context, name: str, url: str):
         """Adds a tag."""
         if not Missile.regex_is_url(url):
             await ctx.reply('Tag content must be a HTTP WWW link!')
@@ -241,9 +241,9 @@ class Bottas(commands.Cog):
         self.cursor.execute("INSERT INTO Tag VALUES (?, ?, ?)", (name, url, ctx.guild.id))
         await ctx.reply('Your tag has been created!')
 
-    @tag.command(aliases=['d'])
+    @tag.command(name='delete', aliases=['d'])
     @commands.has_permissions(manage_messages=True)
-    async def delete(self, ctx: commands.Context, name: str):
+    async def tag_delete(self, ctx: commands.Context, name: str):
         """Deletes a tag"""
         if self.cursor.execute("SELECT EXISTS(SELECT 1 FROM Tag WHERE name = ? AND guildID = ?)",
                                (name, ctx.guild.id)).fetchone()[0]:
