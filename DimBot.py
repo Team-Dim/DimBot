@@ -26,7 +26,7 @@ bot.default_prefix = 't.' if dimsecret.debug else 'd.'
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.18.4"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.19"
 # List of activities that will be randomly displayed every 5 minutes
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -267,7 +267,7 @@ async def hug(ctx):
     gif = choice(['https://tenor.com/view/milk-and-mocha-bear-couple-line-hug-cant-breathe-gif-12687187',
                   'https://tenor.com/view/hugs-hug-ghost-hug-gif-4451998',
                   'https://tenor.com/view/true-love-hug-miss-you-everyday-always-love-you-running-hug-gif-5534958'])
-    await ctx.send(f'{gif}\nIn memory of our friendship, {bot.missile.eggy}\nHug {ctx.author.mention}')
+    await ctx.send(f'{gif}\nWe are friends again, {bot.missile.eggy}\nHug {ctx.author.mention}')
 
 
 @bot.command(aliases=['color'])

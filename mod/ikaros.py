@@ -1,8 +1,8 @@
 import asyncio
 
 import discord
-from discord.ext.commands import Cog, command, Context, has_any_role, has_permissions, bot_has_permissions, \
-    has_guild_permissions, bot_has_guild_permissions, group
+from discord.ext.commands import Cog, command, Context, has_permissions, bot_has_permissions, has_guild_permissions, \
+    bot_has_guild_permissions, group
 
 import bitbay
 import tribe
@@ -34,6 +34,9 @@ async def ensure_target(msg: discord.Message, target: discord.Member, countdown:
 async def kick(msg: discord.Message, target: discord.Member, countdown: int, reason: str):
     """Internal logic for kicking member"""
     try:
+        if not msg.guild.me.guild_permissions.kick_members:
+            await msg.channel.send("I don't have kick permission.")
+            return
         await ensure_target(msg, target, countdown)
         await target.kick(reason=reason)
         await send(msg, target.mention + ' has been kicked.')
@@ -44,6 +47,9 @@ async def kick(msg: discord.Message, target: discord.Member, countdown: int, rea
 async def ban(msg: discord.Message, target: discord.Member, length: int, countdown: int, reason: str):
     """Internal logic for banning member"""
     try:
+        if not msg.guild.me.guild_permissions.ban_members:
+            await msg.channel.send("I don't have ban permission.")
+            return
         await ensure_target(msg, target, countdown)
         await target.ban(delete_message_days=0, reason=reason)
         await send(msg, f'Banning {target.mention} for {length}s')
@@ -62,6 +68,9 @@ async def unban(msg: discord.Message, user: discord.User, reason: str):
 async def mute(msg: discord.Message, target: discord.Member, length: int, countdown: int, reason: str):
     """Internal logic for muting member"""
     try:
+        if not msg.guild.me.guild_permissions.manage_roles:
+            await msg.channel.send("I don't have Manage Roles permission.")
+            return
         await ensure_target(msg, target, countdown)
         role = None
         # Temporary mute system setup that only works in my server / 128BB
@@ -98,13 +107,14 @@ async def unmute(msg: discord.Message, target: discord.Member, reason: str):
 
 class Ikaros(Cog):
     """Moderation commands. For AutoMod please check out Aegis
-    Version 0.4"""
+    Version 0.4.1"""
 
     def __init__(self, bot):
         self.bot = bot
 
     @command()
-    @has_any_role(702608566845964338, 452859434104913931, 702889819570831572)
+    @has_guild_permissions(manage_roles=True)
+    @bot_has_guild_permissions(manage_roles=True)
     @Missile.guild_only()
     async def role(self, ctx: Context, role: discord.Role, target: discord.Member):
         """Gives/removes a member's role"""
@@ -152,7 +162,7 @@ class Ikaros(Cog):
     @has_guild_permissions(mute_members=True)
     @bot_has_guild_permissions(manage_roles=True)
     @Missile.is_guild_cmd_check(bitbay.guild_id, tribe.guild_id)
-    async def mute_cmd(self, ctx: Context, target: discord.Member, countdown: int = 3, length: int = None):
+    async def mute_cmd(self, ctx: Context, target: discord.Member, length: int = None, countdown: int = 3):
         """Mutes a member. Can define a time to auto unmute"""
         await mute(ctx.message, target, length, countdown, f'Ikaros: Muted by {ctx.author}')
 

@@ -61,10 +61,12 @@ class Albon:
             for channel in self._channels:
                 self.bot.loop.create_task(channel.send(msg))
             self._channels = []
+            self.online = []
             return web.Response()
 
         @routes.post('/exit')
         async def exit_code(request: web.Request):
+            self.online = []
             code = await request.text()
             msg = 'Minecraft server exited with code ' + code
             if code == '137':
