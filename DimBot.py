@@ -26,7 +26,7 @@ bot.default_prefix = 't.' if dimsecret.debug else 'd.'
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
 bot.missile = Missile(bot)
 bot.echo = Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.19"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.20"
 # List of activities that will be randomly displayed every 5 minutes
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -151,8 +151,8 @@ async def on_command_error(ctx, error):
     raise error  # This is basically "unknown error", raise it for debug purposes
 
 
-@bot.command(aliases=['ver', 'verinfo'])
-async def info(ctx):
+@bot.command(aliases=('bot',))
+async def botinfo(ctx):
     """Displays bot information"""
     from platform import python_version
     embed = discord.Embed(title=sponsor_txt,

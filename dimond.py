@@ -9,17 +9,22 @@ from missile import Missile
 class Dimond(commands.Cog):
     """Named by Anqaa' (uid: 98591077975465984)
     Report users/channels/servers details. Literally CIA
-    Version: 1.1"""
+    Version: 1.2"""
 
     def __init__(self, bot):
         self.bot: commands.Bot = bot
 
     @commands.group(invoke_without_command=True)
+    async def info(self, ctx):
+        """Commands for showing info of various objects"""
+        pass
+
+    @info.command(aliases=('u',))
     async def user(self, ctx, u: discord.User = None):
         """Shows user info"""
         # https://discordpy.readthedocs.io/en/latest/api.html#discord.User
         u = u if u else ctx.author
-        desc = f"Send `{self.bot.default_prefix}user f [user]` for flag details,\n`{self.bot.default_prefix}perm " \
+        desc = f"Send `{self.bot.default_prefix}info f [user]` for flag details,\n`{self.bot.default_prefix}info p " \
                "[user|channel] [channel]` for permission details"
         emb = discord.Embed(title=str(u), description=desc)
         emb.set_thumbnail(url=u.avatar_url)
@@ -36,7 +41,7 @@ class Dimond(commands.Cog):
             if m:
                 member = m
                 if m.voice:  # Searches whether the 'member' is in a VC
-                    break   # A user can only be in 1 VC
+                    break  # A user can only be in 1 VC
         # TODO: Use user.mutual_guilds to check status&activities instead when d.py 1.7 is released
         if member:  # Data that can only be accessed as a Member
             emb.add_field(name='Number of activities', value=str(len(member.activities)) if member.activities else '0')
@@ -69,7 +74,7 @@ class Dimond(commands.Cog):
         emb.set_author(name=member.display_name if member else u.name, icon_url=u.default_avatar_url)
         await ctx.reply(embed=emb)
 
-    @user.command(aliases=['f'])
+    @info.command(aliases=('f',))
     async def flags(self, ctx, u: discord.User = None):
         """Shows public flags of a user"""
         # https://discordpy.readthedocs.io/en/latest/api.html#discord.PublicUserFlags
@@ -100,7 +105,7 @@ class Dimond(commands.Cog):
         emb.add_field(name='Discord employee', value=u.public_flags.staff)  # 2^0
         await ctx.reply(embed=emb)
 
-    @commands.command(aliases=['perm', 'perms', 'permission'])
+    @info.command(aliases=('p',))
     @Missile.guild_only()
     async def permissions(self, ctx, *args):
         """Shows a user's permission server/channel wise"""
@@ -170,8 +175,39 @@ class Dimond(commands.Cog):
         emb.add_field(name='View audit log', value=perm.view_audit_log)  # 2^7
         emb.add_field(name='Add reactions', value=perm.add_reactions)  # 2^6
         await ctx.reply(content=f"Manage server: **{perm.manage_guild}** "  # 2^5
-                        f"Manage channels: **{perm.manage_channels}** "  # 2^4
-                        f"Administrator: **{perm.administrator}** "  # 2^3
-                        f"Ban members: **{perm.ban_members}** "  # 2^2
-                        f"Kick members: **{perm.kick_members}** "  # 2^1
-                        f"Create invites: **{perm.create_instant_invite}**", embed=emb)  # 2^0
+                                f"Manage channels: **{perm.manage_channels}** "  # 2^4
+                                f"Administrator: **{perm.administrator}** "  # 2^3
+                                f"Ban members: **{perm.ban_members}** "  # 2^2
+                                f"Kick members: **{perm.kick_members}** "  # 2^1
+                                f"Create invites: **{perm.create_instant_invite}**", embed=emb)  # 2^0
+
+    @info.command(aliases=('r',))
+    @Missile.guild_only()
+    async def role(self, ctx: commands.Context, r: discord.Role):
+        """Shows role info"""
+        emb = discord.Embed(title=r.name, color=r.color)
+        if r.is_bot_managed():
+            emb.description = 'Bot role: ' + self.bot.get_user(r.tags.bot_id).mention
+        elif r.is_default():
+            emb.description = 'Default role'
+        elif r.is_integration():
+            emb.description = 'Integration role: ❄ID ' + str(r.tags.integration_id)
+        elif r.is_premium_subscriber():
+            emb.description = 'Nitro Boost role'
+        emb.add_field(name='❄ ID', value=r.id)
+        emb.add_field(name='Member count', value=str(len(r.members)))
+        emb.add_field(name='Displays separately', value=r.hoist)
+        emb.add_field(name='Created at', value=r.created_at)
+        emb.add_field(name='Permissions', value=f'0x{r.permissions.value:X}')
+        emb.add_field(name='Position', value=str(r.position))
+        await ctx.reply(embed=emb)
+
+    @info.command()
+    async def vc(self, ctx: commands.Context, ch: discord.VoiceChannel):
+        """Shows info of a voice channel. PM the command if the channel is not in that server."""
+        emb = discord.Embed(title=ch.name, color=discord.Colour.random())
+        if not ctx.guild:
+            emb.add_field(name='Server ❄ID', value=ch.guild.id)
+        emb.add_field(name='Bit rate (kbps)', value=ch.bitrate // 1000)
+        emb.add_field(name='Created at', value=ch.created_at)
+        await ctx.reply(embed=emb)
