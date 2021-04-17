@@ -27,3 +27,10 @@ class MsgExt:
     async def send(self, content: str):
         await self.msg.channel.send(self.prefix + content)
 
+
+class Embed(discord.Embed):
+
+    def __init__(self, color=discord.Colour.random(), thumbnail: str = None, **kwargs):
+        super().__init__(color=color, **kwargs)
+        if thumbnail:
+            super().set_thumbnail(url=thumbnail)

@@ -23,7 +23,7 @@ intent.guilds = intent.members = intent.messages = intent.reactions = intent.voi
 intent.presences = True
 bot = obj.Bot(command_prefix=Missile.prefix_process, intents=intent)
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.22"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.23"
 # List of activities that will be randomly displayed every 5 minutes
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -47,12 +47,8 @@ reborn_channel = None
 
 
 async def binvk(ctx: commands.Context):
-    a = randint(1, 100)
-    if a <= 10:
-        if a <= 5:
-            await ctx.send(sponsor_txt)
-        else:
-            await ctx.send('Rest in peace for those who lost their lives in the Taiwan train derail accident.')
+    if randint(1, 100) <= 5:
+        await ctx.send(sponsor_txt)
     bot.missile.invoke_time = datetime.now()
 
 
@@ -132,7 +128,7 @@ async def on_command_error(ctx, error):
     if isinstance(error, commands.errors.MissingRequiredArgument) or isinstance(error, commands.errors.MissingAnyRole) \
             or isinstance(error, commands.errors.CommandOnCooldown) or isinstance(error, commands.errors.UserNotFound) \
             or isinstance(error, commands.errors.MemberNotFound) or \
-            isinstance(error, commands.errors.MissingPermissions):
+            isinstance(error, commands.errors.MissingPermissions) or isinstance(error, commands.errors.BadInviteArgument):
         await ctx.reply(str(error))
         return
     if isinstance(error, commands.errors.ChannelNotFound):  # Human error

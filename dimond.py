@@ -10,7 +10,7 @@ from missile import Missile
 class Dimond(commands.Cog):
     """Named by Anqaa' (uid: 98591077975465984)
     Report users/channels/servers details. Literally CIA
-    Version: 1.2"""
+    Version: 1.3"""
 
     def __init__(self, bot):
         self.bot: obj.Bot = bot
@@ -198,6 +198,7 @@ class Dimond(commands.Cog):
         elif r.is_premium_subscriber():
             emb.description = 'Nitro Boost role'
         emb.add_field(name='❄ ID', value=r.id)
+        # noinspection PyTypeChecker
         emb.add_field(name='Member count', value=len(r.members))
         emb.add_field(name='Displays separately', value=r.hoist)
         emb.add_field(name='Created at', value=r.created_at)
@@ -215,6 +216,7 @@ class Dimond(commands.Cog):
         emb.add_field(name='Created at', value=ch.created_at)
         await ctx.reply(embed=emb)
 
+    # noinspection PyTypeChecker
     @info.command(aliases=('s',))
     async def server(self, ctx: commands.Context, s: discord.Guild = None):
         """Shows info of a server"""
@@ -236,6 +238,11 @@ class Dimond(commands.Cog):
             emb.add_field(name='Features', value=',\n'.join(s.features))
         emb.add_field(name='Max members', value=s.max_members)
         emb.add_field(name='Max presences', value=s.max_presences)
+        if s.me.guild_permissions.manage_webhooks:
+            emb.add_field(name='Webhooks', value=len(await s.webhooks()))
+        if s.me.guild_permissions.manage_guild:
+            emb.add_field(name='Integrations', value=len(await s.integrations()))
+            emb.add_field(name='Invites', value=len(await s.invites()))
         emb.set_thumbnail(url=s.icon_url)
         await ctx.reply(embed=emb)
 
@@ -243,6 +250,7 @@ class Dimond(commands.Cog):
     async def emoji(self, ctx: commands.Context, e: Union[discord.Emoji, discord.PartialEmoji]):
         """Shows info of a custom(non-Unicode) emoji"""
         emb = discord.Embed(title=e.name, color=discord.Colour.random())
+        # noinspection PyTypeChecker
         emb.set_author(name=e)
         emb.set_thumbnail(url=e.url)
         emb.add_field(name='❄ ID', value=e.id)
@@ -267,13 +275,55 @@ class Dimond(commands.Cog):
         """Shows info of a webhook"""
         for webhook in await ctx.guild.webhooks():
             if webhook.name == name:
-                emb = discord.Embed(name=name, color=discord.Colour.random())
-                emb.add_field(name='❄ ID', value=webhook.id)
+                emb = discord.Embed(title=f'❄ ID: {webhook.id}', color=discord.Colour.random())
                 emb.add_field(name='Created at', value=webhook.created_at)
                 emb.add_field(name='Channel', value=webhook.channel.mention)
-                emb.add_field(name='Server ID', value=webhook.guild_id)
                 emb.add_field(name='Type', value=webhook.type)
-                emb.set_thumbnail(url=webhook.avatar_url)
                 await ctx.reply(embed=emb)
                 return
         await ctx.reply(f"Webhook user '{name}' not found.")
+
+    @info.command(aliases=('int',))
+    @Missile.guild_only()
+    @commands.bot_has_guild_permissions(manage_guild=True)
+    async def integration(self, ctx: commands.Context):
+        """Shows info of an integration"""
+        await ctx.reply('Coming soon!')
+        print(await ctx.guild.integrations())
+
+    @info.command(aliases=('sinv',))
+    async def server_invite(self, ctx: commands.Context, s: discord.Guild = None):
+        """Lists invite codes of a server"""
+        if not s:
+            if ctx.guild:
+                s = ctx.guild
+            else:
+                await ctx.reply('You must specify a server if you are sending this command in PM!')
+                return
+        if s.me.guild_permissions.manage_guild:
+            emb = obj.Embed(description='')
+            for inv in await s.invites():
+                print(inv.uses)
+                emb.description += f"[{inv.code}]({inv.url}) "
+            await ctx.reply(embed=emb)
+        else:
+            await ctx.reply("I don't have `Manage Server` permission in that server!")
+
+    @info.command(aliases=('inv',))
+    async def invite(self, ctx: commands.Context, inv: discord.Invite):
+        """Shows info of an invite."""
+        emb = discord.Embed(title=inv.code, color=discord.Colour.random(), url=inv.url)
+        emb.add_field(name='Server ID', value=inv.guild.id)
+        emb.add_field(name='Channel', value=inv.channel.mention)
+        if inv.guild in self.bot.guilds and inv.guild.me.guild_permissions.manage_guild:
+            for i in await inv.guild.invites():
+                if i.code == inv.code:
+                    emb.add_field(name='Uses', value=i.uses)
+                    emb.add_field(name='Created at', value=i.created_at)
+                    if inv.inviter:
+                        emb.add_field(name='Inviter', value=i.inviter.mention)
+                    emb.add_field(name='Expires in', value=i.max_age)
+                    emb.add_field(name='Max uses', value=i.max_uses)
+                    emb.add_field(name='Revoked', value=i.revoked)
+                    emb.add_field(name='Only grants temporary membership', value=i.temporary)
+        await ctx.reply(embed=emb)

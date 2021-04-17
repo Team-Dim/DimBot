@@ -107,7 +107,7 @@ async def unmute(msg: discord.Message, target: discord.Member, reason: str):
 
 class Ikaros(Cog):
     """Moderation commands. For AutoMod please check out Aegis
-    Version 0.4.1"""
+    Version 0.5"""
 
     def __init__(self, bot):
         self.bot = bot
@@ -199,3 +199,9 @@ class Ikaros(Cog):
         """d.purge but only deletes up to the specified amount of the sender's messages"""
         msgs = await ctx.channel.purge(check=lambda m: m.author == sender, limit=amount, before=ctx.message)
         await send(ctx.message, f'Purged {len(msgs)} messages.')
+
+    @command()
+    @Missile.guild_only()
+    async def preprune(self, ctx: Context, days: int):
+        """Checks how many members will be pruned. Must specify the number of days before counting as inactive."""
+        await ctx.reply(f'**{await ctx.guild.estimate_pruned_members(days=days)}** members will be pruned.')
