@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 
 import discord
 from discord.ext import commands
@@ -240,13 +240,40 @@ class Dimond(commands.Cog):
         await ctx.reply(embed=emb)
 
     @info.command(aliases=('e',))
-    async def emoji(self, ctx: commands.Context, e: discord.Emoji):
+    async def emoji(self, ctx: commands.Context, e: Union[discord.Emoji, discord.PartialEmoji]):
+        """Shows info of a custom(non-Unicode) emoji"""
         emb = discord.Embed(title=e.name, color=discord.Colour.random())
         emb.set_author(name=e)
         emb.set_thumbnail(url=e.url)
         emb.add_field(name='❄ ID', value=e.id)
         emb.add_field(name='Created at', value=e.created_at)
-        emb.add_field(name='Server ID', value=e.guild_id)
-        if e.roles:
-            emb.add_field(name='Usable roles', value=''.join(r.mention for r in e.roles))
+        if isinstance(e, discord.Emoji):
+            emb.add_field(name='Server ID', value=e.guild_id)
+            if e.user:
+                emb.add_field(name='Creator', value=e.user)
+            if e.roles:
+                emb.add_field(name='Usable roles', value=''.join(r.mention for r in e.roles))
         await ctx.reply(embed=emb)
+
+    @emoji.error
+    async def emoji_error(self, ctx, error):
+        if isinstance(error, commands.errors.BadUnionArgument):
+            await ctx.reply('Unknown emoji. This command currently does not support Unicode emojis.')
+
+    @info.command(aliases=('w',))
+    @Missile.guild_only()
+    @commands.bot_has_guild_permissions(manage_webhooks=True)
+    async def webhook(self, ctx: commands.Context, name):
+        """Shows info of a webhook"""
+        for webhook in await ctx.guild.webhooks():
+            if webhook.name == name:
+                emb = discord.Embed(name=name, color=discord.Colour.random())
+                emb.add_field(name='❄ ID', value=webhook.id)
+                emb.add_field(name='Created at', value=webhook.created_at)
+                emb.add_field(name='Channel', value=webhook.channel.mention)
+                emb.add_field(name='Server ID', value=webhook.guild_id)
+                emb.add_field(name='Type', value=webhook.type)
+                emb.set_thumbnail(url=webhook.avatar_url)
+                await ctx.reply(embed=emb)
+                return
+        await ctx.reply(f"Webhook user '{name}' not found.")

@@ -23,7 +23,7 @@ intent.guilds = intent.members = intent.messages = intent.reactions = intent.voi
 intent.presences = True
 bot = obj.Bot(command_prefix=Missile.prefix_process, intents=intent)
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.21"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.22"
 # List of activities that will be randomly displayed every 5 minutes
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -131,8 +131,8 @@ async def on_command_error(ctx, error):
     # Human error
     if isinstance(error, commands.errors.MissingRequiredArgument) or isinstance(error, commands.errors.MissingAnyRole) \
             or isinstance(error, commands.errors.CommandOnCooldown) or isinstance(error, commands.errors.UserNotFound) \
-            or isinstance(error, commands.errors.MemberNotFound) or isinstance(error,
-                                                                               commands.errors.MissingPermissions):
+            or isinstance(error, commands.errors.MemberNotFound) or \
+            isinstance(error, commands.errors.MissingPermissions):
         await ctx.reply(str(error))
         return
     if isinstance(error, commands.errors.ChannelNotFound):  # Human error
@@ -144,7 +144,9 @@ async def on_command_error(ctx, error):
     if isinstance(error, commands.errors.GuildNotFound):
         await ctx.reply('Invalid server or I am not in that server.')
         return
-    if isinstance(error, commands.errors.BadArgument):  # Could be a human/program error
+    if isinstance(error, commands.errors.BadArgument) or isinstance(error, commands.errors.BadUnionArgument) \
+            and not ctx.command.has_error_handler():
+        # Could be a human/program error
         await ctx.reply('Bad arguments.')
     elif isinstance(error, commands.errors.CheckFailure):
         return
