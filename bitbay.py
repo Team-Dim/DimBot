@@ -5,8 +5,9 @@ from random import randint
 from typing import Optional
 
 import discord
-from discord.ext.commands import Cog, Context, command, has_any_role, group, cooldown, BucketType, Bot
+from discord.ext.commands import Cog, Context, command, has_any_role, group, cooldown, BucketType
 
+import obj
 from dimsecret import debug
 from missile import Missile
 
@@ -40,10 +41,10 @@ class PP:
 
 class BitBay(Cog):
     """Utilities for 128BB
-    Version 1.3.2"""
+    Version 1.3.3"""
 
     def __init__(self, bot):
-        self.bot: Bot = bot
+        self.bot: obj.Bot = bot
         self.organs: dict = {}  # Dict for storing pp size
         self.mpm = True  # Message Pattern Matching master switch
         self.no_pp_msg = f"No pp found. Have you set it up by {bot.default_prefix}pp?"
@@ -156,9 +157,14 @@ class BitBay(Cog):
         user = user if user else ctx.author
         size = randint(0, max_pp_size)
         viagra = randint(0, 100) < 25
-        self.organs[user.id] = PP(size, viagra)
+        pp = self.get_pp(user.id)
+        if pp:
+            pp.size = size
+            pp.viagra_available = viagra
+        else:
+            self.organs[user.id] = PP(size, viagra)
         await ctx.send(embed=discord.Embed(title=user.display_name + "'s penis", description=self.draw_pp(user.id),
-                                           colour=Missile.random_rgb()))
+                                           colour=discord.Colour.random()))
 
     @pp.command()
     async def info(self, ctx: Context, user: discord.User = None):
@@ -239,6 +245,12 @@ class BitBay(Cog):
             else:
                 title = "WIN...?"  # Should not gain xp if opponent has no pp
                 gain_msg = 'You gained nothing!'
+            if my.viagra_rounds > 1:
+                my.viagra_rounds -= 1
+            elif my.viagra_rounds == 1:
+                my.size = my.size // 2
+                my.viagra_rounds -= 1
+                await ctx.send(f"Faith effect has worn off for {ctx.author.display_name}'s pp")
         elif his:
             title = "DESTROYED"
             my.score -= his.size  # Deducts score
@@ -250,13 +262,7 @@ class BitBay(Cog):
             embed=discord.Embed(title=title,
                                 description=f"**{ctx.author.name}'s penis:**\n{self.draw_pp(ctx.author.id)}\n"
                                             f"**{user.name}'s penis:**\n{self.draw_pp(user.id)}\n\n{gain_msg}",
-                                colour=Missile.random_rgb()))
-        if my:
-            if my.viagra_rounds > 0:
-                my.viagra_rounds -= 1
-                if my.viagra_rounds == -1:
-                    await ctx.send(f"Faith effect has worn off for {ctx.author.display_name}'s pp")
-                    my.size = my.size // 2
+                                colour=discord.Colour.random()))
 
     @pp.command()
     async def lb(self, ctx: Context):
@@ -278,7 +284,7 @@ class BitBay(Cog):
             elif pp.viagra_available:
                 pp.viagra_available = False
                 pp.size = pp.size * 2
-                pp.viagra_rounds = 2
+                pp.viagra_rounds = 3
                 await ctx.send(ctx.author.mention + " has faith in his pp!!!!! New pp size: " + str(pp.size))
             else:
                 await ctx.reply('Your pp is not ready for it!')

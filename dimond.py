@@ -3,6 +3,7 @@ from typing import Optional
 import discord
 from discord.ext import commands
 
+import obj
 from missile import Missile
 
 
@@ -12,12 +13,12 @@ class Dimond(commands.Cog):
     Version: 1.2"""
 
     def __init__(self, bot):
-        self.bot: commands.Bot = bot
+        self.bot: obj.Bot = bot
 
     @commands.group(invoke_without_command=True)
     async def info(self, ctx):
         """Commands for showing info of various objects"""
-        pass
+        raise commands.errors.CommandNotFound
 
     @info.command(aliases=('u',))
     async def user(self, ctx, u: discord.User = None):
@@ -69,7 +70,8 @@ class Dimond(commands.Cog):
                 emb.add_field(name='Joined at', value=member.joined_at)
                 emb.add_field(name='Pending member?', value=member.pending)
                 emb.add_field(name='Nitro boosting server since', value=member.premium_since)
-                emb.add_field(name='Roles', value=' '.join([role.mention for role in member.roles[1:]][::-1]))
+                if len(member.roles) > 1:
+                    emb.add_field(name='Roles', value=' '.join([role.mention for role in member.roles[1:]][::-1]))
                 emb.colour = member.color
         emb.set_author(name=member.display_name if member else u.name, icon_url=u.default_avatar_url)
         await ctx.reply(embed=emb)
@@ -186,6 +188,7 @@ class Dimond(commands.Cog):
     async def role(self, ctx: commands.Context, r: discord.Role):
         """Shows role info"""
         emb = discord.Embed(title=r.name, color=r.color)
+        emb.set_author(name=f'Color: 0x{r.color.value:X}')
         if r.is_bot_managed():
             emb.description = 'Bot role: ' + self.bot.get_user(r.tags.bot_id).mention
         elif r.is_default():
@@ -195,11 +198,11 @@ class Dimond(commands.Cog):
         elif r.is_premium_subscriber():
             emb.description = 'Nitro Boost role'
         emb.add_field(name='❄ ID', value=r.id)
-        emb.add_field(name='Member count', value=str(len(r.members)))
+        emb.add_field(name='Member count', value=len(r.members))
         emb.add_field(name='Displays separately', value=r.hoist)
         emb.add_field(name='Created at', value=r.created_at)
         emb.add_field(name='Permissions', value=f'0x{r.permissions.value:X}')
-        emb.add_field(name='Position', value=str(r.position))
+        emb.add_field(name='Position', value=r.position)
         await ctx.reply(embed=emb)
 
     @info.command()
@@ -210,4 +213,40 @@ class Dimond(commands.Cog):
             emb.add_field(name='Server ❄ID', value=ch.guild.id)
         emb.add_field(name='Bit rate (kbps)', value=ch.bitrate // 1000)
         emb.add_field(name='Created at', value=ch.created_at)
+        await ctx.reply(embed=emb)
+
+    @info.command(aliases=('s',))
+    async def server(self, ctx: commands.Context, s: discord.Guild = None):
+        """Shows info of a server"""
+        if not s:
+            if ctx.guild:
+                s = ctx.guild
+            else:
+                await ctx.reply('You must specify a server if you are sending this command in PM!')
+                return
+        emb = discord.Embed(title=s.name, color=discord.Colour.random())
+        if s.description:
+            emb.description = s.description
+        emb.add_field(name='❄ ID', value=s.id)
+        emb.add_field(name='Owner ID', value=s.owner_id)
+        emb.add_field(name='Created at', value=s.created_at)
+        emb.add_field(name='Member count', value=s.member_count)
+        emb.add_field(name='Region', value=s.region)
+        if s.features:  # https://discordpy.readthedocs.io/en/latest/api.html#discord.Guild.features
+            emb.add_field(name='Features', value=',\n'.join(s.features))
+        emb.add_field(name='Max members', value=s.max_members)
+        emb.add_field(name='Max presences', value=s.max_presences)
+        emb.set_thumbnail(url=s.icon_url)
+        await ctx.reply(embed=emb)
+
+    @info.command(aliases=('e',))
+    async def emoji(self, ctx: commands.Context, e: discord.Emoji):
+        emb = discord.Embed(title=e.name, color=discord.Colour.random())
+        emb.set_author(name=e)
+        emb.set_thumbnail(url=e.url)
+        emb.add_field(name='❄ ID', value=e.id)
+        emb.add_field(name='Created at', value=e.created_at)
+        emb.add_field(name='Server ID', value=e.guild_id)
+        if e.roles:
+            emb.add_field(name='Usable roles', value=''.join(r.mention for r in e.roles))
         await ctx.reply(embed=emb)

