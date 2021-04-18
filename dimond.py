@@ -304,6 +304,7 @@ class Dimond(commands.Cog):
             else:
                 emb.title = 'So many invites lmfao'
                 emb.description += '...'
+                break
         await ctx.reply(embed=emb)
 
     @info.command(aliases=('inv',))

@@ -32,11 +32,12 @@ def decode(text: str) -> str:
 
 class PP:
 
-    def __init__(self, size: int, viagra: bool):
+    def __init__(self, size: int, viagra, sesami):
         self.size: int = size
         self.viagra_available: bool = viagra
         self.viagra_rounds: int = 0
         self.score = 0
+        self.sesami_oil: bool = sesami
 
 
 class BitBay(Cog):
@@ -143,6 +144,8 @@ class BitBay(Cog):
                 description = f'**{description}**\nViagra rounds left: {pp.viagra_rounds}'
             elif pp.viagra_available:
                 description += '\nViagra available!'
+            if pp.sesami_oil:
+                description += '\nYou have sesami oil!'
             if pp.size == max_pp_size:
                 description += '\n**MAX POWER**'
             return description
@@ -157,12 +160,15 @@ class BitBay(Cog):
         user = user if user else ctx.author
         size = randint(0, max_pp_size)
         viagra = randint(0, 100) < 25
+        sesami = randint(0, 100) < 10
         pp = self.get_pp(user.id)
         if pp:
             pp.size = size
             pp.viagra_available = viagra
+            if sesami and pp.sesami_oil is False:
+                pp.sesami_oil = True
         else:
-            self.organs[user.id] = PP(size, viagra)
+            self.organs[user.id] = PP(size, viagra, sesami)
         await ctx.send(embed=discord.Embed(title=user.display_name + "'s penis", description=self.draw_pp(user.id),
                                            colour=discord.Colour.random()))
 
@@ -190,9 +196,9 @@ class BitBay(Cog):
 
     @pp.command()
     @Missile.is_rainbow_cmd_check()
-    async def max(self, ctx: Context, target: discord.User = None, viagra=True):
+    async def max(self, ctx: Context, target: discord.User = None, viagra=True, sesami=True):
         target = target if target else ctx.author
-        self.organs[target.id] = PP(max_pp_size, viagra)
+        self.organs[target.id] = PP(max_pp_size, viagra, sesami)
         await ctx.send(embed=discord.Embed(title=target.display_name + "'s penis",
                                            description=self.draw_pp(target.id),
                                            colour=Missile.random_rgb()))
@@ -200,7 +206,7 @@ class BitBay(Cog):
     @pp.command()
     async def min(self, ctx: Context):
         """Minimises your pp strength"""
-        self.organs[ctx.author.id] = PP(0, False)
+        self.organs[ctx.author.id] = PP(0, False, False)
         await ctx.send(embed=discord.Embed(title=ctx.author.display_name + "'s penis", description='8D',
                                            colour=Missile.random_rgb()))
 
@@ -231,6 +237,10 @@ class BitBay(Cog):
         his = self.get_pp(user.id)
         if my:
             if his:
+                if his.sesami_oil is None:
+                    his.sesami_oil = False
+                    await ctx.reply('Your opponent has **Sesami oil**, it slid off your pp!')
+                    return
                 xp = my.size - his.size
                 if my.size > his.size:
                     title = "VICTORY"
@@ -288,5 +298,20 @@ class BitBay(Cog):
                 await ctx.send(ctx.author.mention + " has faith in his pp!!!!! New pp size: " + str(pp.size))
             else:
                 await ctx.reply('Your pp is not ready for it!')
+        else:
+            await ctx.reply(self.no_pp_msg)
+
+    @pp.command()
+    async def sesami(self, ctx: Context):
+        """Applies sesami oil to your pp. Completely absorbs 1 round of attack damage."""
+        pp = self.get_pp(ctx.author.id)
+        if pp:
+            if pp.sesami_oil:
+                pp.sesami_oil = None
+                await ctx.reply('You applied sesami oil to your pp. Your pp is now reflective.')
+            elif pp.sesami_oil is None:
+                await ctx.reply("You've already applied sesami oil!")
+            else:
+                await ctx.reply("You don't have any sesami oil.")
         else:
             await ctx.reply(self.no_pp_msg)
