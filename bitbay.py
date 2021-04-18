@@ -31,13 +31,20 @@ def decode(text: str) -> str:
 
 
 class PP:
+    target_no_pp = 'Your opponent has no pp.'
+    log = "**__Apr 18, 3:09AM GMT+1__**\n" \
+          "Sesami oil: `d.pp` now has a 10% chance to generate sesami oil. It allows the holder to completely absorb " \
+          "1 round of attack.\n"\
+          "`d.pp zenitsu`: When you have viagra available AND sesami oil, calling this command allows you to " \
+          "violently STUN your opponent for 2 rounds!"
 
-    def __init__(self, size: int, viagra, sesami):
+    def __init__(self, size: int, viagra, sesami, stun=0):
         self.size: int = size
         self.viagra_available: bool = viagra
         self.viagra_rounds: int = 0
         self.score = 0
         self.sesami_oil: bool = sesami
+        self.stun: int = stun
 
 
 class BitBay(Cog):
@@ -49,6 +56,7 @@ class BitBay(Cog):
         self.organs: dict = {}  # Dict for storing pp size
         self.mpm = True  # Message Pattern Matching master switch
         self.no_pp_msg = f"No pp found. Have you set it up by {bot.default_prefix}pp?"
+        self.stunned = f'You are stunned! Use `{bot.default_prefix}pp sf` to remove the effect!'
 
     @Cog.listener()
     async def on_message(self, msg: discord.Message):
@@ -145,9 +153,11 @@ class BitBay(Cog):
             elif pp.viagra_available:
                 description += '\nViagra available!'
             if pp.sesami_oil:
-                description += '\nYou have sesami oil!'
+                description += '\nSesami oil'
             if pp.size == max_pp_size:
                 description += '\n**MAX POWER**'
+            if pp.stun:
+                description += f'\n**STUNNED:** {pp.stun} rounds left'
             return description
         return self.no_pp_msg
 
@@ -157,15 +167,22 @@ class BitBay(Cog):
         Wiki for the d.pp commands: https://github.com/TCLRainbow/DimBot/wiki/pp
         """
         # Randomises user's pp size
+        my = self.get_pp(ctx.author.id)
+        if my and my.stun:
+            await ctx.reply(self.stunned)
+            return
         user = user if user else ctx.author
         size = randint(0, max_pp_size)
         viagra = randint(0, 100) < 25
         sesami = randint(0, 100) < 10
         pp = self.get_pp(user.id)
         if pp:
+            if pp.stun:
+                await ctx.reply(f"{user} is stunned, you can't change his pp!")
+                return
             pp.size = size
             pp.viagra_available = viagra
-            if sesami and pp.sesami_oil is False:
+            if sesami:
                 pp.sesami_oil = True
         else:
             self.organs[user.id] = PP(size, viagra, sesami)
@@ -206,7 +223,9 @@ class BitBay(Cog):
     @pp.command()
     async def min(self, ctx: Context):
         """Minimises your pp strength"""
-        self.organs[ctx.author.id] = PP(0, False, False)
+        my = self.get_pp(ctx.author.id)
+        stun = my.stun if my else 0
+        self.organs[ctx.author.id] = PP(0, False, False, stun=stun)
         await ctx.send(embed=discord.Embed(title=ctx.author.display_name + "'s penis", description='8D',
                                            colour=Missile.random_rgb()))
 
@@ -236,8 +255,15 @@ class BitBay(Cog):
         my = self.get_pp(ctx.author.id)
         his = self.get_pp(user.id)
         if my:
+            if my.stun:
+                stun_msg = 'Focusing energy on your muscle, your pp is slowly twitching.'
+                my.stun -= 1
+                if not my.stun:
+                    stun_msg += '\nWith a masculine roar, your pp has fully recovered from the stun.'
+                await ctx.reply(stun_msg)
+                return
             if his:
-                if his.sesami_oil is None:
+                if his.sesami_oil:
                     his.sesami_oil = False
                     await ctx.reply('Your opponent has **Sesami oil**, it slid off your pp!')
                     return
@@ -285,10 +311,13 @@ class BitBay(Cog):
         await ctx.reply(base)
 
     @pp.command()
-    async def faith(self, ctx: Context):
+    async def viagra(self, ctx: Context):
         """In your pp, WE TRUST"""
         pp = self.get_pp(ctx.author.id)
         if pp:
+            if pp.stun:
+                await ctx.reply(self.stunned)
+                return
             if pp.viagra_rounds:
                 await ctx.reply('You are already one with your pp! Rounds left: ' + str(pp.viagra_rounds))
             elif pp.viagra_available:
@@ -301,17 +330,24 @@ class BitBay(Cog):
         else:
             await ctx.reply(self.no_pp_msg)
 
-    @pp.command()
-    async def sesami(self, ctx: Context):
-        """Applies sesami oil to your pp. Completely absorbs 1 round of attack damage."""
-        pp = self.get_pp(ctx.author.id)
-        if pp:
-            if pp.sesami_oil:
-                pp.sesami_oil = None
-                await ctx.reply('You applied sesami oil to your pp. Your pp is now reflective.')
-            elif pp.sesami_oil is None:
-                await ctx.reply("You've already applied sesami oil!")
+    @pp.command(aliases=('zen',))
+    async def zenitsu(self, ctx: Context, user: discord.User = None):
+        """Stuns your opponent"""
+        my = self.get_pp(ctx.author.id)
+        if my and my.sesami_oil and my.viagra_available:
+            if not user:
+                user = self.bot.get_user(random.choice(list(self.organs.keys())))
+            his = self.get_pp(user.id)
+            if his:
+                his.stun = 2
+                my.sesami_oil = my.viagra_available = False
+                await ctx.reply(f"Inhaling thunder, you stunned {user}")
             else:
-                await ctx.reply("You don't have any sesami oil.")
+                await ctx.reply(PP.target_no_pp)
         else:
-            await ctx.reply(self.no_pp_msg)
+            await ctx.reply("You need to have sesami oil and viagra available!")
+
+    @pp.command()
+    async def changelog(self, ctx: Context):
+        """Shows the latest changelog of the PP command"""
+        await ctx.reply(PP.log)
