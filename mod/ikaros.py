@@ -204,4 +204,7 @@ class Ikaros(Cog):
     @Missile.guild_only()
     async def preprune(self, ctx: Context, days: int):
         """Checks how many members will be pruned. Must specify the number of days before counting as inactive."""
-        await ctx.reply(f'**{await ctx.guild.estimate_pruned_members(days=days)}** members will be pruned.')
+        if 0 < days < 31:
+            await ctx.reply(f'**{await ctx.guild.estimate_pruned_members(days=days)}** members will be pruned.')
+        else:
+            await ctx.reply('Days should be 1-30 inclusive.')

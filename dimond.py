@@ -303,8 +303,12 @@ class Dimond(commands.Cog):
         if s.me.guild_permissions.manage_guild:
             emb = obj.Embed(description='')
             for inv in await s.invites():
-                print(inv.uses)
-                emb.description += f"[{inv.code}]({inv.url}) "
+                to_be_added = f"[{inv.code}]({inv.url}) "
+                if emb.description + to_be_added < 2045:
+                    emb.description += to_be_added
+                else:
+                    emb.title = 'So many invites lmfao'
+                    emb.description += '...'
             await ctx.reply(embed=emb)
         else:
             await ctx.reply("I don't have `Manage Server` permission in that server!")
