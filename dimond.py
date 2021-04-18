@@ -292,26 +292,19 @@ class Dimond(commands.Cog):
         print(await ctx.guild.integrations())
 
     @info.command(aliases=('sinv',))
-    async def server_invite(self, ctx: commands.Context, s: discord.Guild = None):
+    @Missile.guild_only()
+    @commands.bot_has_guild_permissions(manage_guild=True)
+    async def server_invite(self, ctx: commands.Context):
         """Lists invite codes of a server"""
-        if not s:
-            if ctx.guild:
-                s = ctx.guild
+        emb = obj.Embed(description='')
+        for inv in await ctx.guild.invites():
+            to_be_added = f"[{inv.code}]({inv.url}) "
+            if len(emb.description + to_be_added) < 2045:
+                emb.description += to_be_added
             else:
-                await ctx.reply('You must specify a server if you are sending this command in PM!')
-                return
-        if s.me.guild_permissions.manage_guild:
-            emb = obj.Embed(description='')
-            for inv in await s.invites():
-                to_be_added = f"[{inv.code}]({inv.url}) "
-                if emb.description + to_be_added < 2045:
-                    emb.description += to_be_added
-                else:
-                    emb.title = 'So many invites lmfao'
-                    emb.description += '...'
-            await ctx.reply(embed=emb)
-        else:
-            await ctx.reply("I don't have `Manage Server` permission in that server!")
+                emb.title = 'So many invites lmfao'
+                emb.description += '...'
+        await ctx.reply(embed=emb)
 
     @info.command(aliases=('inv',))
     async def invite(self, ctx: commands.Context, inv: discord.Invite):
@@ -331,3 +324,12 @@ class Dimond(commands.Cog):
                     emb.add_field(name='Revoked', value=i.revoked)
                     emb.add_field(name='Only grants temporary membership', value=i.temporary)
         await ctx.reply(embed=emb)
+
+    @info.command(aliases=('sint',))
+    @Missile.guild_only()
+    @commands.bot_has_guild_permissions(manage_guild=True)
+    async def server_integrations(self, ctx: commands.Context):
+        m = 'Please note that this command is currently for testing purposes only!\n'
+        for i in await ctx.guild.integrations():
+            m += str(i) + '\n'
+        await ctx.reply(m)
