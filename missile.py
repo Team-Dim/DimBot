@@ -9,6 +9,7 @@ from aiohttp import ClientSession
 from discord.ext import commands
 
 import dimsecret
+import obj
 
 dim_id = 264756129916125184
 
@@ -24,9 +25,6 @@ class Missile:
             self.lvl = logging.DEBUG
         else:
             self.lvl = logging.INFO
-        # Stores the message for snipe command
-        self.snipe: discord.Embed = discord.Embed(description='No one has deleted anything yet...',
-                                                  color=Missile.random_rgb())
         self.sch = None
         self.eggy: discord.User = None  # Special Discord user for hug
         self.invoke_time = None
@@ -56,12 +54,6 @@ class Missile:
         """Checks whether the message is sent by the same author and in the same channel.
             Used when the bot needs further response from the user"""
         return lambda msg: msg.author.id == ctx.author.id and msg.channel == ctx.channel
-
-    @staticmethod
-    def random_rgb():
-        """Generates a random color"""
-        # TODO: Remove this method
-        return discord.Colour.random()
 
     @staticmethod
     def is_rainbow(uid: int):

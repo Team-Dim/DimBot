@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 from discord.ext import commands
 from discord.ext.commands import Context
 
+import obj
 from dimsecret import debug, youtube
 from missile import Missile
 
@@ -107,7 +108,7 @@ class Ricciardo(commands.Cog):
             # Limits the content size to prevent spam
             description = (content.get_text()[:497] + '...') if len(content.get_text()) > 500 else content.get_text()
             # Constructs base Embed object
-            emb = discord.Embed(title=feed.title, description=description, url=feed.link, color=Missile.random_rgb())
+            emb = obj.Embed(feed.title, description, url=feed.link)
             for row in rss_sub:
                 local_emb = emb.copy()
                 channel = self.bot.get_channel(row['rssChID'])

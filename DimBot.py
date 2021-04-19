@@ -23,7 +23,7 @@ intent.guilds = intent.members = intent.messages = intent.reactions = intent.voi
 intent.presences = True
 bot = obj.Bot(command_prefix=Missile.prefix_process, intents=intent)
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.26"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.26.1"
 # List of activities that will be randomly displayed every 5 minutes
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -112,10 +112,10 @@ async def on_message_delete(msg: discord.Message):
         return
     # Stores the deleted message for snipe command
     content = msg.content if msg.content else msg.embeds[0].title
-    bot.missile.snipe = discord.Embed(title=msg.author.display_name, description=content)
-    bot.missile.snipe.set_author(name=msg.guild.name, icon_url=msg.author.avatar_url)
-    bot.missile.snipe.set_thumbnail(url=msg.guild.icon_url)
-    bot.missile.snipe.colour = msg.embeds[0].colour if msg.embeds else Missile.random_rgb()
+    bot.snipe = obj.Embed(msg.author.display_name, content,
+                          msg.embeds[0].colour if msg.embeds else discord.Colour.random(),
+                          msg.guild.icon_url)
+    bot.snipe.set_author(name=msg.guild.name, icon_url=msg.author.avatar_url)
 
 
 @bot.event
@@ -128,7 +128,8 @@ async def on_command_error(ctx, error):
     if isinstance(error, commands.errors.MissingRequiredArgument) or isinstance(error, commands.errors.MissingAnyRole) \
             or isinstance(error, commands.errors.CommandOnCooldown) or isinstance(error, commands.errors.UserNotFound) \
             or isinstance(error, commands.errors.MemberNotFound) or \
-            isinstance(error, commands.errors.MissingPermissions) or isinstance(error, commands.errors.BadInviteArgument):
+            isinstance(error, commands.errors.MissingPermissions) or isinstance(error,
+                                                                                commands.errors.BadInviteArgument):
         await ctx.reply(str(error))
         return
     if isinstance(error, commands.errors.ChannelNotFound):  # Human error

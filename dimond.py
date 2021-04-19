@@ -83,9 +83,8 @@ class Dimond(commands.Cog):
         u = u if u else ctx.author
         bin_value = f'{u.public_flags.value:b}'
         hex_value = f'{u.public_flags.value:X}'
-        emb = discord.Embed(title=u.name + "'s public flags",
-                            description=f"{u.public_flags.value}, 0b{bin_value.zfill(18)}, 0x{hex_value.zfill(5)}",
-                            color=Missile.random_rgb())
+        emb = obj.Embed(u.name + "'s public flags",
+                        f"{u.public_flags.value}, 0b{bin_value.zfill(18)}, 0x{hex_value.zfill(5)}")
         emb.add_field(name='Verified bot developer', value=u.public_flags.verified_bot_developer)  # 2^17
         emb.add_field(name='Verified bot', value=u.public_flags.verified_bot)  # 2^16
         if u.public_flags.bug_hunter_level_2:
@@ -149,9 +148,8 @@ class Dimond(commands.Cog):
         # https://discordpy.readthedocs.io/en/latest/api.html#discord.Permissions
         bin_value = f'{perm.value:b}'
         hex_value = f'{perm.value:X}'
-        emb = discord.Embed(title=f'Permissions for {mem.name} in ' + title,
-                            description=f"{perm.value}, 0b{bin_value.zfill(30)}, 0x{hex_value.zfill(8)}",
-                            color=Missile.random_rgb())
+        emb = obj.Embed(f'Permissions for {mem.name} in {title}',
+                        f"{perm.value}, 0b{bin_value.zfill(30)}, 0x{hex_value.zfill(8)}")
         emb.add_field(name='Manage webhooks', value=perm.manage_webhooks)  # 2^29
         emb.add_field(name='Manage permissions and roles', value=perm.manage_permissions)  # 2^28
         emb.add_field(name='Manage nicknames', value=perm.manage_nicknames)  # 2^27
@@ -188,7 +186,7 @@ class Dimond(commands.Cog):
     async def role(self, ctx: commands.Context, r: discord.Role):
         """Shows role info"""
         emb = discord.Embed(title=r.name, color=r.color)
-        emb.set_author(name=f'Color: 0x{r.color.value:X}')
+        emb.set_author(name=f'Color: #{r.color.value:X}')
         if r.is_bot_managed():
             emb.description = 'Bot role: ' + self.bot.get_user(r.tags.bot_id).mention
         elif r.is_default():

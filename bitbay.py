@@ -182,6 +182,7 @@ class BitBay(Cog):
                 return
             pp.size = size
             pp.viagra_available = viagra
+            pp.viagra_rounds = 0
             if sesami:
                 pp.sesami_oil = True
         else:
@@ -195,9 +196,7 @@ class BitBay(Cog):
         user = user if user else ctx.author
         pp = self.get_pp(user.id)
         if pp:
-            await ctx.send(embed=discord.Embed(title='pp size: ' + str(pp.size),
-                                               description=self.draw_pp(user.id),
-                                               color=Missile.random_rgb()))
+            await ctx.reply(embed=obj.Embed('pp size: ' + str(pp.size), self.draw_pp(user.id)))
         else:
             await ctx.send(self.no_pp_msg)
 
@@ -205,9 +204,7 @@ class BitBay(Cog):
     async def slap(self, ctx: Context, user: discord.User):
         """Use pp to slap others"""
         if self.get_pp(ctx.author.id):
-            emb = discord.Embed(description=self.draw_pp(ctx.author.id), color=Missile.random_rgb())
-            emb.set_thumbnail(url=user.avatar_url)
-            await ctx.send(embed=emb)
+            await ctx.send(embed=obj.Embed(description=self.draw_pp(ctx.author.id), thumbnail=user.avatar_url))
         else:
             await ctx.send(self.no_pp_msg)
 
@@ -216,9 +213,7 @@ class BitBay(Cog):
     async def max(self, ctx: Context, target: discord.User = None, viagra=True, sesami=True):
         target = target if target else ctx.author
         self.organs[target.id] = PP(max_pp_size, viagra, sesami)
-        await ctx.send(embed=discord.Embed(title=target.display_name + "'s penis",
-                                           description=self.draw_pp(target.id),
-                                           colour=Missile.random_rgb()))
+        await ctx.reply(embed=obj.Embed(target.display_name + "'s penis", self.draw_pp(target.id)))
 
     @pp.command()
     async def min(self, ctx: Context):
@@ -226,8 +221,7 @@ class BitBay(Cog):
         my = self.get_pp(ctx.author.id)
         stun = my.stun if my else 0
         self.organs[ctx.author.id] = PP(0, False, False, stun=stun)
-        await ctx.send(embed=discord.Embed(title=ctx.author.display_name + "'s penis", description='8D',
-                                           colour=Missile.random_rgb()))
+        await ctx.reply(embed=obj.Embed(ctx.author.display_name + "'s penis", self.draw_pp(ctx.author.id)))
 
     @pp.command()
     async def cut(self, ctx: Context):
@@ -283,10 +277,6 @@ class BitBay(Cog):
                 gain_msg = 'You gained nothing!'
             if my.viagra_rounds > 1:
                 my.viagra_rounds -= 1
-            elif my.viagra_rounds == 1:
-                my.size = my.size // 2
-                my.viagra_rounds -= 1
-                await ctx.send(f"Faith effect has worn off for {ctx.author.display_name}'s pp")
         elif his:
             title = "DESTROYED"
             my.score -= his.size  # Deducts score
@@ -299,6 +289,10 @@ class BitBay(Cog):
                                 description=f"**{ctx.author.name}'s penis:**\n{self.draw_pp(ctx.author.id)}\n"
                                             f"**{user.name}'s penis:**\n{self.draw_pp(user.id)}\n\n{gain_msg}",
                                 colour=discord.Colour.random()))
+        if my and my.viagra_rounds == 1:
+            my.size = my.size // 2
+            my.viagra_rounds = 0
+            await ctx.send(f"Faith effect has worn off for {ctx.author.display_name}'s pp")
 
     @pp.command()
     async def lb(self, ctx: Context):
