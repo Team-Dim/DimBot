@@ -1,6 +1,8 @@
 import logging
+from datetime import datetime
 
 import discord
+from aiohttp import ClientSession
 from discord.ext import commands
 
 import dimsecret
@@ -24,6 +26,10 @@ def get_logger(name: str) -> logging.Logger:
     return logger
 
 
+async def append_msg(msg: discord.Message, content: str, delimiter: str = '\n'):
+    await msg.edit(content=f'{msg.content}{delimiter}{content}')
+
+
 class Bot(commands.Bot):
 
     def __init__(self, command_prefix, **options):
@@ -33,6 +39,11 @@ class Bot(commands.Bot):
         self.echo = Bottas(self)
         # Stores the message for the snipe command
         self.snipe = Embed(description='No one has deleted anything yet...')
+        self.sch = None
+        self.eggy = None  # Special Discordr user for d.hug
+        self.invoke_time = None  # Time needed to process a command
+        self.boot_time = datetime.now()  # Time when bot started
+        self.session = ClientSession()  # Central session for all aiohttp client requests
 
 
 class MsgExt:
@@ -40,9 +51,6 @@ class MsgExt:
     def __init__(self, msg: discord.Message, prefix: str = ''):
         self.msg = msg
         self.prefix = prefix + ' '
-
-    async def append(self, content: str, delimiter: str = '\n'):
-        await self.msg.edit(content=f'{self.msg.content}{delimiter}{content}')
 
     async def send(self, content: str):
         await self.msg.channel.send(self.prefix + content)

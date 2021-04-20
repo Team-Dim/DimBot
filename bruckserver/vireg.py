@@ -49,11 +49,11 @@ class Verstapen(obj.Cog):
                 Owners=['self']
             )['Images']
             if not ami:
-                await Missile.append_message(msg, '⚠No AMI! Please ask Dim for help!')
+                await obj.append_msg(msg, '⚠No AMI! Please ask Dim for help!')
                 return
             ami = ami[0]
             inst_type = 't4g.medium' if level else 't4g.small'
-            await Missile.append_message(msg, f"Requesting new **{inst_type}** instance")
+            await obj.append_msg(msg, f"Requesting new **{inst_type}** instance")
             spot_request = ec2.request_spot_instances(
                 LaunchSpecification={
                     'SecurityGroups': ['default'],
@@ -68,21 +68,21 @@ class Verstapen(obj.Cog):
                     'Monitoring': {'Enabled': True}
                 }
             )['SpotInstanceRequests'][0]
-            await Missile.append_message(msg, 'Waiting for AWS to provide an instance...')
+            await obj.append_msg(msg, 'Waiting for AWS to provide an instance...')
             spot_info = {"State": ""}
             while spot_info['State'] != 'active':
                 await asyncio.sleep(5)
                 spot_info = ec2.describe_spot_instance_requests(SpotInstanceRequestIds=
                                                                 [spot_request['SpotInstanceRequestId']])
                 spot_info = spot_info['SpotInstanceRequests'][0]
-            await Missile.append_message(
+            await obj.append_msg(
                 msg, 'AWS has fulfilled our request in '
                      f'*{spot_request["LaunchSpecification"]["Placement"]["AvailabilityZone"]}*')
             instance_id = spot_info['InstanceId']
             ec2.create_tags(Resources=[instance_id], Tags=[{'Key': 'Name', 'Value': 'bruck3 Spot'}])
             instance = ec2.describe_instances(InstanceIds=[instance_id])
         instance = instance['Reservations'][0]['Instances'][0]
-        await Missile.append_message(msg, f'IP: **{instance["PublicIpAddress"]}**')
+        await obj.append_msg(msg, f'IP: **{instance["PublicIpAddress"]}**')
 
     @commands.command()
     @Missile.is_guild_cmd_check(tribe.guild_id, 686397146290979003)
@@ -99,7 +99,7 @@ class Verstapen(obj.Cog):
     @commands.command()
     @Missile.is_rainbow_cmd_check()
     async def post(self, ctx, path: str):
-        async with self.bot.missile.session.post('http://localhost/' + path) as r:
+        async with self.bot.session.post('http://localhost/' + path) as r:
             await ctx.reply(f"{r.status}: {await r.text()}")
 
     @commands.command()

@@ -5,6 +5,7 @@ from typing import Union
 
 import discord
 from discord.ext import commands
+from discord.ext.commands import errors
 
 import dimond
 import dimsecret
@@ -23,7 +24,7 @@ intent.guilds = intent.members = intent.messages = intent.reactions = intent.voi
 intent.presences = True
 bot = obj.Bot(command_prefix=Missile.prefix_process, intents=intent)
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.27"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.27.1"
 # List of activities that will be randomly displayed every 5 minutes
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -49,14 +50,14 @@ reborn_channel = None
 async def binvk(ctx: commands.Context):
     if randint(1, 100) <= 5:
         await ctx.send(sponsor_txt)
-    bot.missile.invoke_time = datetime.now()
+    bot.invoke_time = datetime.now()
 
 
 bot.before_invoke(binvk)
 
 
 async def ainvk(ctx: commands.Context):
-    timedelta = (datetime.now() - bot.missile.invoke_time).total_seconds() * 1000
+    timedelta = (datetime.now() - bot.invoke_time).total_seconds() * 1000
     await bot.get_channel(666431254312517633).send(f'**{ctx.command}**: {timedelta}ms')
 
 
@@ -86,12 +87,13 @@ async def on_message(msg: discord.Message):
 async def on_ready():
     """Event handler when the bot has connected to the Discord endpoint"""
     # First, fetch all the special objects
-    bot.missile.eggy = await bot.fetch_user(226664644041768960)
+    bot.eggy = await bot.fetch_user(226664644041768960)
+    await bot.is_owner(bot.eggy)  # Trick to set bot.owner_id
     # Then updates the nickname for each server that DimBot is listening to
     for guild in bot.guilds:
         if guild.me.nick != nickname:
             bot.loop.create_task(guild.me.edit(nick=nickname))
-    if reborn_channel:
+    if reborn_channel:  # Post-process Pandora if needed
         await bot.get_channel(reborn_channel).send("Arc-Cor𐑞: Pandora complete.")
     while True:
         logger.debug('Changed activity')
@@ -121,31 +123,29 @@ async def on_message_delete(msg: discord.Message):
 @bot.event
 async def on_command_error(ctx: commands.Context, error: commands.errors.CommandInvokeError):
     """Event handler when a command raises an error"""
-    if isinstance(error, commands.errors.CommandNotFound):  # Human error
+    if isinstance(error, errors.CommandNotFound):  # Human error
         await ctx.reply('Stoopid. That is not a command.')
         return
     # Human error
-    if isinstance(error, commands.errors.MissingRequiredArgument) or isinstance(error, commands.errors.MissingAnyRole) \
-            or isinstance(error, commands.errors.CommandOnCooldown) or isinstance(error, commands.errors.UserNotFound) \
-            or isinstance(error, commands.errors.MemberNotFound) or \
-            isinstance(error, commands.errors.MissingPermissions) or isinstance(error,
-                                                                                commands.errors.BadInviteArgument):
+    if isinstance(error, (errors.MissingRequiredArgument, errors.MissingAnyRole, errors.CommandOnCooldown,
+                          errors.UserNotFound, errors.MemberNotFound, errors.MissingPermissions,
+                          errors.BadInviteArgument)):
         await ctx.reply(str(error))
         return
-    if isinstance(error, commands.errors.ChannelNotFound):  # Human error
+    if isinstance(error, errors.ChannelNotFound):  # Human error
         await ctx.reply("Invalid channel. Maybe you've tagged the wrong one?")
         return
-    if isinstance(error, commands.errors.RoleNotFound):  # Human error
+    if isinstance(error, errors.RoleNotFound):  # Human error
         await ctx.reply("Invalid role. Maybe you've tagged the wrong one?")
         return
-    if isinstance(error, commands.errors.GuildNotFound):
+    if isinstance(error, errors.GuildNotFound):
         await ctx.reply('Invalid server or I am not in that server.')
         return
-    if isinstance(error, commands.errors.BadArgument) or isinstance(error, commands.errors.BadUnionArgument) \
+    if isinstance(error, errors.BadArgument) or isinstance(error, commands.errors.BadUnionArgument) \
             and not ctx.command.has_error_handler():
         # Could be a human/program error
         await ctx.reply('Bad arguments.')
-    elif isinstance(error, commands.errors.CheckFailure):
+    elif isinstance(error, errors.CheckFailure):
         return
     # This is basically "unknown error", raise it for debug purposes
     import traceback
@@ -166,7 +166,7 @@ async def botinfo(ctx):
                                       f'`{bot.default_prefix}help <module name>`',
                           color=discord.Colour.random())
     embed.add_field(name='Guild count', value=str(len(bot.guilds)))
-    embed.add_field(name='Uptime', value=datetime.now() - bot.missile.boot_time)
+    embed.add_field(name='Uptime', value=datetime.now() - bot.boot_time)
     embed.add_field(name='Python', value=python_version())
     embed.add_field(name='Discord.py', value=discord.__version__)
     embed.add_field(name='Codename', value='Barbados')
@@ -255,25 +255,25 @@ async def pandora(ctx):
 
 @arccore.command()
 async def sch(ctx, ch: Union[discord.TextChannel, discord.User]):
-    bot.missile.sch = ch
+    bot.sch = ch
 
 
 @arccore.command()
 async def say(ctx, *, msg: str):
-    await bot.missile.sch.send(msg)
+    await bot.sch.send(msg)
 
 
 @arccore.command()
 async def shadow(c, *, cmd: str):
-    msg = await bot.missile.sch.send('⠀')
+    msg = await bot.sch.send('⠀')
     msg.content = bot.default_prefix + cmd
-    msg.author = msg.guild.get_member(dim_id)
+    msg.author = msg.guild.get_member(bot.owner_id)
     await bot.invoke(await bot.get_context(msg))
 
 
 @arccore.command()
 async def unban(ctx: commands.Context, s: discord.Guild):
-    await s.unban(bot.get_user(dim_id), reason='Sasageyo')
+    await s.unban(bot.get_user(bot.owner_id), reason='Sasageyo')
     await ctx.reply('Done.')
 
 
@@ -284,7 +284,7 @@ async def hug(ctx):
     gif = choice(['https://tenor.com/view/milk-and-mocha-bear-couple-line-hug-cant-breathe-gif-12687187',
                   'https://tenor.com/view/hugs-hug-ghost-hug-gif-4451998',
                   'https://tenor.com/view/true-love-hug-miss-you-everyday-always-love-you-running-hug-gif-5534958'])
-    await ctx.send(f'{gif}\nWe are friends again, {bot.missile.eggy}\nHug {ctx.author.mention}')
+    await ctx.send(f'{gif}\nWe are friends again, {bot.eggy}\nHug {ctx.author.mention}')
 
 
 @bot.command(aliases=['color'])

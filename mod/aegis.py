@@ -1,11 +1,11 @@
 import asyncio
+import re
 
 import discord
 from discord.ext.commands import Cog
 
 import bitbay
 from missile import Missile
-from . import ikaros
 
 
 async def send(ch: discord.TextChannel, content: str):
@@ -19,7 +19,7 @@ async def reply(msg: discord.Message, content: str):
 
 class Aegis(Cog):
     """AutoMod system
-    Version 0.4.2"""
+    Version 0.5"""
 
     def __init__(self, bot):
         self.bot = bot
@@ -38,6 +38,10 @@ class Aegis(Cog):
         # Check whether message needs to be scanned by Aegis
         if not msg.guild or msg.author == msg.guild.me:
             return
+        # Checks for crash gifs
+        if re.search(r".*gfycat.com/safeofficialharvestmouse", msg.content):
+            await msg.delete()
+            await send(msg.channel, 'Detected crash GIF by ' + msg.author.mention)
         if msg.author.id not in self.count:  # Creates record for the message author
             self.count[msg.author.id] = [[], 0]  # [Tracked messages, warn count]
         raw_mention_count = len(msg.raw_mentions)
@@ -79,6 +83,7 @@ class Aegis(Cog):
                     await msg.channel.send(f'Deleted webhook <@{webhook.id}>')
                     return
             return
+        ikaros = self.bot.get_cog('Ikaros')
         if self.count[msg.author.id][1] == 2:  # 3 warns in the past 2h
             await ikaros.mute(msg, msg.author, 10, 0, reason + ', threat level 1')  # 10s mute
         elif self.count[msg.author.id][1] == 3:  # 3 warns in the past 2h

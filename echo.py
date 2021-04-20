@@ -147,7 +147,7 @@ class Bottas(commands.Cog):
         quote = self.get_quote(index)  # Checks if the quote exists
         if quote:
             # Check if sender is quote uploader or sender is me (db admin)
-            if quote['uid'] == ctx.author.id or Missile.is_rainbow(ctx.author.id):
+            if quote['uid'] == ctx.author.id or ctx.author.id == self.bot.owner_id:
                 # Confirmation
                 if await self.bot.missile.ask_reaction(ctx, f"> {quote['msg']}\n"
                                                             f"You sure you want to delete this? React ✅ to confirm"):
@@ -174,7 +174,7 @@ class Bottas(commands.Cog):
     async def edit(self, ctx: commands.Context, index: int):
         """Edits a quote"""
         quote = self.get_quote(index)
-        if quote and (quote['uid'] == ctx.author.id or Missile.is_rainbow(ctx.author.id)):
+        if quote and (quote['uid'] == ctx.author.id or ctx.author.id == self.bot.owner_id):
             content = await self.bot.missile.ask_msg(ctx, 'Enter the new quote: (wait 10 seconds to cancel)')
             if content:
                 # Quote message validation

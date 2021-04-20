@@ -1,11 +1,11 @@
 import asyncio
 import re
-from datetime import datetime
 from typing import Optional
 
 import discord
-from aiohttp import ClientSession
 from discord.ext import commands
+
+import obj
 
 dim_id = 264756129916125184
 
@@ -13,31 +13,8 @@ dim_id = 264756129916125184
 class Missile:
     """A class to store variables that are shared between different modules"""
 
-    # noinspection PyTypeChecker
-    # TODO: ^ Remove when wait_for_ready() port finishes
     def __init__(self, bot: commands.Bot):
         self.bot: commands.Bot = bot
-        self.sch = None
-        self.eggy: discord.User = None  # Special Discord user for hug
-        self.invoke_time = None
-        self.boot_time = datetime.now()
-        self.session: ClientSession = ClientSession()
-
-    @staticmethod
-    async def append_message(msg: discord.Message, append_content: str, delimiter: str = '\n'):
-        """Appends content to a message"""
-        await msg.edit(content=f'{msg.content}{delimiter}{append_content}')
-
-    @staticmethod
-    def check_same_author_and_channel(ctx):
-        """Checks whether the message is sent by the same author and in the same channel.
-            Used when the bot needs further response from the user"""
-        return lambda msg: msg.author.id == ctx.author.id and msg.channel == ctx.channel
-
-    @staticmethod
-    def is_rainbow(uid: int):
-        """Is it me?"""
-        return uid == dim_id
 
     @staticmethod
     # similar to @commands.is_owner()
@@ -45,7 +22,7 @@ class Missile:
         """When a command has been invoked, checks whether the sender is me, and reply msg if it is not."""
 
         async def check(ctx):
-            rainbow = Missile.is_rainbow(ctx.author.id)
+            rainbow = ctx.author.id == ctx.bot.owner_id
             if not rainbow:
                 await ctx.send(msg)
             return rainbow
@@ -91,17 +68,20 @@ class Missile:
         await ctx.send(msg)
         # Waits for the time specified
         try:
-            reply = await self.bot.wait_for('message', timeout=timeout, check=self.check_same_author_and_channel(ctx))
+            reply = await self.bot.wait_for(
+                'message', timeout=timeout,
+                # Checks whether the message is sent by the same author and in the same channel.
+                check=lambda mess: mess.author.id == ctx.author.id and mess.channel == ctx.channel)
             return reply.content
         except asyncio.TimeoutError:
             return None
 
     @staticmethod
-    async def prefix_process(bot: commands.Bot, msg: discord.Message):
+    async def prefix_process(bot, msg: discord.Message):
         """Function for discord.py to extract applicable prefix based on the message"""
         tag_mention = re.search(f'^((<@.?{bot.user.id}> |DimBot), )', msg.content)
         if tag_mention:
-            if Missile.is_rainbow(msg.author.id):
+            if msg.author.id == bot.owner_id:
                 return tag_mention.group(0)  # Only I can use 'DimBot, xxx' or '@DimBot , xxx'
             else:
                 await msg.reply('Only my little pog champ can use authoritative orders!')
