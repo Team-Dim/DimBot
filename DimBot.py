@@ -26,7 +26,7 @@ intent.presences = True
 bot = obj.Bot(command_prefix=Missile.prefix_process, intents=intent)
 bot.echo = Bottas(bot)
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.27.2"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.27.3"
 # List of activities that will be randomly displayed every 5 minutes
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -60,7 +60,7 @@ bot.before_invoke(binvk)
 
 async def ainvk(ctx: commands.Context):
     timedelta = (datetime.now() - bot.invoke_time).total_seconds() * 1000
-    await bot.get_cog('Verstapen').bot_test.send(f'**{ctx.command}**: {timedelta}ms')
+    await bot.get_cog('Hamilton').bot_test.send(f'**{ctx.command}**: {timedelta}ms')
 
 
 bot.after_invoke(ainvk)

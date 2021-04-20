@@ -39,7 +39,7 @@ class Aegis(Cog):
         if not msg.guild or msg.author == msg.guild.me:
             return
         # Checks for crash gifs
-        if re.search(r".*gfycat.com/safeofficialharvestmouse", msg.content):
+        if re.search(r".*(gfycat.com/safeofficialharvestmouse|gfycat.com/grizzledwildinsect)", msg.content):
             await msg.delete()
             await send(msg.channel, 'Detected crash GIF by ' + msg.author.mention)
         if msg.author.id not in self.count:  # Creates record for the message author
