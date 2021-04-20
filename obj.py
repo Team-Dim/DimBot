@@ -30,7 +30,7 @@ class Bot(commands.Bot):
         super().__init__(command_prefix, **options)
         self.default_prefix = 't.' if dimsecret.debug else 'd.'
         self.missile = Missile(self)  # Actually, just migrate Missile to this Bot class
-        self.echo = Bottas()
+        self.echo = Bottas(self)
         # Stores the message for the snipe command
         self.snipe = Embed(description='No one has deleted anything yet...')
 

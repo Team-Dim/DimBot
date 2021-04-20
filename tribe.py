@@ -13,6 +13,7 @@ class Hamilton(Cog):
         self.invites = {}
         self.guild = bot.get_guild(guild_id)  # My own server
         self.logs = bot.get_channel(384636771805298689)  # #logs in my server
+        self.bot_test = bot.get_channel(666431254312517633)  # #bot_test
 
     async def get_join_invite(self) -> discord.Invite:
         """Returns the invite used by a member.This is done by first caching self.invites in on_ready() then compare

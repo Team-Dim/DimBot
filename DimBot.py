@@ -23,7 +23,7 @@ intent.guilds = intent.members = intent.messages = intent.reactions = intent.voi
 intent.presences = True
 bot = obj.Bot(command_prefix=Missile.prefix_process, intents=intent)
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.26.1"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.27"
 # List of activities that will be randomly displayed every 5 minutes
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -119,7 +119,7 @@ async def on_message_delete(msg: discord.Message):
 
 
 @bot.event
-async def on_command_error(ctx, error):
+async def on_command_error(ctx: commands.Context, error: commands.errors.CommandInvokeError):
     """Event handler when a command raises an error"""
     if isinstance(error, commands.errors.CommandNotFound):  # Human error
         await ctx.reply('Stoopid. That is not a command.')
@@ -147,7 +147,14 @@ async def on_command_error(ctx, error):
         await ctx.reply('Bad arguments.')
     elif isinstance(error, commands.errors.CheckFailure):
         return
-    raise error  # This is basically "unknown error", raise it for debug purposes
+    # This is basically "unknown error", raise it for debug purposes
+    import traceback
+    content = f'```python\n{ctx.message.content}\n'
+    for tb in traceback.format_tb(error.original.__traceback__):
+        content += tb
+    content += str(error.original) + '```'
+    msg = await bot.get_cog('Hamilton').bot_test.send(content)
+    await ctx.reply(f'Hmm... Report ID: **{msg.id}**')
 
 
 @bot.command(aliases=('bot',))
@@ -163,9 +170,9 @@ async def botinfo(ctx):
     embed.add_field(name='Python', value=python_version())
     embed.add_field(name='Discord.py', value=discord.__version__)
     embed.add_field(name='Codename', value='Barbados')
-    embed.add_field(name='Devblog', value='[Instagram](http://www.instagram.com/techdim)')
-    embed.add_field(name='Source code', value='[GitHub](http://github.com/TCLRainbow/DimBot)')
-    embed.add_field(name='Discord server', value='[6PjhjCD](http://discord.gg/6PjhjCD)')
+    embed.add_field(name='Devblog', value='[Instagram](https://www.instagram.com/techdim)')
+    embed.add_field(name='Source code', value='[GitHub](https://github.com/TCLRainbow/DimBot)')
+    embed.add_field(name='Discord server', value='[6PjhjCD](https://discord.gg/6PjhjCD)')
     await ctx.send(embed=embed)
 
 
@@ -185,10 +192,10 @@ async def noel(ctx):
     await msg.edit(content=msg.content + f' :satellite_orbital: {(toc - tic).total_seconds() * 1000:.3f}ms')
 
 
-@bot.group()
+@bot.group(invoke_without_command=True)
 async def link(ctx):
     """Commands for generating links"""
-    pass
+    raise commands.errors.CommandNotFound
 
 
 @link.command()
@@ -210,17 +217,22 @@ async def galacticraft(ctx):
                    f'https://micdoodle8.com/new-builds/GC-{mc_ver}/{ga_build}/MicdoodleCore-{mc}-{ga}.jar')
 
 
+@link.command(aliases=('m',))
+async def message(ctx, msg: discord.Message):
+    await ctx.reply(msg.jump_url)
+
+
 @bot.command()
 async def snipe(ctx):
     """Displays the last deleted message"""
-    await ctx.send(embed=bot.missile.snipe)
+    await ctx.send(embed=bot.snipe)
 
 
-@bot.group()
+@bot.group(invoke_without_command=True)
 @Missile.is_rainbow_cmd_check()
 async def arccore(ctx):
     """Confidential"""
-    pass
+    raise commands.errors.CommandNotFound
 
 
 @arccore.command()

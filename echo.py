@@ -13,7 +13,8 @@ class Bottas(commands.Cog):
     """Storing messages.
     Version 2.0"""
 
-    def __init__(self):
+    def __init__(self, bot):
+        self.bot = bot
         # Initialise database connection
         self.db: sqlite3.Connection = sqlite3.connect('DimBot.db', check_same_thread=False,
                                                       detect_types=sqlite3.PARSE_DECLTYPES)
