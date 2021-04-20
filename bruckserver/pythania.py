@@ -1,5 +1,7 @@
 from aiohttp import web
 
+import obj
+
 
 class Albon:
     """HTTP server sub-project used by Verstapen
@@ -9,7 +11,7 @@ class Albon:
         self._channels = []
         self.bot = bot
         self.online = []
-        self.logger = bot.missile.get_logger('Albon')
+        self.logger = obj.get_logger('Albon')
 
     @property
     def channels(self):

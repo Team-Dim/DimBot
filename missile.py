@@ -1,5 +1,4 @@
 import asyncio
-import logging
 import re
 from datetime import datetime
 from typing import Optional
@@ -7,9 +6,6 @@ from typing import Optional
 import discord
 from aiohttp import ClientSession
 from discord.ext import commands
-
-import dimsecret
-import obj
 
 dim_id = 264756129916125184
 
@@ -21,28 +17,11 @@ class Missile:
     # TODO: ^ Remove when wait_for_ready() port finishes
     def __init__(self, bot: commands.Bot):
         self.bot: commands.Bot = bot
-        if dimsecret.debug:
-            self.lvl = logging.DEBUG
-        else:
-            self.lvl = logging.INFO
         self.sch = None
         self.eggy: discord.User = None  # Special Discord user for hug
         self.invoke_time = None
         self.boot_time = datetime.now()
         self.session: ClientSession = ClientSession()
-
-    def get_logger(self, name: str) -> logging.Logger:
-        """Returns a logger with the module name"""
-        logger = logging.getLogger(name)
-        logger.setLevel(self.lvl)
-        ch = logging.StreamHandler()
-        ch.setLevel(self.lvl)
-        preformat = f'[{logger.name}]'
-        # [%(threadName)s/%(levelname)s] = [MainThread/INFO]
-        ch.setFormatter(logging.Formatter(fmt=preformat + ' %(levelname)s [%(asctime)s] %(message)s',
-                                          datefmt='%H:%M:%S'))
-        logger.addHandler(ch)
-        return logger
 
     @staticmethod
     async def append_message(msg: discord.Message, append_content: str, delimiter: str = '\n'):

@@ -2,7 +2,6 @@ import asyncio
 import re
 from time import mktime
 
-import aiohttp
 import discord
 import feedparser
 from bs4 import BeautifulSoup
@@ -10,22 +9,18 @@ from discord.ext import commands
 from discord.ext.commands import Context
 
 import obj
-from dimsecret import debug, youtube
+from dimsecret import youtube
 from missile import Missile
 
 
-class Ricciardo(commands.Cog):
+class Ricciardo(obj.Cog):
     """Relaying RSS, BBM and YouTube feeds to discord channels.
     Version 5.0"""
 
     def __init__(self, bot):
-        self.bot = bot
-        self.logger = bot.missile.get_logger('Ricciardo')
+        super().__init__(bot, 'Ricciardo')
         self.addon_ids = [274058, 306357, 274326]  # List of addon IDs for BBM operations
         self.data = {}
-        if debug:  # Debug system uses Windows while production server uses Linux
-            asyncio.set_event_loop_policy(  # change to check os in future
-                asyncio.WindowsSelectorEventLoopPolicy())  # https://github.com/aio-libs/aiohttp/issues/4324
 
     @commands.Cog.listener()
     async def on_ready(self):

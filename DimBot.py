@@ -41,7 +41,7 @@ activities = [
     discord.Activity(name='Muzen train', type=discord.ActivityType.watching),
     discord.Activity(name="Heaven's Lost Property", type=discord.ActivityType.watching)
 ]
-logger = bot.missile.get_logger('DimBot')
+logger = obj.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
 

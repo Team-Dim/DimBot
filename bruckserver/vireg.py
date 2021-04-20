@@ -4,18 +4,18 @@ import boto3
 from discord.ext import commands
 
 import dimsecret
+import obj
 import tribe
 from bruckserver.pythania import Albon
 from missile import Missile
 
 
-class Verstapen(commands.Cog):
+class Verstapen(obj.Cog):
     """Connects to AWS and communicates with a minecraft server instance.
     Version 2.0"""
 
     def __init__(self, bot):
-        self.bot = bot
-        self.logger = bot.missile.get_logger('Verstapen')
+        super().__init__(bot, 'Verstapen')
         self.http_not_started = True
         self.albon = Albon(bot)
 
