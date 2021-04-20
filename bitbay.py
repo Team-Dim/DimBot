@@ -107,7 +107,7 @@ class BitBay(Cog):
         """Encodes base64 via command"""
         if ctx.channel.type == discord.ChannelType.text:
             await ctx.message.delete()
-        if Missile.regex_is_url(url):
+        if obj.regex_is_url(url):
             await ctx.send(f'<https://codebeautify.org/base64-decode?input={encode(url)}>')
         else:
             url = ctx.author.mention + ': ' + url
@@ -209,7 +209,7 @@ class BitBay(Cog):
             await ctx.send(self.no_pp_msg)
 
     @pp.command()
-    @Missile.is_rainbow_cmd_check()
+    @obj.is_rainbow()
     async def max(self, ctx: Context, target: discord.User = None, viagra=True, sesami=True):
         target = target if target else ctx.author
         self.organs[target.id] = PP(max_pp_size, viagra, sesami)
@@ -277,13 +277,9 @@ class BitBay(Cog):
                 gain_msg = 'You gained nothing!'
             if my.viagra_rounds > 1:
                 my.viagra_rounds -= 1
-        elif his:
-            title = "DESTROYED"
-            my.score -= his.size  # Deducts score
-            gain_msg = f"You lost **{his.size}** score!"
         else:
-            title = "NOTHING"
-            gain_msg = 'You have nothing to lose or gain...'
+            await ctx.reply(self.no_pp_msg)
+            return
         await ctx.send(
             embed=discord.Embed(title=title,
                                 description=f"**{ctx.author.name}'s penis:**\n{self.draw_pp(ctx.author.id)}\n"

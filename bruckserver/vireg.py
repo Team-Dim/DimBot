@@ -97,7 +97,7 @@ class Verstapen(obj.Cog):
             await self.albon.run_server()
 
     @commands.command()
-    @Missile.is_rainbow_cmd_check()
+    @obj.is_rainbow()
     async def post(self, ctx, path: str):
         async with self.bot.session.post('http://localhost/' + path) as r:
             await ctx.reply(f"{r.status}: {await r.text()}")

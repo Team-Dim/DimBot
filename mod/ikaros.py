@@ -113,7 +113,7 @@ class Ikaros(Cog):
     @command()
     @has_guild_permissions(manage_roles=True)
     @bot_has_guild_permissions(manage_roles=True)
-    @Missile.guild_only()
+    @obj.guild_only()
     async def role(self, ctx: Context, role: discord.Role, target: discord.Member):
         """Gives/removes a member's role"""
         if role >= ctx.guild.me.top_role:
@@ -135,7 +135,7 @@ class Ikaros(Cog):
     @command(name='kick')
     @has_permissions(kick_members=True)
     @bot_has_permissions(kick_members=True)
-    @Missile.guild_only()
+    @obj.guild_only()
     async def kick_cmd(self, ctx: Context, target: discord.Member, countdown: int = 3):
         """Kicks a member"""
         await self.kick(ctx.message, target, countdown, f'Ikaros: Kicked by {ctx.author}')
@@ -143,7 +143,7 @@ class Ikaros(Cog):
     @command(name='ban')
     @has_permissions(ban_members=True)
     @bot_has_permissions(ban_members=True)
-    @Missile.guild_only()
+    @obj.guild_only()
     async def ban_cmd(self, ctx: Context, target: discord.Member, length: int = None, countdown: int = 3):
         """Bans a member. Can define a time to auto unban"""
         await self.ban(ctx.message, target, length, countdown, f'Ikaros: Banned by {ctx.author}')
@@ -151,7 +151,7 @@ class Ikaros(Cog):
     @command(name='unban')
     @has_permissions(ban_members=True)
     @bot_has_permissions(ban_members=True)
-    @Missile.guild_only()
+    @obj.guild_only()
     async def unban_cmd(self, ctx: Context, target: discord.User):
         """Unbans a user"""
         await self.unban(ctx.message, target, f'Ikaros: Unbanned by {ctx.author}')
@@ -173,7 +173,7 @@ class Ikaros(Cog):
         await self.unmute(ctx.message, target, f'Ikaros: Unmuted by {ctx.author}')
 
     @command()
-    @Missile.guild_only()
+    @obj.guild_only()
     async def surprise(self, ctx: Context, target: discord.Member, countdown: int = 3):
         """Gives the member a surprise"""
         await ctx.message.delete()
@@ -183,7 +183,7 @@ class Ikaros(Cog):
     @group(invoke_without_command=True)
     @has_guild_permissions(manage_messages=True)
     @bot_has_guild_permissions(manage_messages=True, read_message_history=True)
-    @Missile.guild_only()
+    @obj.guild_only()
     async def purge(self, ctx: Context, amount: int):
         """Purges messages (excluding the command)"""
         msgs = await ctx.channel.purge(limit=amount, before=ctx.message)
@@ -192,14 +192,14 @@ class Ikaros(Cog):
     @purge.command()
     @has_guild_permissions(manage_messages=True)
     @bot_has_guild_permissions(manage_messages=True, read_message_history=True)
-    @Missile.guild_only()
+    @obj.guild_only()
     async def by(self, ctx: Context, sender: discord.User, amount: int):
         """d.purge but only deletes up to the specified amount of the sender's messages"""
         msgs = await ctx.channel.purge(check=lambda m: m.author == sender, limit=amount, before=ctx.message)
         await send(ctx.message, f'Purged {len(msgs)} messages.')
 
     @command()
-    @Missile.guild_only()
+    @obj.guild_only()
     async def preprune(self, ctx: Context, days: int):
         """Checks how many members will be pruned. Must specify the number of days before counting as inactive."""
         if 0 < days < 31:

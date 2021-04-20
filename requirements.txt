@@ -1,5 +1,5 @@
 beautifulsoup4
 feedparser
-discord.py>=1.7.1
+discord.py>=1.7.1,<2
 boto3
 aiohttp>=3.7.3 # Raceline GSMArena somehow needs 3.7

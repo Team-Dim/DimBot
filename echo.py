@@ -5,6 +5,7 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 
+import obj
 from missile import Missile
 
 
@@ -85,7 +86,7 @@ class Bottas(commands.Cog):
         await ctx.send(content)
 
     @quote.command()
-    @Missile.is_rainbow_cmd_check()
+    @obj.is_rainbow()
     async def exe(self, ctx, *, msg: str):
         # Directly executes SQL statements
         try:
@@ -98,7 +99,7 @@ class Bottas(commands.Cog):
             await ctx.send(f"**{e.__class__.__name__}**: {e}")
 
     @quote.command()
-    @Missile.is_rainbow_cmd_check()
+    @obj.is_rainbow()
     async def save(self, ctx):
         # Forcefully saves the db
         self.db.commit()
@@ -121,7 +122,7 @@ class Bottas(commands.Cog):
             await ctx.send(f'This quote duplicates with #{exists[0]}')
         else:
             # Asks for the quoter who said the quote
-            quoter = await self.bot.missile.ask_msg(ctx, 'Quoter?')
+            quoter = await self.bot.ask_msg(ctx, 'Quoter?')
             if quoter:
                 # Quote message validation
                 if '<@' in quoter:
@@ -175,7 +176,7 @@ class Bottas(commands.Cog):
         """Edits a quote"""
         quote = self.get_quote(index)
         if quote and (quote['uid'] == ctx.author.id or ctx.author.id == self.bot.owner_id):
-            content = await self.bot.missile.ask_msg(ctx, 'Enter the new quote: (wait 10 seconds to cancel)')
+            content = await self.bot.ask_msg(ctx, 'Enter the new quote: (wait 10 seconds to cancel)')
             if content:
                 # Quote message validation
                 if '<@' in content:
@@ -184,7 +185,7 @@ class Bottas(commands.Cog):
                 if '\n' in content:
                     await ctx.send("The quote should be only one line!")
                     return
-                quoter = await self.bot.missile.ask_msg(ctx, "Enter new quoter: (wait 10 seconds if it is the same)")
+                quoter = await self.bot.ask_msg(ctx, "Enter new quoter: (wait 10 seconds if it is the same)")
                 if quoter:
                     # Quote message validation
                     if '<@' in quoter:
@@ -227,7 +228,7 @@ class Bottas(commands.Cog):
     @commands.has_permissions(manage_messages=True)
     async def tag_add(self, ctx: commands.Context, name: str, url: str):
         """Adds a tag."""
-        if not Missile.regex_is_url(url):
+        if not obj.regex_is_url(url):
             await ctx.reply('Tag content must be a HTTP WWW link!')
             return
         if self.cursor.execute("SElECT EXISTS(SELECT 1 FROM Tag WHERE (name = ? OR content = ?) AND guildID = ?)",

@@ -181,7 +181,7 @@ class Ricciardo(obj.Cog):
         pass
 
     @rss.command(name='subscribe', aliases=['s', 'sub'])
-    @Missile.is_channel_owner_cmd_check()
+    @obj.is_channel_owner()
     async def rss_subscribe(self, ctx: Context, url: str, *, footer: str = ''):
         # noinspection PyBroadException
         # Above comment suppresses Exception Too Broad for PyCharm.
@@ -210,7 +210,7 @@ class Ricciardo(obj.Cog):
         await ctx.send('Subscribed!')
 
     @rss.command(name='unsubscribe', aliases=['u', 'unsub'])
-    @Missile.is_channel_owner_cmd_check()
+    @obj.is_channel_owner()
     async def rss_unsubscribe(self, ctx: Context, url: str):
         """Unsubscribe from a RSS URL"""
         # Attempts to delete the subscription record. If the record is deleted, count = 1.
@@ -233,7 +233,7 @@ class Ricciardo(obj.Cog):
         pass
 
     @bbm.command(name='subscribe', aliases=['s', 'sub'])
-    @Missile.is_channel_owner_cmd_check()
+    @obj.is_channel_owner()
     async def bbm_subscribe(self, ctx: Context, addon: int, role: discord.Role = None):
         """Subscribe to a BBM addon"""
         if addon not in self.addon_ids:  # Ensures that the user has inputted a valid addon ID
@@ -255,7 +255,7 @@ class Ricciardo(obj.Cog):
         await ctx.send('Subscribed!')
 
     @bbm.command(name='unsubscribe', aliases=['u', 'unsub'])
-    @Missile.is_channel_owner_cmd_check()
+    @obj.is_channel_owner()
     async def bbm_unsubscribe(self, ctx: Context, addon: int):
         """Unsubscribes from a BBM addon."""
         # Attempts to delete the subscription record. If the record is deleted, count = 1.
@@ -273,7 +273,7 @@ class Ricciardo(obj.Cog):
             await ctx.send("This channel hasn't subscribed to this addon.")
 
     @bbm.command(aliases=['r'])
-    @Missile.is_channel_owner_cmd_check()
+    @obj.is_channel_owner()
     async def role(self, ctx: Context, role: discord.Role = None):
         """Modifies the role to be pinged if a BBM update has been detected."""
         role = role.id if role else None
@@ -295,7 +295,7 @@ class Ricciardo(obj.Cog):
             raise ValueError
 
     @yt.command(name='subscribe', aliases=['s', 'sub'])
-    @Missile.is_channel_owner_cmd_check()
+    @obj.is_channel_owner()
     async def yt_subscribe(self, ctx: Context, ch: str):
         """'Subscribe' to a YouTube channel/user"""
 
@@ -337,7 +337,7 @@ class Ricciardo(obj.Cog):
             await ctx.send('Invalid YouTube channel/user link.')
 
     @yt.command(name='unsubscribe', aliases=['u', 'unsub'])
-    @Missile.is_channel_owner_cmd_check()
+    @obj.is_channel_owner()
     async def yt_unsubscribe(self, ctx: Context, ch: str):
         """'Unsubscribe' from a YouTube channel/user"""
         try:

@@ -14,7 +14,8 @@ import raceline
 import tribe
 from bitbay import BitBay
 from bruckserver.vireg import Verstapen
-from missile import Missile, dim_id
+from echo import Bottas
+from missile import Missile
 from mod.aegis import Aegis
 from mod.ikaros import Ikaros
 
@@ -23,8 +24,9 @@ intent = discord.Intents.none()
 intent.guilds = intent.members = intent.messages = intent.reactions = intent.voice_states = intent.typing = True
 intent.presences = True
 bot = obj.Bot(command_prefix=Missile.prefix_process, intents=intent)
+bot.echo = Bottas(bot)
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.27.1"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.27.2"
 # List of activities that will be randomly displayed every 5 minutes
 activities = [
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -58,7 +60,7 @@ bot.before_invoke(binvk)
 
 async def ainvk(ctx: commands.Context):
     timedelta = (datetime.now() - bot.invoke_time).total_seconds() * 1000
-    await bot.get_channel(666431254312517633).send(f'**{ctx.command}**: {timedelta}ms')
+    await bot.get_cog('Verstapen').bot_test.send(f'**{ctx.command}**: {timedelta}ms')
 
 
 bot.after_invoke(ainvk)
@@ -81,24 +83,6 @@ async def on_message(msg: discord.Message):
         await msg.channel.send(f'My prefix is **{bot.default_prefix}**')
         return
     await bot.process_commands(msg)
-
-
-@bot.event
-async def on_ready():
-    """Event handler when the bot has connected to the Discord endpoint"""
-    # First, fetch all the special objects
-    bot.eggy = await bot.fetch_user(226664644041768960)
-    await bot.is_owner(bot.eggy)  # Trick to set bot.owner_id
-    # Then updates the nickname for each server that DimBot is listening to
-    for guild in bot.guilds:
-        if guild.me.nick != nickname:
-            bot.loop.create_task(guild.me.edit(nick=nickname))
-    if reborn_channel:  # Post-process Pandora if needed
-        await bot.get_channel(reborn_channel).send("Arc-Cor𐑞: Pandora complete.")
-    while True:
-        logger.debug('Changed activity')
-        await bot.change_presence(activity=choice(activities))
-        await asyncio.sleep(300)
 
 
 @bot.event
@@ -201,15 +185,15 @@ async def link(ctx):
 @link.command()
 async def forge(ctx):
     """Generating MinecraftForge installer links"""
-    msg = await bot.missile.ask_msg(ctx, 'Reply `Minecraft version`-`Forge version`')
+    msg = await bot.ask_msg(ctx, 'Reply `Minecraft version`-`Forge version`')
     await ctx.send(f'https://files.minecraftforge.net/maven/net/minecraftforge/forge/{msg}/forge-{msg}-installer.jar')
 
 
 @link.command()
 async def galacticraft(ctx):
     """Generating Galaticraft mod download links"""
-    mc = await bot.missile.ask_msg(ctx, 'Minecraft version?')
-    ga = await bot.missile.ask_msg(ctx, 'Galacticraft version?')
+    mc = await bot.ask_msg(ctx, 'Minecraft version?')
+    ga = await bot.ask_msg(ctx, 'Galacticraft version?')
     mc_ver = mc.rsplit(',', 1)[0]
     ga_build = ga.rsplit('.', 1)[1]
     await ctx.send(f'https://micdoodle8.com/new-builds/GC-{mc_ver}/{ga_build}/GalacticraftCore-{mc}-{ga}.jar\n'
@@ -229,7 +213,7 @@ async def snipe(ctx):
 
 
 @bot.group(invoke_without_command=True)
-@Missile.is_rainbow_cmd_check()
+@obj.is_rainbow()
 async def arccore(ctx):
     """Confidential"""
     raise commands.errors.CommandNotFound
@@ -326,6 +310,18 @@ async def ready_tasks():
     bot.add_cog(Aegis(bot))
     await bot.wait_until_ready()
     bot.add_cog(tribe.Hamilton(bot))
+    bot.eggy = await bot.fetch_user(226664644041768960)  # Spcial Discord user
+    await bot.is_owner(bot.eggy)  # Trick to set bot.owner_id
+    # Then updates the nickname for each server that DimBot is listening to
+    for guild in bot.guilds:
+        if guild.me.nick != nickname:
+            bot.loop.create_task(guild.me.edit(nick=nickname))
+    if reborn_channel:  # Post-process Pandora if needed
+        await bot.get_channel(reborn_channel).send("Arc-Cor𐑞: Pandora complete.")
+    while True:
+        logger.debug('Changed activity')
+        await bot.change_presence(activity=choice(activities))
+        await asyncio.sleep(300)
 
 
 bot.loop.create_task(ready_tasks())

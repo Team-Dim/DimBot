@@ -107,7 +107,7 @@ class Dimond(commands.Cog):
         await ctx.reply(embed=emb)
 
     @info.command(aliases=('p',))
-    @Missile.guild_only()
+    @obj.guild_only()
     async def permissions(self, ctx, *args):
         """Shows a user's permission server/channel wise"""
         # TODO: Maybe first arg use Union[User, TextCh, VC, Category, None],
@@ -182,7 +182,7 @@ class Dimond(commands.Cog):
                                 f"Create invites: **{perm.create_instant_invite}**", embed=emb)  # 2^0
 
     @info.command(aliases=('r',))
-    @Missile.guild_only()
+    @obj.guild_only()
     async def role(self, ctx: commands.Context, r: discord.Role):
         """Shows role info"""
         emb = discord.Embed(title=r.name, color=r.color)
@@ -267,7 +267,7 @@ class Dimond(commands.Cog):
             await ctx.reply('Unknown emoji. This command currently does not support Unicode emojis.')
 
     @info.command(aliases=('w',))
-    @Missile.guild_only()
+    @obj.guild_only()
     @commands.bot_has_guild_permissions(manage_webhooks=True)
     async def webhook(self, ctx: commands.Context, name):
         """Shows info of a webhook"""
@@ -282,7 +282,7 @@ class Dimond(commands.Cog):
         await ctx.reply(f"Webhook user '{name}' not found.")
 
     @info.command(aliases=('int',))
-    @Missile.guild_only()
+    @obj.guild_only()
     @commands.bot_has_guild_permissions(manage_guild=True)
     async def integration(self, ctx: commands.Context):
         """Shows info of an integration"""
@@ -290,7 +290,7 @@ class Dimond(commands.Cog):
         print(await ctx.guild.integrations())
 
     @info.command(aliases=('sinv',))
-    @Missile.guild_only()
+    @obj.guild_only()
     @commands.bot_has_guild_permissions(manage_guild=True)
     async def server_invite(self, ctx: commands.Context):
         """Lists invite codes of a server"""
@@ -325,7 +325,7 @@ class Dimond(commands.Cog):
         await ctx.reply(embed=emb)
 
     @info.command(aliases=('sint',))
-    @Missile.guild_only()
+    @obj.guild_only()
     @commands.bot_has_guild_permissions(manage_guild=True)
     async def server_integrations(self, ctx: commands.Context):
         m = 'Please note that this command is currently for testing purposes only!\n'

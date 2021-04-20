@@ -1,13 +1,8 @@
 import asyncio
 import re
-from typing import Optional
 
 import discord
 from discord.ext import commands
-
-import obj
-
-dim_id = 264756129916125184
 
 
 class Missile:
@@ -15,66 +10,6 @@ class Missile:
 
     def __init__(self, bot: commands.Bot):
         self.bot: commands.Bot = bot
-
-    @staticmethod
-    # similar to @commands.is_owner()
-    def is_rainbow_cmd_check(msg: str = 'I guess you are not my little pog champ :3'):
-        """When a command has been invoked, checks whether the sender is me, and reply msg if it is not."""
-
-        async def check(ctx):
-            rainbow = ctx.author.id == ctx.bot.owner_id
-            if not rainbow:
-                await ctx.send(msg)
-            return rainbow
-
-        return commands.check(check)
-
-    @staticmethod
-    def is_channel_owner_cmd_check():
-        """When a command has been invoked, checks whether the sender is the owner of that text channel."""
-
-        async def check(ctx):
-            if ctx.guild:
-                owner = ctx.author == ctx.guild.owner
-                if not owner:
-                    await ctx.send("I guess you are not this server's pogchamp. Bruh.")
-                return owner
-            return True
-
-        return commands.check(check)
-
-    @staticmethod
-    def guild_only():
-        """When a command has been invoked, checks whether it is sent in a server"""
-
-        async def check(ctx):
-            if ctx.guild:  # In a server
-                return True
-            await ctx.send('This command is only available in servers!')
-            return False
-
-        return commands.check(check)
-
-    @staticmethod
-    def regex_is_url(url: str):
-        """Uses RegEx to check whether a string is a HTTP(s) link"""
-        # https://stackoverflow.com/a/17773849/8314159
-        return re.search(r"(https?://(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9]"
-                         r"[a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?://(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}"
-                         r"|www\.[a-zA-Z0-9]+\.[^\s]{2,})", url)
-
-    async def ask_msg(self, ctx, msg: str, timeout: int = 10) -> Optional[str]:
-        """Asks a follow-up question"""
-        await ctx.send(msg)
-        # Waits for the time specified
-        try:
-            reply = await self.bot.wait_for(
-                'message', timeout=timeout,
-                # Checks whether the message is sent by the same author and in the same channel.
-                check=lambda mess: mess.author.id == ctx.author.id and mess.channel == ctx.channel)
-            return reply.content
-        except asyncio.TimeoutError:
-            return None
 
     @staticmethod
     async def prefix_process(bot, msg: discord.Message):
