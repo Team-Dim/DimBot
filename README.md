@@ -17,3 +17,10 @@ The following are the variables that should be in the file:
 | debug             | bool | Whether the bot is in debug mode.<br>ALWAYS REQUIRED                         |
 | aws_access_key    | str  | Access Key from AWS IAM User security credentials<br>Required for Vireg  |
 | aws_secret_key    | str  | Secret key from AWS IAM User security credentials<br>Required for Vireg  |
+
+# Codenames
+`Barbados` is the codename given to the discord.py implementation of DimBot.
+|Name|Represents|English|
+|------|-----------|---------|
+|뾆|0.9|Bbwaelp|
+|ζ|0.8|Zeta|

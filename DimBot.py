@@ -9,13 +9,12 @@ from discord.ext.commands import errors
 
 import dimond
 import dimsecret
-import obj
+import missile
 import raceline
 import tribe
 from bitbay import BitBay
 from bruckserver.vireg import Verstapen
 from echo import Bottas
-from missile import Missile
 from mod.aegis import Aegis
 from mod.ikaros import Ikaros
 
@@ -23,12 +22,11 @@ from mod.ikaros import Ikaros
 intent = discord.Intents.none()
 intent.guilds = intent.members = intent.messages = intent.reactions = intent.voice_states = intent.typing = True
 intent.presences = True
-bot = obj.Bot(command_prefix=Missile.prefix_process, intents=intent)
-bot.echo = Bottas(bot)
+bot = missile.Bot(intents=intent)
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.8.27.3"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 뾆"
 # List of activities that will be randomly displayed every 5 minutes
-activities = [
+activities = (
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
     discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
     discord.Activity(name='Sam yawning', type=discord.ActivityType.listening),
@@ -43,8 +41,8 @@ activities = [
     discord.Activity(name='Try not to crash', type=discord.ActivityType.competing),
     discord.Activity(name='Muzen train', type=discord.ActivityType.watching),
     discord.Activity(name="Heaven's Lost Property", type=discord.ActivityType.watching)
-]
-logger = obj.get_logger('DimBot')
+)
+logger = missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
 
@@ -94,13 +92,13 @@ async def on_guild_join(guild: discord.Guild):
 @bot.event
 async def on_message_delete(msg: discord.Message):
     """Event handler when a message has been deleted"""
-    if msg.author == msg.guild.me or msg.content.startswith(await Missile.prefix_process(bot, msg)):
+    if msg.author == msg.guild.me or msg.content.startswith(await missile.prefix_process(bot, msg)):
         return
     # Stores the deleted message for snipe command
     content = msg.content if msg.content else msg.embeds[0].title
-    bot.snipe = obj.Embed(msg.author.display_name, content,
-                          msg.embeds[0].colour if msg.embeds else discord.Colour.random(),
-                          msg.guild.icon_url)
+    bot.snipe = missile.Embed(msg.author.display_name, content,
+                              msg.embeds[0].colour if msg.embeds else discord.Colour.random(),
+                              msg.guild.icon_url)
     bot.snipe.set_author(name=msg.guild.name, icon_url=msg.author.avatar_url)
 
 
@@ -109,23 +107,18 @@ async def on_command_error(ctx: commands.Context, error: commands.errors.Command
     """Event handler when a command raises an error"""
     if isinstance(error, errors.CommandNotFound):  # Human error
         await ctx.reply('Stoopid. That is not a command.')
-        return
     # Human error
-    if isinstance(error, (errors.MissingRequiredArgument, errors.MissingAnyRole, errors.CommandOnCooldown,
-                          errors.UserNotFound, errors.MemberNotFound, errors.MissingPermissions,
-                          errors.BadInviteArgument)):
+    elif isinstance(error, (errors.MissingRequiredArgument, errors.MissingAnyRole, errors.CommandOnCooldown,
+                            errors.UserNotFound, errors.MemberNotFound, errors.MissingPermissions,
+                            errors.BadInviteArgument, errors.BadColourArgument)):
         await ctx.reply(str(error))
-        return
-    if isinstance(error, errors.ChannelNotFound):  # Human error
+    elif isinstance(error, errors.ChannelNotFound):  # Human error
         await ctx.reply("Invalid channel. Maybe you've tagged the wrong one?")
-        return
-    if isinstance(error, errors.RoleNotFound):  # Human error
+    elif isinstance(error, errors.RoleNotFound):  # Human error
         await ctx.reply("Invalid role. Maybe you've tagged the wrong one?")
-        return
-    if isinstance(error, errors.GuildNotFound):
+    elif isinstance(error, errors.GuildNotFound):
         await ctx.reply('Invalid server or I am not in that server.')
-        return
-    if isinstance(error, errors.BadArgument) or isinstance(error, commands.errors.BadUnionArgument) \
+    elif isinstance(error, errors.BadArgument) or isinstance(error, commands.errors.BadUnionArgument) \
             and not ctx.command.has_error_handler():
         # Could be a human/program error
         await ctx.reply('Bad arguments.')
@@ -145,18 +138,15 @@ async def on_command_error(ctx: commands.Context, error: commands.errors.Command
 async def botinfo(ctx):
     """Displays bot information"""
     from platform import python_version
-    embed = discord.Embed(title=sponsor_txt,
-                          description='Bot module descriptions have been moved to '
-                                      f'`{bot.default_prefix}help <module name>`',
-                          color=discord.Colour.random())
-    embed.add_field(name='Guild count', value=str(len(bot.guilds)))
-    embed.add_field(name='Uptime', value=datetime.now() - bot.boot_time)
-    embed.add_field(name='Python', value=python_version())
-    embed.add_field(name='Discord.py', value=discord.__version__)
-    embed.add_field(name='Codename', value='Barbados')
-    embed.add_field(name='Devblog', value='[Instagram](https://www.instagram.com/techdim)')
-    embed.add_field(name='Source code', value='[GitHub](https://github.com/TCLRainbow/DimBot)')
-    embed.add_field(name='Discord server', value='[6PjhjCD](https://discord.gg/6PjhjCD)')
+    embed = missile.Embed(sponsor_txt)
+    embed.add_field('Guild count', len(bot.guilds))
+    embed.add_field('Uptime', datetime.now() - bot.boot_time)
+    embed.add_field('Python', python_version())
+    embed.add_field('Discord.py', discord.__version__)
+    embed.add_field('Codename', '뾆')
+    embed.add_field('Devblog', '[Instagram](https://www.instagram.com/techdim)')
+    embed.add_field('Source code', '[GitHub](https://github.com/TCLRainbow/DimBot)')
+    embed.add_field('Discord server', '[6PjhjCD](https://discord.gg/6PjhjCD)')
     await ctx.send(embed=embed)
 
 
@@ -212,23 +202,24 @@ async def snipe(ctx):
     await ctx.send(embed=bot.snipe)
 
 
-@bot.group(invoke_without_command=True)
-@obj.is_rainbow()
-async def arccore(ctx):
+@bot.group()
+@missile.is_rainbow()
+async def arccore(ctx: commands.Context):
     """Confidential"""
-    raise commands.errors.CommandNotFound
+    if not ctx.invoked_subcommand:
+        raise commands.errors.CommandNotFound
 
 
 @arccore.command()
 async def stealth(ctx):
-    bot.echo.db.commit()
+    bot.db.commit()
     await ctx.send('Arc-Cor𐑞: **Stealth**')
     await bot.logout()
 
 
 @arccore.command()
 async def pandora(ctx):
-    bot.echo.db.commit()
+    bot.db.commit()
     await ctx.send('Arc-Cor𐑞: **PANDORA**, self-evolving!')
     with open('final', 'w') as death_note:
         death_note.write(str(ctx.channel.id))
@@ -261,6 +252,27 @@ async def unban(ctx: commands.Context, s: discord.Guild):
     await ctx.reply('Done.')
 
 
+@arccore.command()
+async def exe(ctx, *, msg: str):
+    # Directly executes SQL statements
+    import sqlite3
+    try:
+        tic = datetime.now()  # Measure execution time
+        rows = bot.cursor.execute(msg)
+        result = rows.fetchall()
+        toc = datetime.now()
+        await ctx.send(f"{result}\n{rows.rowcount} row affected in {(toc - tic).total_seconds() * 1000}ms")
+    except sqlite3.Error as e:
+        await ctx.send(f"**{e.__class__.__name__}**: {e}")
+
+
+@arccore.command()
+async def save(ctx):
+    # Forcefully saves the db
+    bot.db.commit()
+    await ctx.send('Saved')
+
+
 # Eggy requested this command
 @bot.command()
 async def hug(ctx):
@@ -271,39 +283,24 @@ async def hug(ctx):
     await ctx.send(f'{gif}\nWe are friends again, {bot.eggy}\nHug {ctx.author.mention}')
 
 
-@bot.command(aliases=['color'])
-async def colour(ctx, a: str = None, *args):
-    """Shows info about the color"""
-    if not a:
-        a = str(randint(1, 0xFFFFFF))
-    try:
-        is_hex = a[0] == '#'
-        if is_hex:
-            colour = discord.Colour(int(a[1:], 16))
-        elif a.lower() == 'rgb':
-            colour = discord.Colour.from_rgb(int(Missile.ensure_index_value(args, 0, 0)),
-                                             int(Missile.ensure_index_value(args, 1, 0)),
-                                             int(Missile.ensure_index_value(args, 2, 0)))
-        elif a.lower() == 'hsv':
-            colour = discord.Colour.from_hsv(int(Missile.ensure_index_value(args, 0, 0)),
-                                             int(Missile.ensure_index_value(args, 1, 0)),
-                                             int(Missile.ensure_index_value(args, 2, 0)))
-        else:
-            colour = discord.Colour(int(a))
-        emb = discord.Embed(title=a if is_hex else f'#{colour.value:X}', color=colour)
-        emb.add_field(name='R', value=colour.r)
-        emb.add_field(name='G', value=colour.g)
-        emb.add_field(name='B', value=colour.b)
-        await ctx.reply(embed=emb)
-    except ValueError:
-        await ctx.reply('Invalid color. You can input an integer `2048` , a hex code `#ABCABC`, or a RGB/HSV '
-                        'combination `rgb/hsv <> <> <>`')
+@bot.group(aliases=['color'], invoke_without_command=True)
+async def colour(ctx: commands.Context, c: discord.Colour = discord.Colour.random()):
+    emb = missile.Embed(f'#{c.value:X}', color=c)
+    emb.add_field('R', c.r)
+    emb.add_field('G', c.g)
+    emb.add_field('B', c.b)
+    await ctx.reply(emb)
+
+
+@colour.command()
+async def hsv(ctx: commands.Context, h: int = 0, s: int = 0, v: int = 0):
+    await bot.get_command('color')(ctx, discord.Colour.from_hsv(h, s, v))
 
 
 async def ready_tasks():
     bot.add_cog(raceline.Ricciardo(bot))
     bot.add_cog(Verstapen(bot))
-    bot.add_cog(bot.echo)
+    bot.add_cog(Bottas(bot))
     bot.add_cog(BitBay(bot))
     bot.add_cog(dimond.Dimond(bot))
     bot.add_cog(Ikaros(bot))

@@ -1,6 +1,6 @@
 from aiohttp import web
 
-import obj
+import missile
 
 
 class Albon:
@@ -11,7 +11,7 @@ class Albon:
         self._channels = []
         self.bot = bot
         self.online = []
-        self.logger = obj.get_logger('Albon')
+        self.logger = missile.get_logger('Albon')
 
     @property
     def channels(self):

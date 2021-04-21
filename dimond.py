@@ -3,8 +3,7 @@ from typing import Optional, Union
 import discord
 from discord.ext import commands
 
-import obj
-from missile import Missile
+import missile
 
 
 class Dimond(commands.Cog):
@@ -13,7 +12,7 @@ class Dimond(commands.Cog):
     Version: 1.3"""
 
     def __init__(self, bot):
-        self.bot: obj.Bot = bot
+        self.bot: missile.Bot = bot
 
     @commands.group(invoke_without_command=True)
     async def info(self, ctx):
@@ -83,7 +82,7 @@ class Dimond(commands.Cog):
         u = u if u else ctx.author
         bin_value = f'{u.public_flags.value:b}'
         hex_value = f'{u.public_flags.value:X}'
-        emb = obj.Embed(u.name + "'s public flags",
+        emb = missile.Embed(u.name + "'s public flags",
                         f"{u.public_flags.value}, 0b{bin_value.zfill(18)}, 0x{hex_value.zfill(5)}")
         emb.add_field(name='Verified bot developer', value=u.public_flags.verified_bot_developer)  # 2^17
         emb.add_field(name='Verified bot', value=u.public_flags.verified_bot)  # 2^16
@@ -107,7 +106,7 @@ class Dimond(commands.Cog):
         await ctx.reply(embed=emb)
 
     @info.command(aliases=('p',))
-    @obj.guild_only()
+    @missile.guild_only()
     async def permissions(self, ctx, *args):
         """Shows a user's permission server/channel wise"""
         # TODO: Maybe first arg use Union[User, TextCh, VC, Category, None],
@@ -148,7 +147,7 @@ class Dimond(commands.Cog):
         # https://discordpy.readthedocs.io/en/latest/api.html#discord.Permissions
         bin_value = f'{perm.value:b}'
         hex_value = f'{perm.value:X}'
-        emb = obj.Embed(f'Permissions for {mem.name} in {title}',
+        emb = missile.Embed(f'Permissions for {mem.name} in {title}',
                         f"{perm.value}, 0b{bin_value.zfill(30)}, 0x{hex_value.zfill(8)}")
         emb.add_field(name='Manage webhooks', value=perm.manage_webhooks)  # 2^29
         emb.add_field(name='Manage permissions and roles', value=perm.manage_permissions)  # 2^28
@@ -182,7 +181,7 @@ class Dimond(commands.Cog):
                                 f"Create invites: **{perm.create_instant_invite}**", embed=emb)  # 2^0
 
     @info.command(aliases=('r',))
-    @obj.guild_only()
+    @missile.guild_only()
     async def role(self, ctx: commands.Context, r: discord.Role):
         """Shows role info"""
         emb = discord.Embed(title=r.name, color=r.color)
@@ -267,7 +266,7 @@ class Dimond(commands.Cog):
             await ctx.reply('Unknown emoji. This command currently does not support Unicode emojis.')
 
     @info.command(aliases=('w',))
-    @obj.guild_only()
+    @missile.guild_only()
     @commands.bot_has_guild_permissions(manage_webhooks=True)
     async def webhook(self, ctx: commands.Context, name):
         """Shows info of a webhook"""
@@ -282,7 +281,7 @@ class Dimond(commands.Cog):
         await ctx.reply(f"Webhook user '{name}' not found.")
 
     @info.command(aliases=('int',))
-    @obj.guild_only()
+    @missile.guild_only()
     @commands.bot_has_guild_permissions(manage_guild=True)
     async def integration(self, ctx: commands.Context):
         """Shows info of an integration"""
@@ -290,11 +289,11 @@ class Dimond(commands.Cog):
         print(await ctx.guild.integrations())
 
     @info.command(aliases=('sinv',))
-    @obj.guild_only()
+    @missile.guild_only()
     @commands.bot_has_guild_permissions(manage_guild=True)
     async def server_invite(self, ctx: commands.Context):
         """Lists invite codes of a server"""
-        emb = obj.Embed(description='')
+        emb = missile.Embed(description='')
         for inv in await ctx.guild.invites():
             to_be_added = f"[{inv.code}]({inv.url}) "
             if len(emb.description + to_be_added) < 2045:
@@ -325,7 +324,7 @@ class Dimond(commands.Cog):
         await ctx.reply(embed=emb)
 
     @info.command(aliases=('sint',))
-    @obj.guild_only()
+    @missile.guild_only()
     @commands.bot_has_guild_permissions(manage_guild=True)
     async def server_integrations(self, ctx: commands.Context):
         m = 'Please note that this command is currently for testing purposes only!\n'

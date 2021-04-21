@@ -5,7 +5,6 @@ import discord
 from discord.ext.commands import Cog
 
 import bitbay
-from missile import Missile
 
 
 async def send(ch: discord.TextChannel, content: str):
@@ -100,7 +99,7 @@ class Aegis(Cog):
         """Event handler when a message has been deleted"""
         # Ghost ping detector
         # Check whether the message is related to the bot
-        if msg.author == msg.guild.me or msg.content.startswith(await Missile.prefix_process(self.bot, msg)):
+        if msg.author == msg.guild.me or msg.content.startswith(await self.bot.get_prefix(msg)):
             return
         if msg.guild and msg.id in self.ghost_pings.keys():  # The message has/used to have pings
             for m in self.ghost_pings[msg.id]:

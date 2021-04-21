@@ -7,9 +7,8 @@ from typing import Optional
 import discord
 from discord.ext.commands import Cog, Context, command, has_any_role, group, cooldown, BucketType
 
-import obj
+import missile
 from dimsecret import debug
-from missile import Missile
 
 max_pp_size = 69
 guild_id = 675477913411518485
@@ -52,7 +51,7 @@ class BitBay(Cog):
     Version 1.3.3"""
 
     def __init__(self, bot):
-        self.bot: obj.Bot = bot
+        self.bot: missile.Bot = bot
         self.organs: dict = {}  # Dict for storing pp size
         self.mpm = True  # Message Pattern Matching master switch
         self.no_pp_msg = f"No pp found. Have you set it up by {bot.default_prefix}pp?"
@@ -107,7 +106,7 @@ class BitBay(Cog):
         """Encodes base64 via command"""
         if ctx.channel.type == discord.ChannelType.text:
             await ctx.message.delete()
-        if obj.regex_is_url(url):
+        if missile.is_url(url):
             await ctx.send(f'<https://codebeautify.org/base64-decode?input={encode(url)}>')
         else:
             url = ctx.author.mention + ': ' + url
@@ -196,7 +195,7 @@ class BitBay(Cog):
         user = user if user else ctx.author
         pp = self.get_pp(user.id)
         if pp:
-            await ctx.reply(embed=obj.Embed('pp size: ' + str(pp.size), self.draw_pp(user.id)))
+            await ctx.reply(embed=missile.Embed('pp size: ' + str(pp.size), self.draw_pp(user.id)))
         else:
             await ctx.send(self.no_pp_msg)
 
@@ -204,16 +203,16 @@ class BitBay(Cog):
     async def slap(self, ctx: Context, user: discord.User):
         """Use pp to slap others"""
         if self.get_pp(ctx.author.id):
-            await ctx.send(embed=obj.Embed(description=self.draw_pp(ctx.author.id), thumbnail=user.avatar_url))
+            await ctx.send(embed=missile.Embed(description=self.draw_pp(ctx.author.id), thumbnail=user.avatar_url))
         else:
             await ctx.send(self.no_pp_msg)
 
     @pp.command()
-    @obj.is_rainbow()
+    @missile.is_rainbow()
     async def max(self, ctx: Context, target: discord.User = None, viagra=True, sesami=True):
         target = target if target else ctx.author
         self.organs[target.id] = PP(max_pp_size, viagra, sesami)
-        await ctx.reply(embed=obj.Embed(target.display_name + "'s penis", self.draw_pp(target.id)))
+        await ctx.reply(embed=missile.Embed(target.display_name + "'s penis", self.draw_pp(target.id)))
 
     @pp.command()
     async def min(self, ctx: Context):
@@ -221,7 +220,7 @@ class BitBay(Cog):
         my = self.get_pp(ctx.author.id)
         stun = my.stun if my else 0
         self.organs[ctx.author.id] = PP(0, False, False, stun=stun)
-        await ctx.reply(embed=obj.Embed(ctx.author.display_name + "'s penis", self.draw_pp(ctx.author.id)))
+        await ctx.reply(embed=missile.Embed(ctx.author.display_name + "'s penis", self.draw_pp(ctx.author.id)))
 
     @pp.command()
     async def cut(self, ctx: Context):
@@ -229,7 +228,7 @@ class BitBay(Cog):
         # Internally this removes the user from self.organs
         pp = self.get_pp(ctx.author.id)
         if pp:
-            if await self.bot.missile.ask_reaction(ctx, '⚠Cutting your pp also resets your score! Are you sure?'):
+            if await self.bot.ask_reaction(ctx, '⚠Cutting your pp also resets your score! Are you sure?'):
                 self.organs.pop(ctx.author.id)
                 await ctx.send(embed=discord.Embed(title=ctx.author.display_name + "'s penis",
                                                    description=f"8\n{'=' * pp.size}D", colour=discord.Colour.red()))
