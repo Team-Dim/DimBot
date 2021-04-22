@@ -329,4 +329,3 @@ class Dimond(commands.Cog):
     async def integration(self, ctx: commands.Context):
         """Shows info of an integration"""
         await ctx.reply('Coming soon!')
-        print(await ctx.guild.integrations())
