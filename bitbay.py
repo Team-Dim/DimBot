@@ -61,6 +61,8 @@ class BitBay(Cog):
     async def on_message(self, msg: discord.Message):
         """Message Pattern Matching logic"""
         if msg.guild and (msg.guild.id == guild_id or debug) and self.mpm and not msg.author.bot:
+            if randint(1, 100) <= 5:
+                await msg.channel.send('Happy 1 year anniversary, 128BB <a:FasterBlobBounce:814890635332943936>')
             if re.search(r".*BSoD", msg.content):
                 await msg.reply('https://discord.com/channels/675477913411518485/675477914019430423/825823145315270687')
                 return
@@ -186,8 +188,7 @@ class BitBay(Cog):
                 pp.sesami_oil = True
         else:
             self.organs[user.id] = PP(size, viagra, sesami)
-        await ctx.send(embed=discord.Embed(title=user.display_name + "'s penis", description=self.draw_pp(user.id),
-                                           colour=discord.Colour.random()))
+        await ctx.reply(embed=missile.Embed(user.display_name + "'s penis", self.draw_pp(user.id)))
 
     @pp.command()
     async def info(self, ctx: Context, user: discord.User = None):
@@ -230,12 +231,12 @@ class BitBay(Cog):
         if pp:
             if await self.bot.ask_reaction(ctx, '⚠Cutting your pp also resets your score! Are you sure?'):
                 self.organs.pop(ctx.author.id)
-                await ctx.send(embed=discord.Embed(title=ctx.author.display_name + "'s penis",
-                                                   description=f"8\n{'=' * pp.size}D", colour=discord.Colour.red()))
+                await ctx.send(embed=missile.Embed(ctx.author.display_name + "'s penis", f"8\n{'=' * pp.size}D",
+                                                   color=discord.Color.red()))
         else:
             await ctx.send('You have no pp to cut!')
 
-    @pp.command(aliases=['sf'])
+    @pp.command(aliases=('sf',))
     @cooldown(rate=1, per=10.0, type=BucketType.user)  # Each person can only call this once per 10s
     async def swordfight(self, ctx: Context, user: discord.User = None):
         """Use your pp as a weapon and fight"""
@@ -280,10 +281,8 @@ class BitBay(Cog):
             await ctx.reply(self.no_pp_msg)
             return
         await ctx.send(
-            embed=discord.Embed(title=title,
-                                description=f"**{ctx.author.name}'s penis:**\n{self.draw_pp(ctx.author.id)}\n"
-                                            f"**{user.name}'s penis:**\n{self.draw_pp(user.id)}\n\n{gain_msg}",
-                                colour=discord.Colour.random()))
+            embed=missile.Embed(title, f"**{ctx.author.name}'s penis:**\n{self.draw_pp(ctx.author.id)}\n"
+                                       f"**{user.name}'s penis:**\n{self.draw_pp(user.id)}\n\n{gain_msg}"))
         if my and my.viagra_rounds == 1:
             my.size = my.size // 2
             my.viagra_rounds = 0

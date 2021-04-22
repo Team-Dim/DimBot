@@ -26,8 +26,7 @@ class Dimond(commands.Cog):
         u = u if u else ctx.author
         desc = f"Send `{self.bot.default_prefix}info f [user]` for flag details,\n`{self.bot.default_prefix}info p " \
                "[user|channel] [channel]` for permission details"
-        emb = discord.Embed(title=str(u), description=desc)
-        emb.set_thumbnail(url=u.avatar_url)
+        emb = missile.Embed(str(u), desc, thumbnail=u.avatar_url)
         if u.avatar:
             emb.set_footer(text='Avatar hash: ' + u.avatar)
         emb.add_field(name='❄ ID', value=u.id)
@@ -206,7 +205,7 @@ class Dimond(commands.Cog):
     @info.command()
     async def vc(self, ctx: commands.Context, ch: discord.VoiceChannel):
         """Shows info of a voice channel. PM the command if the channel is not in that server."""
-        emb = discord.Embed(title=ch.name, color=discord.Colour.random())
+        emb = missile.Embed(ch.name)
         if not ctx.guild:
             emb.add_field(name='Server ❄ID', value=ch.guild.id)
         emb.add_field(name='Bit rate (kbps)', value=ch.bitrate // 1000)
@@ -223,7 +222,7 @@ class Dimond(commands.Cog):
             else:
                 await ctx.reply('You must specify a server if you are sending this command in PM!')
                 return
-        emb = discord.Embed(title=s.name, color=discord.Colour.random())
+        emb = missile.Embed(s.name)
         if s.description:
             emb.description = s.description
         emb.add_field(name='❄ ID', value=s.id)
@@ -246,7 +245,7 @@ class Dimond(commands.Cog):
     @info.command(aliases=('e',))
     async def emoji(self, ctx: commands.Context, e: Union[discord.Emoji, discord.PartialEmoji]):
         """Shows info of a custom(non-Unicode) emoji"""
-        emb = discord.Embed(title=e.name, color=discord.Colour.random())
+        emb = missile.Embed(e.name)
         # noinspection PyTypeChecker
         emb.set_author(name=e)
         emb.set_thumbnail(url=e.url)
@@ -272,21 +271,13 @@ class Dimond(commands.Cog):
         """Shows info of a webhook"""
         for webhook in await ctx.guild.webhooks():
             if webhook.name == name:
-                emb = discord.Embed(title=f'❄ ID: {webhook.id}', color=discord.Colour.random())
+                emb = missile.Embed(f'❄ ID: {webhook.id}')
                 emb.add_field(name='Created at', value=webhook.created_at)
                 emb.add_field(name='Channel', value=webhook.channel.mention)
                 emb.add_field(name='Type', value=webhook.type)
                 await ctx.reply(embed=emb)
                 return
         await ctx.reply(f"Webhook user '{name}' not found.")
-
-    @info.command(aliases=('int',))
-    @missile.guild_only()
-    @commands.bot_has_guild_permissions(manage_guild=True)
-    async def integration(self, ctx: commands.Context):
-        """Shows info of an integration"""
-        await ctx.reply('Coming soon!')
-        print(await ctx.guild.integrations())
 
     @info.command(aliases=('sinv',))
     @missile.guild_only()
@@ -307,7 +298,7 @@ class Dimond(commands.Cog):
     @info.command(aliases=('inv',))
     async def invite(self, ctx: commands.Context, inv: discord.Invite):
         """Shows info of an invite."""
-        emb = discord.Embed(title=inv.code, color=discord.Colour.random(), url=inv.url)
+        emb = missile.Embed(inv.code, url=inv.url)
         emb.add_field(name='Server ID', value=inv.guild.id)
         emb.add_field(name='Channel', value=inv.channel.mention)
         if inv.guild in self.bot.guilds and inv.guild.me.guild_permissions.manage_guild:
@@ -331,3 +322,11 @@ class Dimond(commands.Cog):
         for i in await ctx.guild.integrations():
             m += str(i) + '\n'
         await ctx.reply(m)
+
+    @info.command(aliases=('int',))
+    @missile.guild_only()
+    @commands.bot_has_guild_permissions(manage_guild=True)
+    async def integration(self, ctx: commands.Context):
+        """Shows info of an integration"""
+        await ctx.reply('Coming soon!')
+        print(await ctx.guild.integrations())

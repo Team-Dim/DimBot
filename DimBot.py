@@ -24,7 +24,7 @@ intent.guilds = intent.members = intent.messages = intent.reactions = intent.voi
 intent.presences = True
 bot = missile.Bot(intents=intent)
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 뾆-2"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 뾆-3"
 # List of activities that will be randomly displayed every 5 minutes
 activities = (
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -286,7 +286,9 @@ async def hug(ctx):
 
 
 @bot.group(aliases=('color',), invoke_without_command=True)
-async def colour(ctx: commands.Context, c: discord.Colour = discord.Colour.random()):
+async def colour(ctx: commands.Context, c: discord.Colour = None):
+    if not c:
+        c = discord.Colour.random()
     value = f'{c.value:X}'
     emb = missile.Embed(f'#{value.zfill(6)}', color=c)
     emb.add_field('R', c.r)

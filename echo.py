@@ -9,7 +9,7 @@ import missile
 # TODO: instead of hardcoded queries like execute('DELETE FROM'), use object oriented approaches like table.delete()
 class Bottas(commands.Cog):
     """Storing messages.
-    Version 2.0.1"""
+    Version 2.1"""
 
     def __init__(self, bot):
         self.bot = bot
