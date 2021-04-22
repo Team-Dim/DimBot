@@ -24,7 +24,7 @@ intent.guilds = intent.members = intent.messages = intent.reactions = intent.voi
 intent.presences = True
 bot = missile.Bot(intents=intent)
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 뾆"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 뾆-2"
 # List of activities that will be randomly displayed every 5 minutes
 activities = (
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -124,14 +124,15 @@ async def on_command_error(ctx: commands.Context, error: commands.errors.Command
         await ctx.reply('Bad arguments.')
     elif isinstance(error, errors.CheckFailure):
         return
-    # This is basically "unknown error", raise it for debug purposes
-    import traceback
-    content = f'```python\n{ctx.message.content}\n'
-    for tb in traceback.format_tb(error.original.__traceback__):
-        content += tb
-    content += str(error.original) + '```'
-    msg = await bot.get_cog('Hamilton').bot_test.send(content)
-    await ctx.reply(f'Hmm... Report ID: **{msg.id}**')
+    else:
+        # This is basically "unknown error", raise it for debug purposes
+        import traceback
+        content = f'```python\n{ctx.message.content}\n'
+        for tb in traceback.format_tb(error.original.__traceback__):
+            content += tb
+        content += str(error.original) + '```'
+        msg = await bot.get_cog('Hamilton').bot_test.send(content)
+        await ctx.reply(f'Hmm... Report ID: **{msg.id}**')
 
 
 @bot.command(aliases=('bot',))
@@ -246,6 +247,7 @@ async def shadow(c, *, cmd: str):
     await bot.invoke(await bot.get_context(msg))
 
 
+# TODO: Probably change to on_ban() -> if Dim unban
 @arccore.command()
 async def unban(ctx: commands.Context, s: discord.Guild):
     await s.unban(bot.get_user(bot.owner_id), reason='Sasageyo')
@@ -283,18 +285,23 @@ async def hug(ctx):
     await ctx.send(f'{gif}\nWe are friends again, {bot.eggy}\nHug {ctx.author.mention}')
 
 
-@bot.group(aliases=['color'], invoke_without_command=True)
+@bot.group(aliases=('color',), invoke_without_command=True)
 async def colour(ctx: commands.Context, c: discord.Colour = discord.Colour.random()):
-    emb = missile.Embed(f'#{c.value:X}', color=c)
+    value = f'{c.value:X}'
+    emb = missile.Embed(f'#{value.zfill(6)}', color=c)
     emb.add_field('R', c.r)
     emb.add_field('G', c.g)
     emb.add_field('B', c.b)
-    await ctx.reply(emb)
+    await ctx.reply(embed=emb)
 
 
 @colour.command()
 async def hsv(ctx: commands.Context, h: int = 0, s: int = 0, v: int = 0):
-    await bot.get_command('color')(ctx, discord.Colour.from_hsv(h, s, v))
+    color = discord.Colour.from_hsv(h, s, v)
+    if 0 <= color.value <= 0xFFFFFF:
+        await bot.get_command('color')(ctx, discord.Colour.from_hsv(h, s, v))
+    else:
+        raise errors.BadColorArgument(color)
 
 
 async def ready_tasks():
@@ -307,7 +314,7 @@ async def ready_tasks():
     bot.add_cog(Aegis(bot))
     await bot.wait_until_ready()
     bot.add_cog(tribe.Hamilton(bot))
-    bot.eggy = await bot.fetch_user(226664644041768960)  # Spcial Discord user
+    bot.eggy = await bot.fetch_user(226664644041768960)  # Special Discord user
     await bot.is_owner(bot.eggy)  # Trick to set bot.owner_id
     # Then updates the nickname for each server that DimBot is listening to
     for guild in bot.guilds:

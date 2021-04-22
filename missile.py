@@ -170,7 +170,7 @@ class MsgExt:
 
 class Embed(discord.Embed):
 
-    def __init__(self, title=None, description=None, color=discord.Colour.random(), thumbnail: str = None, **kwargs):
+    def __init__(self, title='', description='', color=discord.Colour.random(), thumbnail: str = None, **kwargs):
         super().__init__(title=title, description=description, color=color, **kwargs)
         if thumbnail:
             super().set_thumbnail(url=thumbnail)
