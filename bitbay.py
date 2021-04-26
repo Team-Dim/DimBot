@@ -1,7 +1,6 @@
 import base64
 import random
 import re
-from datetime import datetime
 from random import randint
 from typing import Optional
 
@@ -57,15 +56,11 @@ class BitBay(Cog):
         self.mpm = True  # Message Pattern Matching master switch
         self.no_pp_msg = f"No pp found. Have you set it up by {bot.default_prefix}pp?"
         self.stunned = f'You are stunned! Use `{bot.default_prefix}pp sf` to remove the effect!'
-        self.birth = datetime.now()
 
     @Cog.listener()
     async def on_message(self, msg: discord.Message):
         """Message Pattern Matching logic"""
         if msg.guild and (msg.guild.id == guild_id or debug) and self.mpm and not msg.author.bot:
-            if randint(1, 1000) <= 5 and (datetime.now() - self.birth).total_seconds() >= 300:
-                await msg.channel.send('Happy 1 year anniversary, 128BB <a:FasterBlobBounce:814890635332943936>')
-                self.birth = datetime.now()
             if re.search(r".*BSoD", msg.content):
                 await msg.reply('https://discord.com/channels/675477913411518485/675477914019430423/825823145315270687')
                 return

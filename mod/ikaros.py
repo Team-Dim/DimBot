@@ -9,15 +9,7 @@ import bitbay
 import missile
 import tribe
 
-
-async def reply(ctx_msg, content: str):
-    """Appends Ikaros to the response and sends it"""
-    await ctx_msg.reply('**Ikaros:** ' + content)
-
-
-async def send(msg: discord.Message, content: str):
-    """Appends Ikaros to the message and sends it"""
-    return await msg.channel.send('**Ikaros:** ' + content)
+ext = missile.MsgExt('Ikaros')
 
 
 class Ikaros(Cog):
@@ -30,7 +22,7 @@ class Ikaros(Cog):
     async def ensure_target(self, msg: discord.Message, target: Union[discord.Member, discord.User], countdown: int,
                             check_role: bool = True):
         """A fancy way to ensure that the action can be applied on the target"""
-        msg = await send(msg, "Attempting to lock target: " + target.mention)
+        msg = await ext.send(msg, "Attempting to lock target: " + target.mention)
         if isinstance(target, discord.Member) and check_role:
             if target.top_role >= msg.guild.me.top_role or target.id == self.bot.owner_id:
                 await missile.append_msg(msg, 'Cannot lock target.')
@@ -48,7 +40,7 @@ class Ikaros(Cog):
                 return
             await self.ensure_target(msg, target, countdown)
             await target.kick(reason=reason)
-            await send(msg, target.mention + ' has been kicked.')
+            await ext.send(msg, target.mention + ' has been kicked.')
         except PermissionError:
             return
 
@@ -61,7 +53,7 @@ class Ikaros(Cog):
                 return
             await self.ensure_target(msg, target, countdown)
             await msg.guild.ban(target, delete_message_days=0, reason=reason)
-            await send(msg, f'Banning {target.mention} for {length}s')
+            await ext.send(msg, f'Banning {target.mention} for {length}s')
             if length:  # Unbans if there is a ban time length
                 await asyncio.sleep(length)
                 await self.unban(msg, target, 'Deactivating ' + reason)
@@ -71,7 +63,7 @@ class Ikaros(Cog):
     @staticmethod
     async def unban(msg: discord.Message, user: discord.User, reason: str):
         await msg.guild.unban(user, reason=reason)
-        await send(msg, user.mention + ' has been unbanned.')
+        await ext.send(msg, user.mention + ' has been unbanned.')
 
     async def mute(self, msg: discord.Message, target: discord.Member, length: int, countdown: int, reason: str):
         """Internal logic for muting member"""
@@ -90,11 +82,11 @@ class Ikaros(Cog):
                 role = msg.guild.get_role(474578007156326412)  # Asteroid Belt
             if role:
                 await target.add_roles(role, reason=reason)
-                await send(msg, f'Muting {target.mention} for {length}s')
+                await ext.send(msg, f'Muting {target.mention} for {length}s')
                 if length:  # Unmutes if there is a mute time length
                     await asyncio.sleep(length)
                     await target.remove_roles(role, reason='Deactivating ' + reason)
-                    await send(msg, 'Unmuted ' + target.mention)
+                    await ext.send(msg, 'Unmuted ' + target.mention)
         except PermissionError:
             return
 
@@ -110,7 +102,7 @@ class Ikaros(Cog):
             role = msg.guild.get_role(474578007156326412)  # Asteroid Belt
         if role:
             await target.remove_roles(role, reason=reason)
-            await send(msg, 'Unmuted ' + target.mention)
+            await ext.send(msg, 'Unmuted ' + target.mention)
 
     @command()
     @has_guild_permissions(manage_roles=True)
@@ -119,20 +111,20 @@ class Ikaros(Cog):
     async def role(self, ctx: Context, role: discord.Role, target: discord.Member):
         """Gives/removes a member's role"""
         if role >= ctx.guild.me.top_role:
-            await reply(ctx, 'The role specified >= my highest role.')
+            await ext.reply(ctx, 'The role specified >= my highest role.')
             return
         if ctx.author.id != self.bot.owner_id and role >= ctx.author.top_role:
-            await reply(ctx, 'The role specified >= your highest role.')
+            await ext.reply(ctx, 'The role specified >= your highest role.')
             return
         if role.is_bot_managed():
-            await reply(ctx, "Cannot assign a bot role")
+            await ext.reply(ctx, "Cannot assign a bot role")
             return
         if role in target.roles:
             await target.remove_roles(role, reason=f'Ikaros: Deleted by {ctx.author}')
-            await reply(ctx, f'Removed **{role.name}** from {target}')
+            await ext.reply(ctx, f'Removed **{role.name}** from {target}')
         else:
             await target.add_roles(role, reason=f'Ikaros: Added by {ctx.author}')
-            await reply(ctx, f'Assigned **{role.name}** to {target}')
+            await ext.reply(ctx, f'Assigned **{role.name}** to {target}')
 
     @command(name='kick')
     @has_permissions(kick_members=True)
@@ -163,7 +155,7 @@ class Ikaros(Cog):
     @has_guild_permissions(mute_members=True)
     @bot_has_guild_permissions(manage_roles=True)
     @missile.in_guilds(bitbay.guild_id, tribe.guild_id)
-    async def mute_cmd(self, ctx: Context, target: discord.Member, length: int = None, countdown: int = 3):
+    async def mute_cmd(self, ctx: Context, target: discord.Member, length: int = 0, countdown: int = 3):
         """Mutes a member. Can define a time to auto unmute"""
         await self.mute(ctx.message, target, length, countdown, f'Ikaros: Muted by {ctx.author}')
 
@@ -190,7 +182,7 @@ class Ikaros(Cog):
     async def purge(self, ctx: Context, amount: int):
         """Purges messages (excluding the command)"""
         msgs = await ctx.channel.purge(limit=amount, before=ctx.message)
-        await send(ctx.message, f'Purged {len(msgs)} messages.')
+        await ext.send(ctx.message, f'Purged {len(msgs)} messages.')
 
     @purge.command()
     @has_guild_permissions(manage_messages=True)
@@ -199,7 +191,7 @@ class Ikaros(Cog):
     async def by(self, ctx: Context, sender: discord.User, amount: int):
         """d.purge but only deletes up to the specified amount of the sender's messages"""
         msgs = await ctx.channel.purge(check=lambda m: m.author == sender, limit=amount, before=ctx.message)
-        await send(ctx.message, f'Purged {len(msgs)} messages.')
+        await ext.send(ctx.message, f'Purged {len(msgs)} messages.')
 
     @command()
     @missile.guild_only()

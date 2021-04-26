@@ -5,15 +5,9 @@ import discord
 from discord.ext.commands import Cog
 
 import bitbay
+import missile
 
-
-async def send(ch: discord.TextChannel, content: str):
-    """Appends Aegis to the message and sends it"""
-    return await ch.send('**Aegis:** ' + content)
-
-
-async def reply(msg: discord.Message, content: str):
-    return await msg.reply('**Aegis:** ' + content)
+ext = missile.MsgExt('Aegis')
 
 
 class Aegis(Cog):
@@ -28,8 +22,8 @@ class Aegis(Cog):
     def act_wrap(self, msg: discord.Message, warn_type: str):
         self.count[msg.author.id][1] += 1
         self.count[msg.author.id][0] = []
-        self.bot.loop.create_task(reply(msg, f'Detected spam by {msg.author.mention}, type {warn_type}. '
-                                             f'Warn: {self.count[msg.author.id][1]}'))
+        self.bot.loop.create_task(ext.reply(msg, f'Detected spam by {msg.author.mention}, type {warn_type}. '
+                                                 f'Warn: {self.count[msg.author.id][1]}'))
         self.bot.loop.create_task(self.act(msg, f'Aegis: Spam, type {warn_type}'))
 
     @Cog.listener()
@@ -40,15 +34,15 @@ class Aegis(Cog):
         # Checks for crash gifs
         if re.search(r".*(gfycat.com/safeofficialharvestmouse|gfycat.com/grizzledwildinsect)", msg.content):
             await msg.delete()
-            await send(msg.channel, 'Detected crash GIF by ' + msg.author.mention)
+            await ext.send(msg.channel, 'Detected crash GIF by ' + msg.author.mention)
         if msg.author.id not in self.count:  # Creates record for the message author
             self.count[msg.author.id] = [[], 0]  # [Tracked messages, warn count]
         raw_mention_count = len(msg.raw_mentions)
         if raw_mention_count >= 5:  # Mass ping
             self.count[msg.author.id][1] += 3
-            self.bot.loop.create_task(send(msg.channel,
-                                           f'Detected mass ping ({raw_mention_count}) by {msg.author.mention}. '
-                                           f'Warn: {self.count[msg.author.id][1]}'))
+            self.bot.loop.create_task(ext.send(msg.channel,
+                                               f'Detected mass ping ({raw_mention_count}) by {msg.author.mention}. '
+                                               f'Warn: {self.count[msg.author.id][1]}'))
             self.bot.loop.create_task(self.act(msg, 'Aegis: Mass ping'))
         elif msg.channel.id not in (
                 bitbay.spam_ch_id, bitbay.bot_ch_id, 826418682154188851):  # Checks whether channel ignores spam
@@ -106,7 +100,7 @@ class Aegis(Cog):
                 # Tells the victim that he has been ghost pinged
                 await m.send(f'{msg.author.mention} ({msg.author}) pinged you in **{msg.guild.name}** and deleted it.')
             # Reports in the incident channel that the culprit deleted a ping
-            await send(msg.channel, msg.author.mention + ' has deleted a ping')
+            await ext.send(msg.channel, msg.author.mention + ' has deleted a ping')
             # Removes the message from the cache as it has been deleted on Discord
             self.ghost_pings.pop(msg.id)
         elif msg.guild and msg.mentions and not msg.edited_at:  # The message has pings and has not been edited
@@ -119,7 +113,7 @@ class Aegis(Cog):
                     except discord.Forbidden:
                         pass
             # Reports in the incident channel that the culprit deleted a ping
-            await send(msg.channel, msg.author.mention + ' has deleted a ping')
+            await ext.send(msg.channel, msg.author.mention + ' has deleted a ping')
 
     @Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
@@ -137,6 +131,6 @@ class Aegis(Cog):
                     self.ghost_pings[before.id].remove(m)
             if has_removed:
                 # Reports in the incident channel that the culprit deleted a ping
-                await send(before.channel, before.author.mention + ' has removed a ping from a message')
+                await ext.send(before.channel, before.author.mention + ' has removed a ping from a message')
             if not self.ghost_pings[before.id]:  # All original pings have bene removed.
                 self.ghost_pings.pop(before.id)  # No longer have to track as there are no pings anymore.

@@ -3,6 +3,7 @@ import logging
 import re
 import sqlite3
 from datetime import datetime
+from typing import Union
 
 import discord
 from aiohttp import ClientSession
@@ -123,9 +124,8 @@ class Bot(commands.Bot):
         self.boot_time = datetime.now()  # Time when bot started
         self.session = ClientSession()  # Central session for all aiohttp client requests
         # Initialise database connection
-        self.db: sqlite3.Connection = sqlite3.connect('DimBot.db', check_same_thread=False,
-                                                      detect_types=sqlite3.PARSE_DECLTYPES)
-        self.cursor = self.get_cursor()
+        self.db = None
+        # self.cursor = self.get_cursor()
 
     def get_cursor(self) -> sqlite3.Cursor:
         """Returns a cursor from the db connection. Multiple cursors are needed when dispatching Raceline tasks"""
@@ -160,12 +160,14 @@ class Bot(commands.Bot):
 
 class MsgExt:
 
-    def __init__(self, msg: discord.Message, prefix: str = ''):
-        self.msg = msg
-        self.prefix = prefix + ' '
+    def __init__(self, prefix: str = ''):
+        self.prefix = f'**{prefix}:** '
 
-    async def send(self, content: str):
-        await self.msg.channel.send(self.prefix + content)
+    async def send(self, msg: Union[discord.Message, commands.Context], content: str):
+        return await msg.channel.send(self.prefix + content)
+
+    async def reply(self, msg: Union[discord.Message, commands.Context], content: str):
+        return await msg.reply(self.prefix + content)
 
 
 class Embed(discord.Embed):

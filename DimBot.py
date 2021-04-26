@@ -3,6 +3,7 @@ from datetime import datetime
 from random import choice, randint
 from typing import Union
 
+import aiosqlite
 import discord
 from discord.ext import commands
 from discord.ext.commands import errors
@@ -10,7 +11,6 @@ from discord.ext.commands import errors
 import dimond
 import dimsecret
 import missile
-import raceline
 import tribe
 from bitbay import BitBay
 from bruckserver.vireg import Verstapen
@@ -24,7 +24,7 @@ intent.guilds = intent.members = intent.messages = intent.reactions = intent.voi
 intent.presences = True
 bot = missile.Bot(intents=intent)
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.1"
 # List of activities that will be randomly displayed every 5 minutes
 activities = (
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -307,7 +307,8 @@ async def hsv(ctx: commands.Context, h: int = 0, s: int = 0, v: int = 0):
 
 
 async def ready_tasks():
-    bot.add_cog(raceline.Ricciardo(bot))
+    bot.db = await aiosqlite.connect('DimBot.db')
+    # bot.add_cog(raceline.Ricciardo(bot))  # Enable when finishes async db
     bot.add_cog(Verstapen(bot))
     bot.add_cog(Bottas(bot))
     bot.add_cog(BitBay(bot))
