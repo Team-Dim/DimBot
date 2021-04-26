@@ -3,8 +3,6 @@ import random
 import discord
 from discord.ext import commands
 
-
-# TODO: instead of hardcoded queries like execute('DELETE FROM'), use object oriented approaches like table.delete()
 import missile
 
 
@@ -19,11 +17,6 @@ class Bottas(commands.Cog):
         """Gets a quote from the db via ROWID"""
         self.bot.cursor.execute("SELECT * FROM Quote WHERE ROWID = ?", (index,))
         return self.bot.cursor.fetchone()
-
-    # TODO: Use this function for Ricciardo after NEA
-    def exists(self, table: str, args: dict) -> bool:
-        base = f"SELECT EXISTS(SELECT 1 FROM {table} WHERE {' AND '.join([f'{key} = ?' for key in args.keys()])}"
-        return self.bot.cursor.execute(base, args.values()).fetchone()[0]
 
     @commands.group()  # Set invoke_without_command after db connection rewrite
     async def quote(self, ctx):
@@ -180,57 +173,40 @@ class Bottas(commands.Cog):
         is not a subcommand, d.tag shows the content of the provided tag. If no arguments are provided, d.tag lists all
         tags within the server."""
         if name:
-            async with self.bot.db.execute(
-                    "SELECT content FROM Tag WHERE name = ? AND guildID = ?",
-                    (name, ctx.guild.id)
-            ) as cursor:
-                row = await cursor.fetchone()
-                if row:
-                    await ctx.reply(row[0])
-                else:
-                    await ctx.reply(f"Tag `{name}` not found.")
+            content = await self.bot.sql.get_tag_content(self.bot.db, name=name, guildID=ctx.guild.id)
+            if content:
+                await ctx.reply(content[0])
+            else:
+                await ctx.reply(f"Tag `{name}` not found.")
         else:
-            async with self.bot.db.execute(
-                    "SELECT name FROM Tag WHERE guildID = ? ORDER BY name",
-                    (ctx.guild.id,)
-            ) as cursor:
+            async with self.bot.sql.get_tags_name_cursor(self.bot.db, guildID=ctx.guild.id) as cursor:
                 msg = ''
                 async for row in cursor:
                     msg += row[0] + ', '
-            await ctx.reply(f"`{msg[:-2]}`")
+                await ctx.reply(f"`{msg[:-2]}`")
 
     @tag.command(name='add', aliases=['a'])
     @commands.has_permissions(manage_messages=True)
     async def tag_add(self, ctx: commands.Context, name: str, url: str):
         """Adds a tag."""
-        await ctx.reply(
-            '<:sqlite:836048237571604481> The database interconnect is being rewritten. '
-            'Most database-related commands are disabled.\nDatabase rn: <:zencry:836049292769624084>')
-        raise commands.errors.CheckFailure
         if not missile.is_url(url):
             await ctx.reply('Tag content must be a HTTP WWW link!')
-            return
-        if self.bot.cursor.execute("SElECT EXISTS(SELECT 1 FROM Tag WHERE (name = ? OR content = ?) AND guildID = ?)",
-                                   (name, url, ctx.guild.id)).fetchone()[0]:
-            await ctx.reply('A tag with the same name/link already exists!')
             return
         if '<@' in name:
             await ctx.reply('Why are you mentioning people in tag names?')
             return
-        self.bot.cursor.execute("INSERT INTO Tag VALUES (?, ?, ?)", (name, url, ctx.guild.id))
+        if await self.bot.sql.tag_exists(self.bot.db, name=name, content=url, guildID=ctx.guild.id):
+            await ctx.reply('A tag with the same name/link already exists!')
+            return
+        await self.bot.sql.add_tag(self.bot.db, name=name, content=url, guildID=ctx.guild.id)
         await ctx.reply('Your tag has been created!')
 
     @tag.command(name='delete', aliases=['d'])
     @commands.has_permissions(manage_messages=True)
     async def tag_delete(self, ctx: commands.Context, name: str):
         """Deletes a tag"""
-        await ctx.reply(
-            '<:sqlite:836048237571604481> The database interconnect is being rewritten. '
-            'Most database-related commands are disabled.\nDatabase rn: <:zencry:836049292769624084>')
-        raise commands.errors.CheckFailure
-        if self.bot.cursor.execute("SELECT EXISTS(SELECT 1 FROM Tag WHERE name = ? AND guildID = ?)",
-                                   (name, ctx.guild.id)).fetchone()[0]:
-            self.bot.cursor.execute("DELETE FROM Tag WHERE name = ? AND guildID = ?", (name, ctx.guild.id))
+        if await self.bot.sql.tag_name_exists(self.bot.db, name=name, guildID=ctx.guild.id):
+            await self.bot.sql.delete_tag(self.bot.db, name=name, guildID=ctx.guild.id)
             await ctx.reply('Deleted tag.')
         else:
             await ctx.reply(f"Tag `{name}` not found.")

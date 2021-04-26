@@ -5,6 +5,7 @@ import sqlite3
 from datetime import datetime
 from typing import Union
 
+import aiosql
 import discord
 from aiohttp import ClientSession
 from discord.ext import commands
@@ -126,6 +127,7 @@ class Bot(commands.Bot):
         # Initialise database connection
         self.db = None
         # self.cursor = self.get_cursor()
+        self.sql = aiosql.from_path('sql', 'aiosqlite')
 
     def get_cursor(self) -> sqlite3.Cursor:
         """Returns a cursor from the db connection. Multiple cursors are needed when dispatching Raceline tasks"""

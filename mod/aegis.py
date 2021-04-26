@@ -100,7 +100,7 @@ class Aegis(Cog):
                 # Tells the victim that he has been ghost pinged
                 await m.send(f'{msg.author.mention} ({msg.author}) pinged you in **{msg.guild.name}** and deleted it.')
             # Reports in the incident channel that the culprit deleted a ping
-            await ext.send(msg.channel, msg.author.mention + ' has deleted a ping')
+            await ext.send(msg, msg.author.mention + ' has deleted a ping')
             # Removes the message from the cache as it has been deleted on Discord
             self.ghost_pings.pop(msg.id)
         elif msg.guild and msg.mentions and not msg.edited_at:  # The message has pings and has not been edited
@@ -113,7 +113,7 @@ class Aegis(Cog):
                     except discord.Forbidden:
                         pass
             # Reports in the incident channel that the culprit deleted a ping
-            await ext.send(msg.channel, msg.author.mention + ' has deleted a ping')
+            await ext.send(msg, msg.author.mention + ' has deleted a ping')
 
     @Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
@@ -131,6 +131,6 @@ class Aegis(Cog):
                     self.ghost_pings[before.id].remove(m)
             if has_removed:
                 # Reports in the incident channel that the culprit deleted a ping
-                await ext.send(before.channel, before.author.mention + ' has removed a ping from a message')
+                await ext.send(before, before.author.mention + ' has removed a ping from a message')
             if not self.ghost_pings[before.id]:  # All original pings have bene removed.
                 self.ghost_pings.pop(before.id)  # No longer have to track as there are no pings anymore.

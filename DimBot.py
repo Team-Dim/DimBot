@@ -24,7 +24,7 @@ intent.guilds = intent.members = intent.messages = intent.reactions = intent.voi
 intent.presences = True
 bot = missile.Bot(intents=intent)
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.1"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.2"
 # List of activities that will be randomly displayed every 5 minutes
 activities = (
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -110,7 +110,8 @@ async def on_command_error(ctx: commands.Context, error: commands.errors.Command
     # Human error
     elif isinstance(error, (errors.MissingRequiredArgument, errors.MissingAnyRole, errors.CommandOnCooldown,
                             errors.UserNotFound, errors.MemberNotFound, errors.MissingPermissions,
-                            errors.BadInviteArgument, errors.BadColourArgument)):
+                            errors.BadInviteArgument, errors.BadColourArgument)) \
+            or isinstance(error, errors.BadUnionArgument) and not ctx.command.has_error_handler():
         await ctx.reply(str(error))
     elif isinstance(error, errors.ChannelNotFound):  # Human error
         await ctx.reply("Invalid channel. Maybe you've tagged the wrong one?")
@@ -118,8 +119,7 @@ async def on_command_error(ctx: commands.Context, error: commands.errors.Command
         await ctx.reply("Invalid role. Maybe you've tagged the wrong one?")
     elif isinstance(error, errors.GuildNotFound):
         await ctx.reply('Invalid server or I am not in that server.')
-    elif isinstance(error, errors.BadArgument) or isinstance(error, commands.errors.BadUnionArgument) \
-            and not ctx.command.has_error_handler():
+    elif isinstance(error, errors.BadArgument):
         # Could be a human/program error
         await ctx.reply('Bad arguments.')
     elif isinstance(error, errors.CheckFailure):
