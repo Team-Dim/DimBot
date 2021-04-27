@@ -1,5 +1,3 @@
-import random
-
 import discord
 from discord.ext import commands
 
@@ -13,52 +11,52 @@ class Bottas(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    def get_quote(self, index: int):
-        """Gets a quote from the db via ROWID"""
-        self.bot.cursor.execute("SELECT * FROM Quote WHERE ROWID = ?", (index,))
-        return self.bot.cursor.fetchone()
-
-    @commands.group()  # Set invoke_without_command after db connection rewrite
+    @commands.group(invoke_without_command=True)
     async def quote(self, ctx):
         """
         Wiki for interacting with quote database: https://github.com/TCLRainbow/DimBot/wiki/Project-Echo
         """
-        await ctx.reply(
-            '<:sqlite:836048237571604481> The database interconnect is being rewritten. '
-            'Most database-related commands are disabled.\nDatabase rn: <:zencry:836049292769624084>')
-        raise commands.errors.CheckFailure
         raise commands.errors.CommandNotFound
 
     @quote.command(aliases=('i',))
     async def index(self, ctx, index: int = 0):
         """Search a quote by its ID"""
-        quote = self.get_quote(index)
+        quote = await self.bot.sql.get_quote(self.bot.db, id=index)
         content = ''
         if not quote:  # Provided Quote ID is invalid
-            count = self.bot.cursor.execute('SELECT COUNT(ROWID) FROM Quote').fetchone()[0]
+            count = await self.bot.sql.get_quotes_count(self.bot.db)
+            quote = await self.bot.sql.get_random_quote(self.bot.db)
+            index = quote[3]
             content = f'That quote ID is invalid. There are **{count}** quotes in the database. This is a random one:\n'
-            while not quote:  # Randomly generates a valid quote
-                index = random.randint(1, count)
-                quote = self.get_quote(index)
         user = self.bot.get_user(quote[2])
         if not user:  # Ensures that user is not None
             user = await self.bot.fetch_user(quote[2])
         content += f"Quote #{index}:\n> {quote[0]} - {quote[1]}\n Uploaded by {user}"
-        await ctx.send(content)
+        await ctx.reply(content)
 
     @quote.command(aliases=('q',))
     async def quoter(self, ctx, *, quoter):
         """List quotes that are said by a quoter"""
-        self.bot.cursor.execute("SELECT ROWID, msg FROM Quote WHERE quoter = ?", (quoter,))
-        quotes = self.bot.cursor.fetchall()
-        content = f"The following are **{quoter}**'s quotes:\n"
+        quotes = await self.bot.sql.get_quoter_quotes(self.bot.db, quoter=quoter)
+        content = f"The following are **{quoter}**'s quotes:\n>>> "
+        no_msg = False
         for quote in quotes:
-            content += f'> {quote[0]}. {quote[1]}\n'
-        await ctx.send(content)
+            content += f'{quote[0]}. {quote[1]}\n'
+            if len(content) >= 2048:
+                no_msg = True
+                break
+        if no_msg:
+            content = f"The following are **{quoter}**'s quotes' IDs:\n"
+            for quote in quotes:
+                content += f'{quote[0]} '
+        await ctx.reply(content)
 
     @quote.command(aliases=['u'])
     async def uploader(self, ctx, user: discord.User = None):
         """List quotes that are uploaded by a Discord user"""
+        await ctx.reply("<:sqlite:836048237571604481> The database interconnect is being rewritten."
+                        "Most d.quote commands are disabled.\nDatabase rn: <:zencry:836049292769624084>")
+        return
         user = user if user else ctx.author
         self.bot.cursor.execute("SELECT ROWID, msg, quoter FROM Quote WHERE uid = ?", (user.id,))
         quotes = self.bot.cursor.fetchall()
@@ -74,6 +72,9 @@ class Bottas(commands.Cog):
     async def quote_add(self, ctx, *, args):
         """Adds a quote"""
         # Quote message validation
+        await ctx.reply("<:sqlite:836048237571604481> The database interconnect is being rewritten."
+                        "Most d.quote commands are disabled.\nDatabase rn: <:zencry:836049292769624084>")
+        return
         if '<@' in args:
             await ctx.send("You can't mention others in quote message!")
             return
@@ -110,6 +111,9 @@ class Bottas(commands.Cog):
     @quote.command(name='delete', aliases=['d'])
     async def quote_delete(self, ctx, index: int):
         """Deletes a quote by its quote ID"""
+        await ctx.reply("<:sqlite:836048237571604481> The database interconnect is being rewritten."
+                        "Most d.quote commands are disabled.\nDatabase rn: <:zencry:836049292769624084>")
+        return
         quote = self.get_quote(index)  # Checks if the quote exists
         if quote:
             # Check if sender is quote uploader or sender is me (db admin)
@@ -129,6 +133,9 @@ class Bottas(commands.Cog):
     @quote.command(aliases=['m'])
     async def message(self, ctx: commands.Context, *, search):
         """Search quotes by keywords"""
+        await ctx.reply("<:sqlite:836048237571604481> The database interconnect is being rewritten."
+                        "Most d.quote commands are disabled.\nDatabase rn: <:zencry:836049292769624084>")
+        return
         quotes = self.bot.cursor.execute("SELECT ROWID, msg, quoter FROM Quote WHERE msg like ?",
                                          ('%' + search + '%',)).fetchall()
         base = f'The following quotes contains **{search}**:'
@@ -139,6 +146,9 @@ class Bottas(commands.Cog):
     @quote.command(aliases=['e'])
     async def edit(self, ctx: commands.Context, index: int):
         """Edits a quote"""
+        await ctx.reply("<:sqlite:836048237571604481> The database interconnect is being rewritten."
+                        "Most d.quote commands are disabled.\nDatabase rn: <:zencry:836049292769624084>")
+        return
         quote = self.get_quote(index)
         if quote and (quote['uid'] == ctx.author.id or ctx.author.id == self.bot.owner_id):
             content = await self.bot.ask_msg(ctx, 'Enter the new quote: (wait 10 seconds to cancel)')
