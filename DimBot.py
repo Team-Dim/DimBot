@@ -3,6 +3,7 @@ from datetime import datetime
 from random import choice, randint
 from typing import Union
 
+import aiosql
 import aiosqlite
 import discord
 from discord.ext import commands
@@ -24,7 +25,7 @@ intent.guilds = intent.members = intent.messages = intent.reactions = intent.voi
 intent.presences = True
 bot = missile.Bot(intents=intent)
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.3"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.4"
 # List of activities that will be randomly displayed every 5 minutes
 activities = (
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -213,14 +214,14 @@ async def arccore(ctx: commands.Context):
 
 @arccore.command()
 async def stealth(ctx):
-    bot.db.commit()
+    await bot.db.commit()
     await ctx.send('Arc-Cor𐑞: **Stealth**')
     await bot.logout()
 
 
 @arccore.command()
 async def pandora(ctx):
-    bot.db.commit()
+    await bot.db.commit()
     await ctx.send('Arc-Cor𐑞: **PANDORA**, self-evolving!')
     with open('final', 'w') as death_note:
         death_note.write(str(ctx.channel.id))
@@ -260,10 +261,12 @@ async def exe(ctx, *, msg: str):
     import sqlite3
     try:
         tic = datetime.now()  # Measure execution time
-        rows = bot.cursor.execute(msg)
-        result = rows.fetchall()
-        toc = datetime.now()
-        await ctx.send(f"{result}\n{rows.rowcount} row affected in {(toc - tic).total_seconds() * 1000}ms")
+        msg = f"--name: sqlexe\n{msg}"""
+        query = aiosql.from_str(msg, 'aiosqlite')
+        async with query.sqlexe_cursor(bot.db) as cursor:
+            result = await cursor.fetchall()
+            toc = datetime.now()
+            await ctx.reply(f"{result}\n{cursor.rowcount} row affected in {(toc - tic).total_seconds() * 1000}ms")
     except sqlite3.Error as e:
         await ctx.send(f"**{e.__class__.__name__}**: {e}")
 
@@ -271,7 +274,7 @@ async def exe(ctx, *, msg: str):
 @arccore.command()
 async def save(ctx):
     # Forcefully saves the db
-    bot.db.commit()
+    await bot.db.commit()
     await ctx.send('Saved')
 
 

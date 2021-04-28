@@ -82,7 +82,7 @@ def is_url(url: str):
 
 async def prefix_process(bot, msg: discord.Message):
     """Function for discord.py to extract applicable prefix based on the message"""
-    tag_mention = re.search(f'^(<@.?{bot.user.id}> |DimBot, )', msg.content)
+    tag_mention = re.search(f'^(<@!?{bot.user.id}>,? |DimBot, )', msg.content)
     if tag_mention:
         if msg.author.id == bot.owner_id:  # Only I can use 'DimBot, xxx' or '@DimBot xxx'
             return tag_mention.group(0)
@@ -112,6 +112,15 @@ def in_guilds(*guilds):
     return commands.check(check)
 
 
+async def check_arg(ctx, arg: str, user_mention=True, newline=True):
+    if user_mention and '<@' in arg:
+        await ctx.reply("You can't mention others!")
+        raise commands.errors.CheckFailure
+    if newline and '\n' in arg:
+        await ctx.reply('It should only be a single line!')
+        raise commands.errors.CheckFailure
+
+
 class Bot(commands.Bot):
 
     def __init__(self, **options):
@@ -126,14 +135,7 @@ class Bot(commands.Bot):
         self.session = ClientSession()  # Central session for all aiohttp client requests
         # Initialise database connection
         self.db = None
-        # self.cursor = self.get_cursor()
         self.sql = aiosql.from_path('sql', 'aiosqlite')
-
-    def get_cursor(self) -> sqlite3.Cursor:
-        """Returns a cursor from the db connection. Multiple cursors are needed when dispatching Raceline tasks"""
-        cursor = self.db.cursor()
-        cursor.row_factory = sqlite3.Row
-        return cursor
 
     async def ask_msg(self, ctx, msg: str, timeout: int = 10):
         """Asks a follow-up question"""

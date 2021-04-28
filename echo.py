@@ -1,7 +1,19 @@
+import re
+
 import discord
 from discord.ext import commands
 
 import missile
+
+
+class Quote:
+
+    def __init__(self, *args):
+        self.msg = args[0]
+        self.quoter = args[1]
+        self.uid = args[2]
+        self.quoter_group = args[3]
+        self.time = args[4]
 
 
 class Bottas(commands.Cog):
@@ -26,17 +38,25 @@ class Bottas(commands.Cog):
         if not quote:  # Provided Quote ID is invalid
             count = await self.bot.sql.get_quotes_count(self.bot.db)
             quote = await self.bot.sql.get_random_quote(self.bot.db)
-            index = quote[3]
+            index = quote[-1]
             content = f'That quote ID is invalid. There are **{count}** quotes in the database. This is a random one:\n'
-        user = self.bot.get_user(quote[2])
+        quote_obj = Quote(*quote)
+        user = self.bot.get_user(quote_obj.uid)
         if not user:  # Ensures that user is not None
-            user = await self.bot.fetch_user(quote[2])
-        content += f"Quote #{index}:\n> {quote[0]} - {quote[1]}\n Uploaded by {user}"
+            try:
+                user = await self.bot.fetch_user(quote_obj.uid)
+            except discord.NotFound:
+                user = '*unknown user*'
+        content += f"Quote #{index}:\n> {quote_obj.msg} - {quote_obj.quoter}"
+        if quote_obj.quoter_group:
+            content += f", {quote_obj.quoter_group}"
+        content += f"\n Uploaded by {user} at {quote_obj.time}"  # TODO: Format time
         await ctx.reply(content)
 
     @quote.command(aliases=('q',))
     async def quoter(self, ctx, *, quoter):
         """List quotes that are said by a quoter"""
+        # TODO: Support searching by quoter/ quoter, quoterGroup/, quoterGroup
         quotes = await self.bot.sql.get_quoter_quotes(self.bot.db, quoter=quoter)
         content = f"The following are **{quoter}**'s quotes:\n>>> "
         no_msg = False
@@ -46,67 +66,61 @@ class Bottas(commands.Cog):
                 no_msg = True
                 break
         if no_msg:
-            content = f"The following are **{quoter}**'s quotes' IDs:\n"
+            content = f"The following are IDs of **{quoter}**'s quotes:\n"
             for quote in quotes:
                 content += f'{quote[0]} '
         await ctx.reply(content)
 
-    @quote.command(aliases=['u'])
+    @quote.command(aliases=('u',))
     async def uploader(self, ctx, user: discord.User = None):
         """List quotes that are uploaded by a Discord user"""
-        await ctx.reply("<:sqlite:836048237571604481> The database interconnect is being rewritten."
-                        "Most d.quote commands are disabled.\nDatabase rn: <:zencry:836049292769624084>")
-        return
         user = user if user else ctx.author
-        self.bot.cursor.execute("SELECT ROWID, msg, quoter FROM Quote WHERE uid = ?", (user.id,))
-        quotes = self.bot.cursor.fetchall()
-        content = f"The following are quotes uploaded by **{user}**:"
+        quotes = await self.bot.sql.get_uploader_quotes(self.bot.db, uid=user.id)
+        content = f"The following are quotes uploaded by **{user}**:\n>>> "
+        no_msg = False
         for quote in quotes:
-            to_be_added = f'\n> {quote[0]}. {quote[1]} - {quote[2]}'
-            if len(content + to_be_added) >= 2000:
+            content += f'{quote[0]}. {quote[1]} - {quote[2]}\n'
+            if len(content) >= 2048:
+                no_msg = True
                 break
-            content += to_be_added
+        if no_msg:
+            content = f"The following are IDs of quotes uploaded by **{user}:\n"
+            for quote in quotes:
+                content += f'{quote[0]} '
         await ctx.send(content)
 
-    @quote.command(name='add', aliases=['a'])
-    async def quote_add(self, ctx, *, args):
+    @quote.command(name='add', aliases=('a',))
+    async def quote_add(self, ctx: commands.Context, *, quote):
         """Adds a quote"""
         # Quote message validation
-        await ctx.reply("<:sqlite:836048237571604481> The database interconnect is being rewritten."
-                        "Most d.quote commands are disabled.\nDatabase rn: <:zencry:836049292769624084>")
-        return
-        if '<@' in args:
-            await ctx.send("You can't mention others in quote message!")
-            return
-        if '\n' in args:
-            await ctx.send("The quote should be only one line!")
-            return
+        await missile.check_arg(ctx, quote)
         # Check if a quote with the same content already exists in the database
-        self.bot.cursor.execute("SELECT ROWID FROM Quote WHERE msg = ?", (args,))
-        exists = self.bot.cursor.fetchone()
-        if exists:
-            await ctx.send(f'This quote duplicates with #{exists[0]}')
-        else:
-            # Asks for the quoter who said the quote
-            quoter = await self.bot.ask_msg(ctx, 'Quoter?')
-            if quoter:
-                # Quote message validation
-                if '<@' in quoter:
-                    await ctx.send("You can't mention others in quote message!")
-                    return
-                if '\n' in quoter:
-                    await ctx.send("The quote should be only one line!")
-                    return
-
-                # Determines the ROWID to be used for inserting the quote
-                rowid = self.bot.cursor.execute('SELECT id FROM QuoteRowID LIMIT 1').fetchone()
-                if rowid:  # Use ROWID from QuoteRowID if available. These IDs exist when a quote was deleted
-                    self.bot.cursor.execute("INSERT INTO Quote(ROWID, msg, quoter, uid) VALUES (?, ?, ?, ?)",
-                                            (rowid[0], args, quoter, ctx.author.id))
-                    self.bot.cursor.execute("DELETE FROM QuoteRowID WHERE id = ?", (rowid[0],))
-                else:  # Normal insertion, using a fresh ROWID
-                    self.bot.cursor.execute("INSERT INTO Quote VALUES (?, ?, ?)", (args, quoter, ctx.author.id))
-                await ctx.send(f"Added quote #{self.bot.cursor.lastrowid}")
+        rowid = await self.bot.sql.quote_exists(self.bot.db, msg=quote)
+        if rowid:
+            await ctx.send(f'This quote duplicates with #{rowid}')
+            return
+        # Asks for the quoter who said the quote
+        quoter = await self.bot.ask_msg(ctx, 'Quoter?')
+        if quoter:
+            # Quote message validation
+            await missile.check_arg(ctx, quoter)
+            quoter = re.split(r", ?", quoter)
+            quoter_group = quoter[1] if len(quoter) > 1 else None
+            quoter = quoter[0]
+            # Determines the ROWID to be used for inserting the quote
+            rowid = await self.bot.sql.get_next_row_id(self.bot.db)
+            if rowid:  # Use ROWID from QuoteRowID if available. These IDs exist when a quote was deleted
+                last_row_id = await self.bot.sql.add_quote_with_rowid(
+                    self.bot.db, rowid=rowid, msg=quote, quoter=quoter, uid=ctx.author.id, QuoterGroup=quoter_group,
+                    time=ctx.message.created_at
+                )
+                await self.bot.sql.delete_row_id(self.bot.db, id=rowid)
+            else:  # Normal insertion, using an all new ROWID
+                last_row_id = await self.bot.sql.add_quote(
+                    self.bot.db, msg=quote, quoter=quoter, uid=ctx.author.id, QuoterGroup=quoter_group,
+                    time=ctx.message.created_at
+                )
+            await ctx.send(f"Added quote #{last_row_id}")
 
     @quote.command(name='delete', aliases=['d'])
     async def quote_delete(self, ctx, index: int):
