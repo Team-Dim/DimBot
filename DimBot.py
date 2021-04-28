@@ -25,7 +25,7 @@ intent.guilds = intent.members = intent.messages = intent.reactions = intent.voi
 intent.presences = True
 bot = missile.Bot(intents=intent)
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.4"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.5"
 # List of activities that will be randomly displayed every 5 minutes
 activities = (
     discord.Activity(name='Echo', type=discord.ActivityType.listening),
@@ -78,6 +78,8 @@ except FileNotFoundError:
 
 @bot.event
 async def on_message(msg: discord.Message):
+    logger.info(f"{msg.author} @{msg.guild} #{msg.channel}")
+    logger.info(msg.content)
     if msg.guild and msg.content == msg.guild.me.mention:
         await msg.channel.send(f'My prefix is **{bot.default_prefix}**')
         return
@@ -231,6 +233,16 @@ async def pandora(ctx):
 
 
 @arccore.command()
+async def update(ctx):
+    await bot.sql.upd_martin(bot.db)
+    quoters = await bot.sql.upd_quoter(bot.db)
+    for quoter_tuple in quoters:
+        quoter = quoter_tuple[0].split(', ')
+        if len(quoter) > 1:
+            await bot.sql.upd_update(bot.db, quoter=quoter[0], QuoterGroup=quoter[1], og=quoter_tuple[0])
+
+
+@arccore.command()
 async def sch(ctx, ch: Union[discord.TextChannel, discord.User]):
     bot.sch = ch
 
@@ -248,10 +260,9 @@ async def shadow(c, *, cmd: str):
     await bot.invoke(await bot.get_context(msg))
 
 
-# TODO: Probably change to on_ban() -> if Dim unban
 @arccore.command()
-async def unban(ctx: commands.Context, s: discord.Guild):
-    await s.unban(bot.get_user(bot.owner_id), reason='Sasageyo')
+async def leave(ctx: commands.Context, s: discord.Guild):
+    await s.leave()
     await ctx.reply('Done.')
 
 
@@ -332,6 +343,7 @@ async def ready_tasks():
         logger.debug('Changed activity')
         await bot.change_presence(activity=choice(activities))
         await asyncio.sleep(300)
+        await bot.db.commit()
 
 
 bot.loop.create_task(ready_tasks())

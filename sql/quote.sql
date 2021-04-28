@@ -17,12 +17,18 @@ FROM Quote;
 --name: get-quoter-quotes
 SELECT ROWID, msg
 FROM Quote
-WHERE quoter = :quoter;
+WHERE (:quoter is '' OR quoter = :quoter)
+  AND (:QuoterGroup is null OR QuoterGroup = :QuoterGroup);
 
 --name: get-uploader-quotes
 SELECT ROWID, msg, quoter
 FROM Quote
 WHERE uid = :uid;
+
+--name: get-keyword-quotes
+SELECT *, ROWID
+FROM Quote
+WHERE msg LIKE '%' + :kw + '%';
 
 --name: quote-exists$
 SELECT ROWID
@@ -34,7 +40,7 @@ SELECT id
 FROM QuoteRowID
 LIMIT 1;
 
---name: add-quote-with-rowid!
+--name: add-quote-with-rowid<!
 INSERT INTO Quote(ROWID, msg, quoter, uid, QuoterGroup, Time)
 VALUES (:rowid, :msg, :quoter, :uid, :QuoterGroup, :time);
 
@@ -42,6 +48,29 @@ VALUES (:rowid, :msg, :quoter, :uid, :QuoterGroup, :time);
 INSERT INTO Quote
 VALUES (:msg, :quoter, :uid, :QuoterGroup, :time);
 
---name: delete-row-id<!
+--name: delete-rowid<!
 DELETE FROM QuoteRowID
 WHERE id = :id;
+
+--name: delete-quote!
+DELETE FROM Quote
+WHERE ROWID = :id;
+
+--name: add-next-rowid!
+INSERT INTO QuoteRowID
+VALUES (:id);
+
+--name: update-quote!
+UPDATE Quote
+SET msg = :msg, quoter = :quoter, QuoterGroup = :QuoterGroup
+WHERE ROWID = :id;
+
+--name: upd-quoter
+SELECT quoter
+FROM Quote;
+
+--name: upd-martin!
+UPDATE Quote SET quoter = 'Martin Luther King Jr.' WHERE quoter = 'Martin Luther King, Jr.';
+
+--name: upd-update!
+UPDATE Quote SET quoter = :quoter, QuoterGroup = :QuoterGroup WHERE quoter = :og

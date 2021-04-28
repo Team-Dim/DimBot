@@ -6,6 +6,11 @@ from discord.ext import commands
 import missile
 
 
+def split_quoter(quoter: str):
+    quoter = re.split(r" *, *", quoter)
+    return quoter[0], quoter[1] if len(quoter) > 1 else None
+
+
 class Quote:
 
     def __init__(self, *args):
@@ -18,7 +23,7 @@ class Quote:
 
 class Bottas(commands.Cog):
     """Storing messages.
-    Version 2.1"""
+    Version 3.0"""
 
     def __init__(self, bot):
         self.bot = bot
@@ -50,15 +55,17 @@ class Bottas(commands.Cog):
         content += f"Quote #{index}:\n> {quote_obj.msg} - {quote_obj.quoter}"
         if quote_obj.quoter_group:
             content += f", {quote_obj.quoter_group}"
-        content += f"\n Uploaded by {user} at {quote_obj.time}"  # TODO: Format time
+        content += f"\n Uploaded by {user}"
+        if quote_obj.time:
+            content += f" at {quote_obj.time.split('.')[0]}"
         await ctx.reply(content)
 
     @quote.command(aliases=('q',))
-    async def quoter(self, ctx, *, quoter):
-        """List quotes that are said by a quoter"""
-        # TODO: Support searching by quoter/ quoter, quoterGroup/, quoterGroup
-        quotes = await self.bot.sql.get_quoter_quotes(self.bot.db, quoter=quoter)
-        content = f"The following are **{quoter}**'s quotes:\n>>> "
+    async def quoter(self, ctx, *, quoter_msg):
+        """List quotes that are said by a quoter/a quoter group"""
+        quoter, quoter_group = split_quoter(quoter_msg)
+        quotes = await self.bot.sql.get_quoter_quotes(self.bot.db, quoter=quoter, QuoterGroup=quoter_group)
+        content = f"The following are **{quoter_msg}**'s quotes:\n>>> "
         no_msg = False
         for quote in quotes:
             content += f'{quote[0]}. {quote[1]}\n'
@@ -66,7 +73,7 @@ class Bottas(commands.Cog):
                 no_msg = True
                 break
         if no_msg:
-            content = f"The following are IDs of **{quoter}**'s quotes:\n"
+            content = f"The following are IDs of **{quoter_msg}**'s quotes:\n"
             for quote in quotes:
                 content += f'{quote[0]} '
         await ctx.reply(content)
@@ -104,9 +111,7 @@ class Bottas(commands.Cog):
         if quoter:
             # Quote message validation
             await missile.check_arg(ctx, quoter)
-            quoter = re.split(r", ?", quoter)
-            quoter_group = quoter[1] if len(quoter) > 1 else None
-            quoter = quoter[0]
+            quoter, quoter_group = split_quoter(quoter)
             # Determines the ROWID to be used for inserting the quote
             rowid = await self.bot.sql.get_next_row_id(self.bot.db)
             if rowid:  # Use ROWID from QuoteRowID if available. These IDs exist when a quote was deleted
@@ -114,7 +119,7 @@ class Bottas(commands.Cog):
                     self.bot.db, rowid=rowid, msg=quote, quoter=quoter, uid=ctx.author.id, QuoterGroup=quoter_group,
                     time=ctx.message.created_at
                 )
-                await self.bot.sql.delete_row_id(self.bot.db, id=rowid)
+                await self.bot.sql.delete_rowid(self.bot.db, id=rowid)
             else:  # Normal insertion, using an all new ROWID
                 last_row_id = await self.bot.sql.add_quote(
                     self.bot.db, msg=quote, quoter=quoter, uid=ctx.author.id, QuoterGroup=quoter_group,
@@ -122,72 +127,69 @@ class Bottas(commands.Cog):
                 )
             await ctx.send(f"Added quote #{last_row_id}")
 
-    @quote.command(name='delete', aliases=['d'])
+    @quote.command(name='delete', aliases=('d',))
     async def quote_delete(self, ctx, index: int):
         """Deletes a quote by its quote ID"""
-        await ctx.reply("<:sqlite:836048237571604481> The database interconnect is being rewritten."
-                        "Most d.quote commands are disabled.\nDatabase rn: <:zencry:836049292769624084>")
-        return
-        quote = self.get_quote(index)  # Checks if the quote exists
-        if quote:
+        quote = await self.bot.sql.get_quote(self.bot.db, id=index)
+        if quote:  # Checks if the quote exists
+            quote = Quote(*quote)
             # Check if sender is quote uploader or sender is me (db admin)
-            if quote['uid'] == ctx.author.id or ctx.author.id == self.bot.owner_id:
+            if quote.uid == ctx.author.id or ctx.author.id == self.bot.owner_id:
                 # Confirmation
-                if await self.bot.ask_reaction(ctx, f"> {quote['msg']}\n"
+                if await self.bot.ask_reaction(ctx, f"> {quote.msg}\n"
                                                     f"You sure you want to delete this? React ✅ to confirm"):
                     # Delete
-                    self.bot.cursor.execute("DELETE FROM Quote WHERE ROWID = ?", (index,))
-                    self.bot.cursor.execute("INSERT INTO QuoteRowID VALUES (?)", (index,))
+                    await self.bot.sql.delete_quote(self.bot.db, id=index)
+                    await self.bot.sql.add_next_rowid(self.bot.db, id=index)
                     await ctx.send('Deleted quote.')
             else:
                 await ctx.send("You must be the quote uploader to delete the quote!")
         else:
             await ctx.send('No quote found!')
 
-    @quote.command(aliases=['m'])
-    async def message(self, ctx: commands.Context, *, search):
+    @quote.command(aliases=('m',))
+    async def message(self, ctx: commands.Context, *, keyword):
         """Search quotes by keywords"""
-        await ctx.reply("<:sqlite:836048237571604481> The database interconnect is being rewritten."
-                        "Most d.quote commands are disabled.\nDatabase rn: <:zencry:836049292769624084>")
-        return
-        quotes = self.bot.cursor.execute("SELECT ROWID, msg, quoter FROM Quote WHERE msg like ?",
-                                         ('%' + search + '%',)).fetchall()
-        base = f'The following quotes contains **{search}**:'
-        for q in quotes:
-            base += f"\n> {q['ROWID']}. {q['msg']} - {q['quoter']}"
-        await ctx.send(base)
+        quotes = await self.bot.sql.get_keyword_quotes(self.bot.db, kw=keyword)
+        content = f'The following quotes contains **{keyword}**:\n>>> '
+        no_msg = False
+        for quote in quotes:
+            q = Quote(*quote)
+            content += f'{quote[-1]}. {q.msg} - {q.quoter}'
+            if q.quoter_group:
+                content += ', ' + q.quoter_group
+            content += '\n'
+            if len(content) >= 2048:
+                no_msg = True
+                break
+        if no_msg:
+            content = f"The following are IDs of quotes that contain **{keyword}**:\n"
+            for quote in quotes:
+                content += f'{quote[-1]} '
+        await ctx.reply(content)
 
-    @quote.command(aliases=['e'])
+    @quote.command(aliases=('e',))
     async def edit(self, ctx: commands.Context, index: int):
         """Edits a quote"""
-        await ctx.reply("<:sqlite:836048237571604481> The database interconnect is being rewritten."
-                        "Most d.quote commands are disabled.\nDatabase rn: <:zencry:836049292769624084>")
-        return
-        quote = self.get_quote(index)
-        if quote and (quote['uid'] == ctx.author.id or ctx.author.id == self.bot.owner_id):
-            content = await self.bot.ask_msg(ctx, 'Enter the new quote: (wait 10 seconds to cancel)')
-            if content:
-                # Quote message validation
-                if '<@' in content:
-                    await ctx.send("You can't mention others in quote message!")
-                    return
-                if '\n' in content:
-                    await ctx.send("The quote should be only one line!")
-                    return
-                quoter = await self.bot.ask_msg(ctx, "Enter new quoter: (wait 10 seconds if it is the same)")
-                if quoter:
-                    # Quote message validation
-                    if '<@' in quoter:
-                        await ctx.send("You can't mention others in quote message!")
-                        return
-                    if '\n' in quoter:
-                        await ctx.send("The quote should be only one line!")
-                        return
-                    self.bot.cursor.execute("UPDATE Quote SET msg = ?, quoter = ? WHERE ROWID = ?",
-                                            (content, quoter, index))
-                else:
-                    self.bot.cursor.execute("UPDATE Quote SET msg = ? WHERE ROWID = ?", (content, index))
-                await ctx.reply('Quote updated')
+        quote = await self.bot.sql.get_quote(self.bot.db, id=index)
+        if quote and (quote[2] == ctx.author.id or ctx.author.id == self.bot.owner_id):
+            quote = Quote(*quote)
+            content = await self.bot.ask_msg(ctx, 'Enter the new quote: (wait 10 seconds if it is the same)')
+            if content:  # Quote message validation
+                await missile.check_arg(ctx, content)
+            else:
+                content = quote.msg
+            quoter = await self.bot.ask_msg(ctx, "Enter new quoter: (wait 10 seconds if it is the same)")
+            if quoter:  # Quoter validation
+                await missile.check_arg(ctx, quoter)
+                quoter, quoter_group = split_quoter(quoter)
+            else:
+                quoter = quote.quoter
+                quoter_group = quote.quoter_group
+            await self.bot.sql.update_quote(
+                self.bot.db, msg=content, quoter=quoter, QuoterGroup=quoter_group, id=index
+            )
+            await ctx.reply('Quote updated')
         else:
             await ctx.reply("You can't edit this quote!")
 

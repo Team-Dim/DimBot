@@ -80,7 +80,6 @@ class Ricciardo(missile.Cog):
         except Exception as e:
             self.logger.critical(e.with_traceback(None))
         self.logger.debug('Synced')
-        self.bot.db.commit()
 
     async def rss_process(self, rowid, row):
         """The main algorithm for RSS feed detector"""

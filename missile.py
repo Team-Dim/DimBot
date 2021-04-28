@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import re
-import sqlite3
 from datetime import datetime
 from typing import Union
 
@@ -82,7 +81,7 @@ def is_url(url: str):
 
 async def prefix_process(bot, msg: discord.Message):
     """Function for discord.py to extract applicable prefix based on the message"""
-    tag_mention = re.search(f'^(<@!?{bot.user.id}>,? |DimBot, )', msg.content)
+    tag_mention = re.search(f'^(<@!{bot.user.id}>,? |DimBot, )', msg.content)
     if tag_mention:
         if msg.author.id == bot.owner_id:  # Only I can use 'DimBot, xxx' or '@DimBot xxx'
             return tag_mention.group(0)
