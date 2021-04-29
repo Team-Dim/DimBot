@@ -64,13 +64,3 @@ VALUES (:id);
 UPDATE Quote
 SET msg = :msg, quoter = :quoter, QuoterGroup = :QuoterGroup
 WHERE ROWID = :id;
-
---name: upd-quoter
-SELECT quoter
-FROM Quote;
-
---name: upd-martin!
-UPDATE Quote SET quoter = 'Martin Luther King Jr.' WHERE quoter = 'Martin Luther King, Jr.';
-
---name: upd-update!
-UPDATE Quote SET quoter = :quoter, QuoterGroup = :QuoterGroup WHERE quoter = :og

@@ -25,24 +25,7 @@ intent.guilds = intent.members = intent.messages = intent.reactions = intent.voi
 intent.presences = True
 bot = missile.Bot(intents=intent)
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.5"
-# List of activities that will be randomly displayed every 5 minutes
-activities = (
-    discord.Activity(name='Echo', type=discord.ActivityType.listening),
-    discord.Activity(name='YOASOBI ❤', type=discord.ActivityType.listening),
-    discord.Activity(name='Sam yawning', type=discord.ActivityType.listening),
-    discord.Activity(name='Lokeon', type=discord.ActivityType.listening),
-    discord.Activity(name='Ricizus screaming', type=discord.ActivityType.listening),
-    discord.Activity(name='Dim codes', type=discord.ActivityType.watching),
-    discord.Activity(name='Matt plays R6', type=discord.ActivityType.watching),
-    discord.Activity(name='Dim laughs', type=discord.ActivityType.watching),
-    discord.Activity(name='comics', type=discord.ActivityType.watching),
-    discord.Activity(name='Terry coughing', type=discord.ActivityType.listening),
-    discord.Activity(name='Bruck sleeps', type=discord.ActivityType.watching),
-    discord.Activity(name='Try not to crash', type=discord.ActivityType.competing),
-    discord.Activity(name='Muzen train', type=discord.ActivityType.watching),
-    discord.Activity(name="Heaven's Lost Property", type=discord.ActivityType.watching)
-)
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.6"
 logger = missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
@@ -59,6 +42,7 @@ bot.before_invoke(binvk)
 
 async def ainvk(ctx: commands.Context):
     timedelta = (datetime.now() - bot.invoke_time).total_seconds() * 1000
+    await bot.wait_until_ready()
     await bot.get_cog('Hamilton').bot_test.send(f'**{ctx.command}**: {timedelta}ms')
 
 
@@ -79,7 +63,7 @@ except FileNotFoundError:
 @bot.event
 async def on_message(msg: discord.Message):
     logger.info(f"{msg.author} @{msg.guild} #{msg.channel}")
-    logger.info(msg.content)
+    logger.info(msg.content + '\n')
     if msg.guild and msg.content == msg.guild.me.mention:
         await msg.channel.send(f'My prefix is **{bot.default_prefix}**')
         return
@@ -218,7 +202,7 @@ async def arccore(ctx: commands.Context):
 async def stealth(ctx):
     await bot.db.commit()
     await ctx.send('Arc-Cor𐑞: **Stealth**')
-    await bot.logout()
+    await bot.close()
 
 
 @arccore.command()
@@ -230,16 +214,6 @@ async def pandora(ctx):
     logger.critical('RESTARTING')
     import subprocess
     subprocess.Popen(['sudo systemctl restart dimbot'], shell=True)
-
-
-@arccore.command()
-async def update(ctx):
-    await bot.sql.upd_martin(bot.db)
-    quoters = await bot.sql.upd_quoter(bot.db)
-    for quoter_tuple in quoters:
-        quoter = quoter_tuple[0].split(', ')
-        if len(quoter) > 1:
-            await bot.sql.upd_update(bot.db, quoter=quoter[0], QuoterGroup=quoter[1], og=quoter_tuple[0])
 
 
 @arccore.command()
@@ -340,8 +314,9 @@ async def ready_tasks():
     if reborn_channel:  # Post-process Pandora if needed
         await bot.get_channel(reborn_channel).send("Arc-Cor𐑞: Pandora complete.")
     while True:
+        activity = await bot.sql.get_activity(bot.db)
+        await bot.change_presence(activity=discord.Activity(name=activity[0], type=discord.ActivityType(activity[1])))
         logger.debug('Changed activity')
-        await bot.change_presence(activity=choice(activities))
         await asyncio.sleep(300)
         await bot.db.commit()
 
