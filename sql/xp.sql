@@ -61,4 +61,5 @@ SELECT uid, xp
 FROM XP
 WHERE guildID = :guildID
 ORDER BY xp DESC
-LIMIT 10 OFFSET :offset
+LIMIT 10
+OFFSET :offset;

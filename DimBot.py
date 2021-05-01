@@ -27,7 +27,7 @@ intent.guilds = intent.members = intent.messages = intent.reactions = intent.voi
 intent.presences = True
 bot = missile.Bot(intents=intent)
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.7"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.7.1"
 logger = missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
@@ -214,6 +214,7 @@ async def arccore(ctx: commands.Context):
 @arccore.command()
 async def stealth(ctx):
     await bot.db.commit()
+    await bot.db.close()
     await ctx.send('Arc-Cor𐑞: **Stealth**')
     await bot.close()
 
@@ -221,6 +222,7 @@ async def stealth(ctx):
 @arccore.command()
 async def pandora(ctx):
     await bot.db.commit()
+    await bot.db.close()
     await ctx.send('Arc-Cor𐑞: **PANDORA**, self-evolving!')
     with open('final', 'w') as death_note:
         death_note.write(str(ctx.channel.id))
