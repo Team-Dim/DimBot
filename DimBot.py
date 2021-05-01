@@ -20,12 +20,14 @@ from mod.aegis import Aegis
 from mod.ikaros import Ikaros
 
 # Variables needed for initialising the bot
+from xp import XP
+
 intent = discord.Intents.none()
 intent.guilds = intent.members = intent.messages = intent.reactions = intent.voice_states = intent.typing = True
 intent.presences = True
 bot = missile.Bot(intents=intent)
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.6"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.6.1"
 logger = missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
@@ -303,10 +305,12 @@ async def ready_tasks():
     bot.add_cog(dimond.Dimond(bot))
     bot.add_cog(Ikaros(bot))
     bot.add_cog(Aegis(bot))
+    bot.add_cog(XP(bot))
     await bot.wait_until_ready()
     bot.add_cog(tribe.Hamilton(bot))
     bot.eggy = await bot.fetch_user(226664644041768960)  # Special Discord user
     await bot.is_owner(bot.eggy)  # Trick to set bot.owner_id
+    logger.info('Ready')
     # Then updates the nickname for each server that DimBot is listening to
     for guild in bot.guilds:
         if guild.me.nick != nickname:
@@ -316,9 +320,9 @@ async def ready_tasks():
     while True:
         activity = await bot.sql.get_activity(bot.db)
         await bot.change_presence(activity=discord.Activity(name=activity[0], type=discord.ActivityType(activity[1])))
-        logger.debug('Changed activity')
         await asyncio.sleep(300)
         await bot.db.commit()
+        logger.debug('DB auto saved')
 
 
 bot.loop.create_task(ready_tasks())

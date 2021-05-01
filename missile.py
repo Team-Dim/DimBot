@@ -135,6 +135,7 @@ class Bot(commands.Bot):
         # Initialise database connection
         self.db = None
         self.sql = aiosql.from_path('sql', 'aiosqlite')
+        self._user_store = {}
 
     async def ask_msg(self, ctx, msg: str, timeout: int = 10):
         """Asks a follow-up question"""
@@ -159,6 +160,12 @@ class Bot(commands.Bot):
             return True
         except asyncio.TimeoutError:
             return False
+
+    def user_store(self, uid: int):
+        """Asserts a UserStore instance for the user"""
+        if uid not in self._user_store.keys():
+            self._user_store[uid] = UserStore()
+        return self._user_store[uid]
 
 
 class MsgExt:
@@ -191,3 +198,15 @@ class Cog(commands.Cog):
     def __init__(self, bot, name):
         self.bot: Bot = bot
         self.logger = get_logger(name)
+
+
+class UserStore:
+    """Stores user specific objects used by DimBot"""
+
+    def __init__(self):
+        self.last_xp_time: dict = {None: datetime.now()}
+
+    def get_last_xp_time(self, guild_id: int):
+        if guild_id not in self.last_xp_time:
+            self.last_xp_time[guild_id] = datetime.now()
+        return self.last_xp_time[guild_id]
