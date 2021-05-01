@@ -40,7 +40,25 @@ FROM XP
 WHERE guildID = :guildID
 ORDER BY xp DESC;
 
+--name: get-global-xp-ranks
+SELECT uid
+FROM XP
+WHERE guildID is null
+ORDER BY xp DESC;
+
 --name: get-xp-count$
 SELECT COUNT(uid)
 FROM XP
 WHERE guildID = :guildID;
+
+--name: get-global-xp-count$
+SELECT COUNT(uid)
+FROM XP
+WHERE guildID is null;
+
+--name: get-xp-leaderboard
+SELECT uid, xp
+FROM XP
+WHERE guildID = :guildID
+ORDER BY xp DESC
+LIMIT 10 OFFSET :offset

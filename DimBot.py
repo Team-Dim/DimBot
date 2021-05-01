@@ -27,7 +27,7 @@ intent.guilds = intent.members = intent.messages = intent.reactions = intent.voi
 intent.presences = True
 bot = missile.Bot(intents=intent)
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.6.1"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.7"
 logger = missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
@@ -64,8 +64,9 @@ except FileNotFoundError:
 
 @bot.event
 async def on_message(msg: discord.Message):
-    logger.info(f"{msg.author} @{msg.guild} #{msg.channel}")
-    logger.info(msg.content + '\n')
+    if msg.author.id != bot.user.id:
+        logger.info(f"{msg.author} @{msg.guild} #{msg.channel}")
+        logger.info(msg.content + '\n')
     if msg.guild and msg.content == msg.guild.me.mention:
         await msg.channel.send(f'My prefix is **{bot.default_prefix}**')
         return
@@ -122,6 +123,16 @@ async def on_command_error(ctx: commands.Context, error: commands.errors.Command
         content += str(error.original) + '```'
         msg = await bot.get_cog('Hamilton').bot_test.send(content)
         await ctx.reply(f'Hmm... Report ID: **{msg.id}**')
+
+
+@bot.check_once
+async def check_commands(ctx: commands.Context):
+    if ctx.guild:
+        for r in ctx.author.roles:
+            if r.id == 837709985814282270:
+                await ctx.send('Abd gang member detected.')
+                return False
+    return True
 
 
 @bot.command(aliases=('bot',))
@@ -263,6 +274,14 @@ async def save(ctx):
     # Forcefully saves the db
     await bot.db.commit()
     await ctx.send('Saved')
+
+
+@arccore.command()
+async def typing(ctx):
+    if bot.arccore_typing:
+        await bot.arccore_typing.__aexit__(None, None, None)
+    else:
+        bot.arccore_typing = await bot.sch.typing().__aenter__()
 
 
 # Eggy requested this command

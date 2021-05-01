@@ -136,6 +136,7 @@ class Bot(commands.Bot):
         self.db = None
         self.sql = aiosql.from_path('sql', 'aiosqlite')
         self._user_store = {}
+        self.arccore_typing = None
 
     async def ask_msg(self, ctx, msg: str, timeout: int = 10):
         """Asks a follow-up question"""
@@ -156,7 +157,8 @@ class Bot(commands.Bot):
 
         try:
             await self.wait_for('reaction_add', timeout=timeout,
-                                check=lambda reaction, user: user == ctx.author and str(reaction.emoji) == emoji)
+                                check=lambda reaction, user:
+                                user == ctx.author and str(reaction.emoji) == emoji and reaction.message == ctx.message)
             return True
         except asyncio.TimeoutError:
             return False

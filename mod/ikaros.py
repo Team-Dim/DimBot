@@ -14,7 +14,7 @@ ext = missile.MsgExt('Ikaros')
 
 class Ikaros(Cog):
     """Moderation commands. For AutoMod please check out Aegis
-    Version 0.5.1"""
+    Version 0.5.2"""
 
     def __init__(self, bot):
         self.bot = bot
@@ -22,6 +22,9 @@ class Ikaros(Cog):
     async def ensure_target(self, msg: discord.Message, target: Union[discord.Member, discord.User], countdown: int,
                             check_role: bool = True):
         """A fancy way to ensure that the action can be applied on the target"""
+        if countdown > 550 or countdown < 0:
+            await ext.reply(msg, 'Countdown should be between 0 and 550!')
+            return
         msg = await ext.send(msg, "Attempting to lock target: " + target.mention)
         if isinstance(target, discord.Member) and check_role:
             if target.top_role >= msg.guild.me.top_role or target.id == self.bot.owner_id:
