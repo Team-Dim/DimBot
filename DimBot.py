@@ -18,16 +18,15 @@ from bruckserver.vireg import Verstapen
 from echo import Bottas
 from mod.aegis import Aegis
 from mod.ikaros import Ikaros
-
-# Variables needed for initialising the bot
 from xp import XP
 
+# Variables needed for initialising the bot
 intent = discord.Intents.none()
 intent.guilds = intent.members = intent.messages = intent.reactions = intent.voice_states = intent.typing = True
 intent.presences = True
 bot = missile.Bot(intents=intent)
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.7.1"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.8"
 logger = missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
@@ -123,16 +122,6 @@ async def on_command_error(ctx: commands.Context, error: commands.errors.Command
         content += str(error.original) + '```'
         msg = await bot.get_cog('Hamilton').bot_test.send(content)
         await ctx.reply(f'Hmm... Report ID: **{msg.id}**')
-
-
-@bot.check_once
-async def check_commands(ctx: commands.Context):
-    if ctx.guild:
-        for r in ctx.author.roles:
-            if r.id == 837709985814282270:
-                await ctx.send('Abd gang member detected.')
-                return False
-    return True
 
 
 @bot.command(aliases=('bot',))

@@ -7,15 +7,37 @@ from discord.ext import commands
 import missile
 
 l_naught = 50
+r = 2.4
 
 
 def get_xp_gain(s: float):
     return round(math.e ** math.log((s + 1) ** 2, l_naught) * l_naught ** (1 / 3))
 
 
+def get_total_xp_for_rank_up(current_lvl: int) -> int:
+    return round(l_naught * (
+        (r ** current_lvl - 1) / (r - 1) + r ** (current_lvl + 1)
+    )) if current_lvl >= 0 else 0
+
+
+def get_current_lvl(xp: int):
+    return max(math.floor(math.log(
+        (xp * r - xp + l_naught) / (l_naught * (r**2 - r + 1)), r
+    )) + 1, 0)
+
+
+def get_lvl_info(xp: int):
+    current_lvl = get_current_lvl(xp)
+    total_xp_for_rank_up = get_total_xp_for_rank_up(current_lvl)
+    previous_total_xp = get_total_xp_for_rank_up(current_lvl - 1)
+    rank_up_needed = total_xp_for_rank_up - previous_total_xp
+    current_progress = xp - previous_total_xp
+    return current_lvl, current_progress, rank_up_needed
+
+
 class XP(missile.Cog):
     """Experience point system
-    Version 0.1"""
+    Version 0.2"""
 
     def __init__(self, bot):
         super(XP, self).__init__(bot, 'XP')
@@ -62,7 +84,10 @@ class XP(missile.Cog):
                 async for global_uid in global_uids:
                     global_rank += 1
                     if global_uid[0] == user.id:
-                        content = f"Cross-server XP: **{global_xp}**, Rank {global_rank}/{global_count}"
+                        lvl_info = get_lvl_info(global_xp)
+                        content = f"Cross-server XP: **{global_xp}**, " \
+                                  f"Level {lvl_info[0]} ({lvl_info[1]}/{lvl_info[2]}) " \
+                                  f"Rank {global_rank}/{global_count}"
                         break
             guild_xp = await self.bot.sql.get_xp(self.bot.db, uid=user.id, guildID=ctx.guild.id)
             if guild_xp:
@@ -72,7 +97,10 @@ class XP(missile.Cog):
                     async for guild_uid in guild_uids:
                         guild_rank += 1
                         if guild_uid[0] == user.id:
-                            content += f"\nServer-specific XP: **{guild_xp}**, Rank {guild_rank}/{count}"
+                            lvl_info = get_lvl_info(guild_xp)
+                            content += f"\nServer-specific XP: **{guild_xp}**, " \
+                                       f"Level {lvl_info[0]} ({lvl_info[1]}/{lvl_info[2]}) " \
+                                       f"Rank {guild_rank}/{count}"
                             break
         else:
             content = f"{user} has no XP record!"
