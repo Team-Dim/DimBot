@@ -30,12 +30,9 @@ def decode(text: str) -> str:
 
 
 class PP:
-    target_no_pp = 'Your opponent has no pp.'
-    log = "**__Apr 18, 3:09AM GMT+1__**\n" \
-          "Sesami oil: `d.pp` now has a 10% chance to generate sesami oil. It allows the holder to completely absorb " \
-          "1 round of attack.\n"\
-          "`d.pp zenitsu`: When you have viagra available AND sesami oil, calling this command allows you to " \
-          "violently STUN your opponent for 2 rounds!"
+    target_no_pp = 'Your opponent is not trained yet.'
+    log = "**__May 4, 5:00PM GMT+1__**\n" \
+          "May the force be with you! You are now a soldier in the battlefield! Oh and also `d.pp cw`"
 
     def __init__(self, size: int, viagra, sesami, stun=0):
         self.size: int = size
@@ -44,6 +41,7 @@ class PP:
         self.score = 0
         self.sesami_oil: bool = sesami
         self.stun: int = stun
+        self.is_good: int = 0 if randint(0, 100) < 50 else 1
 
 
 class BitBay(Cog):
@@ -54,8 +52,9 @@ class BitBay(Cog):
         self.bot: missile.Bot = bot
         self.organs: dict = {}  # Dict for storing pp size
         self.mpm = True  # Message Pattern Matching master switch
-        self.no_pp_msg = f"No pp found. Have you set it up by {bot.default_prefix}pp?"
+        self.no_pp_msg = f"No light saber found. Have you set it up by {bot.default_prefix}pp?"
         self.stunned = f'You are stunned! Use `{bot.default_prefix}pp sf` to remove the effect!'
+        self.clan_war = {0: 0, 1: 0}
 
     @Cog.listener()
     async def on_message(self, msg: discord.Message):
@@ -146,19 +145,22 @@ class BitBay(Cog):
         """Returns the string for displaying pp"""
         pp = self.get_pp(uid)
         if pp:
-            description = f'8{"=" * pp.size}D'
+            description = f'{"Sith lord" if pp.is_good else "Jedi master"}\n8{"=" * pp.size}D'
             if pp.viagra_rounds:
                 description = f'**{description}**\nViagra rounds left: {pp.viagra_rounds}'
             elif pp.viagra_available:
-                description += '\nViagra available!'
+                description += '\nBlaster available!'
             if pp.sesami_oil:
-                description += '\nSesami oil'
+                description += '\nOne with the force'
             if pp.size == max_pp_size:
                 description += '\n**MAX POWER**'
             if pp.stun:
                 description += f'\n**STUNNED:** {pp.stun} rounds left'
             return description
         return self.no_pp_msg
+
+    def pp_embed(self, user):
+        return missile.Embed(user.display_name + "'s light saber", self.draw_pp(user.id))
 
     @group(invoke_without_command=True)
     async def pp(self, ctx: Context, user: discord.User = None):
@@ -177,7 +179,7 @@ class BitBay(Cog):
         pp = self.get_pp(user.id)
         if pp:
             if pp.stun:
-                await ctx.reply(f"{user} is stunned, you can't change his pp!")
+                await ctx.reply(f"{user} is stunned, you can't change his light saber!")
                 return
             pp.size = size
             pp.viagra_available = viagra
@@ -186,7 +188,7 @@ class BitBay(Cog):
                 pp.sesami_oil = True
         else:
             self.organs[user.id] = PP(size, viagra, sesami)
-        await ctx.reply(embed=missile.Embed(user.display_name + "'s penis", self.draw_pp(user.id)))
+        await ctx.reply(embed=self.pp_embed(user))
 
     @pp.command()
     async def info(self, ctx: Context, user: discord.User = None):
@@ -194,7 +196,7 @@ class BitBay(Cog):
         user = user if user else ctx.author
         pp = self.get_pp(user.id)
         if pp:
-            await ctx.reply(embed=missile.Embed('pp size: ' + str(pp.size), self.draw_pp(user.id)))
+            await ctx.reply(embed=missile.Embed('Light saber size: ' + str(pp.size), self.draw_pp(user.id)))
         else:
             await ctx.send(self.no_pp_msg)
 
@@ -211,7 +213,7 @@ class BitBay(Cog):
     async def max(self, ctx: Context, target: discord.User = None, viagra=True, sesami=True):
         target = target if target else ctx.author
         self.organs[target.id] = PP(max_pp_size, viagra, sesami)
-        await ctx.reply(embed=missile.Embed(target.display_name + "'s penis", self.draw_pp(target.id)))
+        await ctx.reply(embed=self.pp_embed(target))
 
     @pp.command()
     async def min(self, ctx: Context):
@@ -219,12 +221,14 @@ class BitBay(Cog):
         my = self.get_pp(ctx.author.id)
         stun = my.stun if my else 0
         self.organs[ctx.author.id] = PP(0, False, False, stun=stun)
-        await ctx.reply(embed=missile.Embed(ctx.author.display_name + "'s penis", self.draw_pp(ctx.author.id)))
+        await ctx.reply(embed=self.pp_embed(ctx.author))
 
     @pp.command()
     async def cut(self, ctx: Context):
         """Cuts your pp"""
         # Internally this removes the user from self.organs
+        await ctx.reply('You cannot flee in Star Wars!')
+        return
         pp = self.get_pp(ctx.author.id)
         if pp:
             if await self.bot.ask_reaction(ctx, '⚠Cutting your pp also resets your score! Are you sure?'):
@@ -240,7 +244,7 @@ class BitBay(Cog):
         """Use your pp as a weapon and fight"""
         if not user:  # User did not specify a target to fight
             if not self.organs:  # There is no one to fight
-                await ctx.reply(f'No one has pp. Either `{self.bot.default_prefix}pp` yourself or any members first,'
+                await ctx.reply(f'No one has light saber. Either `{self.bot.default_prefix}pp` yourself or any members first,'
                                 f' or `{self.bot.default_prefix}pp sf @anyone`')
                 return
             user = self.bot.get_user(random.choice(list(self.organs.keys())))
@@ -248,16 +252,19 @@ class BitBay(Cog):
         his = self.get_pp(user.id)
         if my:
             if my.stun:
-                stun_msg = 'Focusing energy on your muscle, your pp is slowly twitching.'
+                stun_msg = 'Focusing energy on your muscle, your hand is slowly moving.'
                 my.stun -= 1
                 if not my.stun:
-                    stun_msg += '\nWith a masculine roar, your pp has fully recovered from the stun.'
+                    stun_msg += '\nWith a masculine roar, you are wielding your light saber again.'
                 await ctx.reply(stun_msg)
                 return
             if his:
+                if my.is_good == his.is_good:
+                    await ctx.reply("He isn't your opponent, he is in the same team with you! You aren't Anakin!")
+                    return
                 if his.sesami_oil:
                     his.sesami_oil = False
-                    await ctx.reply('Your opponent has **Sesami oil**, it slid off your pp!')
+                    await ctx.reply('Your opponent instantly deflects your attack.')
                     return
                 xp = my.size - his.size
                 if my.size > his.size:
@@ -270,6 +277,7 @@ class BitBay(Cog):
                     title = "LOST"
                     gain_msg = f"You lost **{-xp}** score!"
                 my.score += xp
+                self.clan_war[my.is_good] += xp
             else:
                 title = "WIN...?"  # Should not gain xp if opponent has no pp
                 gain_msg = 'You gained nothing!'
@@ -279,22 +287,26 @@ class BitBay(Cog):
             await ctx.reply(self.no_pp_msg)
             return
         await ctx.send(
-            embed=missile.Embed(title, f"**{ctx.author.name}'s penis:**\n{self.draw_pp(ctx.author.id)}\n"
-                                       f"**{user.name}'s penis:**\n{self.draw_pp(user.id)}\n\n{gain_msg}"))
+            embed=missile.Embed(title, f"**{ctx.author.name}'s light saber:**\n{self.draw_pp(ctx.author.id)}\n"
+                                       f"**{user.name}'s light saber:**\n{self.draw_pp(user.id)}\n\n{gain_msg}"))
         if my and my.viagra_rounds == 1:
             my.size = my.size // 2
             my.viagra_rounds = 0
-            await ctx.send(f"Faith effect has worn off for {ctx.author.display_name}'s pp")
+            await ctx.send(f"{ctx.author} ran out of ammo!")
 
     @pp.command()
     async def lb(self, ctx: Context):
         """Shows the pp leaderboard"""
         self.organs = dict(
             sorted(self.organs.items(), key=lambda item: item[1].score, reverse=True))  # Sort self.xp by score
-        base = 'pp score leaderboard:\n'
+        base = 'Light saber score leaderboard:\n'
         for key in self.organs.keys():
             base += f"{self.bot.get_user(key).name}: **{self.organs[key].score}** "
-        await ctx.reply(base)
+        await ctx.reply("Don't forget to checkout d.pp cw!\n" + base)
+
+    @pp.command()
+    async def cw(self, ctx: Context):
+        await ctx.reply(f'Star Wars:\nRepublic: **{self.clan_war[0]}**  Empire: **{self.clan_war[1]}**')
 
     @pp.command()
     async def viagra(self, ctx: Context):
@@ -305,14 +317,14 @@ class BitBay(Cog):
                 await ctx.reply(self.stunned)
                 return
             if pp.viagra_rounds:
-                await ctx.reply('You are already one with your pp! Rounds left: ' + str(pp.viagra_rounds))
+                await ctx.reply('You are already holding a blaster! Ammo left: ' + str(pp.viagra_rounds))
             elif pp.viagra_available:
                 pp.viagra_available = False
                 pp.size = pp.size * 2
                 pp.viagra_rounds = 3
-                await ctx.send(ctx.author.mention + " has faith in his pp!!!!! New pp size: " + str(pp.size))
+                await ctx.send(ctx.author.mention + " is holding a blaster!!!!! New damage points: " + str(pp.size))
             else:
-                await ctx.reply('Your pp is not ready for it!')
+                await ctx.reply('You are not ready for it!')
         else:
             await ctx.reply(self.no_pp_msg)
 
@@ -327,11 +339,12 @@ class BitBay(Cog):
             if his:
                 his.stun = 2
                 my.sesami_oil = my.viagra_available = False
-                await ctx.reply(f"Inhaling thunder, you stunned {user}")
+                await ctx.reply(f"https://gfycat.com/cheapaggravatingbarasinga-star-wars-7-the-force-awakens-people-blogs\nStunned {user}")
+                # await ctx.reply(f"Reaching out your arm with, you stunned {user}")
             else:
                 await ctx.reply(PP.target_no_pp)
         else:
-            await ctx.reply("You need to have sesami oil and viagra available!")
+            await ctx.reply("You need to have a blaster and focused!!")
 
     @pp.command()
     async def changelog(self, ctx: Context):
