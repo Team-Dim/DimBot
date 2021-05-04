@@ -145,7 +145,7 @@ class BitBay(Cog):
         """Returns the string for displaying pp"""
         pp = self.get_pp(uid)
         if pp:
-            description = f'{"Sith lord" if pp.is_good else "Jedi master"}\n8{"=" * pp.size}D'
+            description = f'{"Sith lord" if pp.is_good else "Jedi master"}\n-|{"=" * pp.size}'
             if pp.viagra_rounds:
                 description = f'**{description}**\nViagra rounds left: {pp.viagra_rounds}'
             elif pp.viagra_available:
@@ -306,7 +306,15 @@ class BitBay(Cog):
 
     @pp.command()
     async def cw(self, ctx: Context):
-        await ctx.reply(f'Star Wars:\nRepublic: **{self.clan_war[0]}**  Empire: **{self.clan_war[1]}**')
+        embed = missile.Embed(
+            'Star Wars war table', 'All of the scores here are Republic/Empire'
+        )
+        embed.add_field('Scores', f"{self.clan_war[0]}/{self.clan_war[1]}")
+        part = [0, 0]
+        for p in self.organs.values():
+            part[p.is_good] += 1
+        embed.add_field('Participants', f"{part[0]}/{part[1]}")
+        await ctx.reply(embed=embed)
 
     @pp.command()
     async def viagra(self, ctx: Context):
