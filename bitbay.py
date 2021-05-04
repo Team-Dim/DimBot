@@ -54,7 +54,14 @@ class BitBay(Cog):
         self.mpm = True  # Message Pattern Matching master switch
         self.no_pp_msg = f"No light saber found. Have you set it up by {bot.default_prefix}pp?"
         self.stunned = f'You are stunned! Use `{bot.default_prefix}pp sf` to remove the effect!'
-        self.clan_war = {0: 0, 1: 0}
+        with open('ls.json', 'r') as f:
+            import json
+            self.clan_war = json.load(f)
+        self.clan_war[0] = self.clan_war['0']
+        self.clan_war[1] = self.clan_war['1']
+        self.clan_war.pop('0')
+        self.clan_war.pop('1')
+        self.fight_count = 0
 
     @Cog.listener()
     async def on_message(self, msg: discord.Message):
@@ -100,7 +107,7 @@ class BitBay(Cog):
                 elif re.search(r"(.* |^)amiibo", match, re.IGNORECASE):
                     await msg.reply('<#796160202067017789>')
 
-    @command(aliases=['enc'])
+    @command(aliases=('enc',))
     async def encode(self, ctx: Context, *, url: str):
         """Encodes base64 via command"""
         if ctx.channel.type == discord.ChannelType.text:
@@ -262,6 +269,7 @@ class BitBay(Cog):
                 if my.is_good == his.is_good:
                     await ctx.reply("He isn't your opponent, he is in the same team with you! You aren't Anakin!")
                     return
+                self.fight_count += 1
                 if his.sesami_oil:
                     his.sesami_oil = False
                     await ctx.reply('Your opponent instantly deflects your attack.')
@@ -314,6 +322,7 @@ class BitBay(Cog):
         for p in self.organs.values():
             part[p.is_good] += 1
         embed.add_field('Participants', f"{part[0]}/{part[1]}")
+        embed.add_field('Fight count', self.fight_count)
         await ctx.reply(embed=embed)
 
     @pp.command()
