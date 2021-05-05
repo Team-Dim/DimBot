@@ -34,14 +34,13 @@ class PP:
     log = "**__May 4, 5:00PM GMT+1__**\n" \
           "May the force be with you! You are now a soldier in the battlefield! Oh and also `d.pp cw`"
 
-    def __init__(self, size: int, viagra, sesami, stun=0):
+    def __init__(self, size: int, viagra, sesami, is_good, stun=0):
         self.size: int = size
-        self.viagra_available: bool = viagra
-        self.viagra_rounds: int = 0
+        self.viagra: int = 0  # -1: Not available 0: Not activated 1-3: rounds left
         self.score = 0
         self.sesami_oil: bool = sesami
         self.stun: int = stun
-        self.is_good: int = 0 if randint(0, 100) < 50 else 1
+        self.is_good: int = is_good
 
 
 class BitBay(Cog):
@@ -61,7 +60,7 @@ class BitBay(Cog):
         self.clan_war[1] = self.clan_war['1']
         self.clan_war.pop('0')
         self.clan_war.pop('1')
-        self.fight_count = 0
+        self.fight_count = 742
 
     @Cog.listener()
     async def on_message(self, msg: discord.Message):
@@ -125,7 +124,7 @@ class BitBay(Cog):
         await ctx.reply(('Disabled' if self.mpm else 'Enabled') + ' Message Pattern Matching (MPM)')
         self.mpm = not self.mpm
 
-    @command(aliases=['dec'])
+    @command(aliases=('dec',))
     async def decode(self, ctx: Context, content: str):
         """Decodes base64 via command"""
         import binascii
@@ -151,20 +150,18 @@ class BitBay(Cog):
     def draw_pp(self, uid: int) -> str:
         """Returns the string for displaying pp"""
         pp = self.get_pp(uid)
-        if pp:
-            description = f'{"Sith lord" if pp.is_good else "Jedi master"}\n-|{"=" * pp.size}'
-            if pp.viagra_rounds:
-                description = f'**{description}**\nViagra rounds left: {pp.viagra_rounds}'
-            elif pp.viagra_available:
-                description += '\nBlaster available!'
-            if pp.sesami_oil:
-                description += '\nOne with the force'
-            if pp.size == max_pp_size:
-                description += '\n**MAX POWER**'
-            if pp.stun:
-                description += f'\n**STUNNED:** {pp.stun} rounds left'
-            return description
-        return self.no_pp_msg
+        description = f'{"Sith lord" if pp.is_good else "Jedi master"}\n-|{"=" * pp.size}'
+        if pp.viagra > 0:
+            description = f'**{description}**\nViagra rounds left: {pp.viagra}'
+        elif pp.viagra == 0:
+            description += '\nBlaster available!'
+        if pp.sesami_oil:
+            description += '\nOne with the force'
+        if pp.size == max_pp_size:
+            description += '\n**MAX POWER**'
+        if pp.stun:
+            description += f'\n**STUNNED:** {pp.stun} rounds left'
+        return description
 
     def pp_embed(self, user):
         return missile.Embed(user.display_name + "'s light saber", self.draw_pp(user.id))
@@ -181,20 +178,21 @@ class BitBay(Cog):
             return
         user = user if user else ctx.author
         size = randint(0, max_pp_size)
-        viagra = randint(0, 100) < 25
+        viagra = (randint(0, 100) < 25) - 1
         sesami = randint(0, 100) < 10
+        is_good = randint(0, 100) < 50
         pp = self.get_pp(user.id)
         if pp:
             if pp.stun:
                 await ctx.reply(f"{user} is stunned, you can't change his light saber!")
                 return
             pp.size = size
-            pp.viagra_available = viagra
-            pp.viagra_rounds = 0
+            pp.viagra = viagra
+            pp.is_good = is_good
             if sesami:
                 pp.sesami_oil = True
         else:
-            self.organs[user.id] = PP(size, viagra, sesami)
+            self.organs[user.id] = PP(size, viagra, sesami, is_good)
         await ctx.reply(embed=self.pp_embed(user))
 
     @pp.command()
@@ -203,7 +201,7 @@ class BitBay(Cog):
         user = user if user else ctx.author
         pp = self.get_pp(user.id)
         if pp:
-            await ctx.reply(embed=missile.Embed('Light saber size: ' + str(pp.size), self.draw_pp(user.id)))
+            await ctx.reply(embed=missile.Embed(f'Light saber size: {pp.size}', self.draw_pp(user.id)))
         else:
             await ctx.send(self.no_pp_msg)
 
@@ -219,7 +217,8 @@ class BitBay(Cog):
     @missile.is_rainbow()
     async def max(self, ctx: Context, target: discord.User = None, viagra=True, sesami=True):
         target = target if target else ctx.author
-        self.organs[target.id] = PP(max_pp_size, viagra, sesami)
+        viagra -= 1
+        self.organs[target.id] = PP(max_pp_size, viagra, sesami, randint(0, 100) < 50)
         await ctx.reply(embed=self.pp_embed(target))
 
     @pp.command()
@@ -227,7 +226,7 @@ class BitBay(Cog):
         """Minimises your pp strength"""
         my = self.get_pp(ctx.author.id)
         stun = my.stun if my else 0
-        self.organs[ctx.author.id] = PP(0, False, False, stun=stun)
+        self.organs[ctx.author.id] = PP(0, -1, False, randint(0, 100) < 50, stun=stun)
         await ctx.reply(embed=self.pp_embed(ctx.author))
 
     @pp.command()
@@ -257,6 +256,7 @@ class BitBay(Cog):
             user = self.bot.get_user(random.choice(list(self.organs.keys())))
         my = self.get_pp(ctx.author.id)
         his = self.get_pp(user.id)
+        content = ''
         if my:
             if my.stun:
                 stun_msg = 'Focusing energy on your muscle, your hand is slowly moving.'
@@ -266,10 +266,12 @@ class BitBay(Cog):
                 await ctx.reply(stun_msg)
                 return
             if his:
-                if my.is_good == his.is_good:
-                    await ctx.reply("He isn't your opponent, he is in the same team with you! You aren't Anakin!")
-                    return
                 self.fight_count += 1
+                if my.viagra > 1:
+                    my.viagra -= 1
+                elif my.viagra == 1:
+                    my.viagra = -1
+                    content = f"{ctx.author} ran out of ammo!"
                 if his.sesami_oil:
                     his.sesami_oil = False
                     await ctx.reply('Your opponent instantly deflects your attack.')
@@ -287,20 +289,15 @@ class BitBay(Cog):
                 my.score += xp
                 self.clan_war[my.is_good] += xp
             else:
-                title = "WIN...?"  # Should not gain xp if opponent has no pp
-                gain_msg = 'You gained nothing!'
-            if my.viagra_rounds > 1:
-                my.viagra_rounds -= 1
+                await ctx.reply(PP.target_no_pp)
+                return
         else:
             await ctx.reply(self.no_pp_msg)
             return
         await ctx.send(
+            content=content,
             embed=missile.Embed(title, f"**{ctx.author.name}'s light saber:**\n{self.draw_pp(ctx.author.id)}\n"
                                        f"**{user.name}'s light saber:**\n{self.draw_pp(user.id)}\n\n{gain_msg}"))
-        if my and my.viagra_rounds == 1:
-            my.size = my.size // 2
-            my.viagra_rounds = 0
-            await ctx.send(f"{ctx.author} ran out of ammo!")
 
     @pp.command()
     async def lb(self, ctx: Context):
@@ -333,15 +330,14 @@ class BitBay(Cog):
             if pp.stun:
                 await ctx.reply(self.stunned)
                 return
-            if pp.viagra_rounds:
-                await ctx.reply('You are already holding a blaster! Ammo left: ' + str(pp.viagra_rounds))
-            elif pp.viagra_available:
-                pp.viagra_available = False
-                pp.size = pp.size * 2
-                pp.viagra_rounds = 3
-                await ctx.send(ctx.author.mention + " is holding a blaster!!!!! New damage points: " + str(pp.size))
+            if pp.viagra:
+                await ctx.reply('You are already holding a blaster! Ammo left: ' + str(pp.viagra))
+            elif pp.viagra == 0:
+                pp.viagra = 3
+                pp.size *= 2
+                await ctx.send(f'{ctx.author.mention} is holding a blaster!!! New damage points: {pp.size}')
             else:
-                await ctx.reply('You are not ready for it!')
+                await ctx.reply("You don't have a blaster!")
         else:
             await ctx.reply(self.no_pp_msg)
 
