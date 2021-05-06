@@ -9,11 +9,11 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import errors
 
+import bitbay
 import dimond
 import dimsecret
 import missile
 import tribe
-from bitbay import BitBay
 from bruckserver.vireg import Verstapen
 from echo import Bottas
 from mod.aegis import Aegis
@@ -26,8 +26,7 @@ intent.guilds = intent.members = intent.messages = intent.reactions = intent.voi
 intent.presences = True
 bot = missile.Bot(intents=intent)
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.8"
-nickname = 'BB-8'
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.9"
 logger = missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
@@ -103,6 +102,8 @@ async def on_command_error(ctx: commands.Context, error: commands.errors.Command
                             errors.BadInviteArgument, errors.BadColourArgument)) \
             or isinstance(error, errors.BadUnionArgument) and not ctx.command.has_error_handler():
         await ctx.reply(str(error))
+    elif isinstance(error, bitbay.BasePPException):  # Human error
+        await ctx.reply(str(error).format(ctx.bot.default_prefix))
     elif isinstance(error, errors.ChannelNotFound):  # Human error
         await ctx.reply("Invalid channel. Maybe you've tagged the wrong one?")
     elif isinstance(error, errors.RoleNotFound):  # Human error
@@ -216,9 +217,6 @@ async def pandora(ctx):
     await ctx.send('Arc-Cor𐑞: **PANDORA**, self-evolving!')
     with open('final', 'w') as death_note:
         death_note.write(str(ctx.channel.id))
-    with open('ls.json', 'w') as f:
-        import json
-        json.dump(bot.get_cog('BitBay').clan_war, f)
     logger.critical('RESTARTING')
     import subprocess
     subprocess.Popen(['sudo systemctl restart dimbot'], shell=True)
@@ -315,7 +313,7 @@ async def ready_tasks():
     # bot.add_cog(raceline.Ricciardo(bot))  # Enable when finishes async db
     bot.add_cog(Verstapen(bot))
     bot.add_cog(Bottas(bot))
-    bot.add_cog(BitBay(bot))
+    bot.add_cog(bitbay.BitBay(bot))
     bot.add_cog(dimond.Dimond(bot))
     bot.add_cog(Ikaros(bot))
     bot.add_cog(Aegis(bot))
@@ -325,7 +323,6 @@ async def ready_tasks():
     bot.eggy = await bot.fetch_user(226664644041768960)  # Special Discord user
     await bot.is_owner(bot.eggy)  # Trick to set bot.owner_id
     logger.info('Ready')
-    await bot.change_presence(activity=discord.Activity(name='Rise of Skywalker', type=discord.ActivityType.watching))
     # Then updates the nickname for each server that DimBot is listening to
     for guild in bot.guilds:
         if guild.me.nick != nickname:
@@ -334,7 +331,7 @@ async def ready_tasks():
         await bot.get_channel(reborn_channel).send("Arc-Cor𐑞: Pandora complete.")
     while True:
         activity = await bot.sql.get_activity(bot.db)
-        # await bot.change_presence(activity=discord.Activity(name=activity[0], type=discord.ActivityType(activity[1])))
+        await bot.change_presence(activity=discord.Activity(name=activity[0], type=discord.ActivityType(activity[1])))
         await asyncio.sleep(300)
         await bot.db.commit()
         logger.debug('DB auto saved')

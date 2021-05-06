@@ -158,7 +158,8 @@ class Bot(commands.Bot):
         try:
             await self.wait_for('reaction_add', timeout=timeout,
                                 check=lambda reaction, user:
-                                user == ctx.author and str(reaction.emoji) == emoji and reaction.message == ctx.message)
+                                user == ctx.author and str(reaction.emoji) == emoji and reaction.message == q)
+
             return True
         except asyncio.TimeoutError:
             return False
