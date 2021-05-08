@@ -13,12 +13,6 @@ max_pp_size = 69
 guild_id = 675477913411518485
 spam_ch_id = 723153902454964224
 bot_ch_id = 718210372561141771
-pp_changelog = """
-    **__May 6, 3:07AM GMT+1__** (Rocket Update 1)\n
-    Major fixes and improvements. PP Unicode art revamped.\n
-    You can no longer initialise someone's pp. However you can still reroll others once they've initialised.\n
-    You can now use `d.pp lock` to prevent others from attacking you, but you must unlock to modify your pp.
-    """
 
 
 def encode(text: str) -> str:
@@ -98,6 +92,7 @@ class PP:
     def check_lock(self, b):
         if self.lock:
             raise PPLocked(b)
+        return self
 
 
 class BitBay(Cog):
@@ -262,8 +257,8 @@ class BitBay(Cog):
         """Use your pp as a weapon and fight"""
         if not user:
             user = self.bot.get_user(random.choice(list(self.organs.keys())))
-        my = self.get_pp(ctx, ctx.author.id)
-        his = self.get_pp(ctx, user.id)
+        my = self.get_pp(ctx, ctx.author.id).check_lock(True)
+        his = self.get_pp(ctx, user.id).check_lock(ctx.author == user)
         content = ''
         if my.stun:
             stun_msg = 'Focusing energy on your muscle, your hand is slowly moving.'
@@ -272,7 +267,6 @@ class BitBay(Cog):
                 stun_msg += '\nWith a masculine roar, you are wielding your light saber again.'
             await ctx.reply(stun_msg)
             return
-        his.check_lock(ctx.author == user)
         if his.sesami_oil:
             his.sesami_oil = False
             await ctx.reply('Your opponent instantly deflects your attack.')
@@ -341,9 +335,14 @@ class BitBay(Cog):
     @pp.command()
     async def changelog(self, ctx: Context):
         """Shows the latest changelog of the PP command"""
-        await ctx.reply(pp_changelog)
+        await ctx.reply("""
+    **__May 8, 3:58AM GMT+1__** (Rocket Update 2)\n
+    Fixes a glitch where you can still attack others with lock on\n
+    Lock command now has a cool down of 30s
+    """)
 
     @pp.command()
+    @cooldown(rate=1, per=30.0, type=BucketType.user)  # Each person can only call this once per 30s
     async def lock(self, ctx: Context):
         pp = self.get_pp(ctx, ctx.author.id)
         pp.lock = not pp.lock

@@ -14,7 +14,7 @@ ext = missile.MsgExt('Ikaros')
 
 class Ikaros(Cog):
     """Moderation commands. For AutoMod please check out Aegis
-    Version 0.5.2"""
+    Version 0.5.3"""
 
     def __init__(self, bot):
         self.bot = bot
@@ -178,22 +178,18 @@ class Ikaros(Cog):
         await self.ensure_target(ctx.message, target, countdown, False)
         await ctx.send('🥳 Surprise')
 
-    @group(invoke_without_command=True)
+    @command()
     @has_guild_permissions(manage_messages=True)
     @bot_has_guild_permissions(manage_messages=True, read_message_history=True)
     @missile.guild_only()
-    async def purge(self, ctx: Context, amount: int):
+    async def purge(self, ctx: Context, amount_to_check: int, sender: discord.User = None):
         """Purges messages (excluding the command)"""
-        msgs = await ctx.channel.purge(limit=amount, before=ctx.message)
-        await ext.send(ctx, f'Purged {len(msgs)} messages.')
-
-    @purge.command()
-    @has_guild_permissions(manage_messages=True)
-    @bot_has_guild_permissions(manage_messages=True, read_message_history=True)
-    @missile.guild_only()
-    async def by(self, ctx: Context, sender: discord.User, amount: int):
-        """d.purge but only deletes up to the specified amount of the sender's messages"""
-        msgs = await ctx.channel.purge(check=lambda m: m.author == sender, limit=amount, before=ctx.message)
+        if sender:
+            msgs = await ctx.channel.purge(
+                check=lambda m: m.author == sender, limit=amount_to_check, before=ctx.message
+            )
+        else:
+            msgs = await ctx.channel.purge(limit=amount_to_check, before=ctx.message)
         await ext.send(ctx, f'Purged {len(msgs)} messages.')
 
     @command()

@@ -18,6 +18,7 @@ from bruckserver.vireg import Verstapen
 from echo import Bottas
 from mod.aegis import Aegis
 from mod.ikaros import Ikaros
+from raceline import Ricciardo
 from xp import XP
 
 # Variables needed for initialising the bot
@@ -26,7 +27,7 @@ intent.guilds = intent.members = intent.messages = intent.reactions = intent.voi
 intent.presences = True
 bot = missile.Bot(intents=intent)
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.9"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.10"
 logger = missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
@@ -116,7 +117,7 @@ async def on_command_error(ctx: commands.Context, error: commands.errors.Command
     elif isinstance(error, errors.CheckFailure):
         return
     else:
-        # This is basically "unknown error", raise it for debug purposes
+        # This is basically "unknown error"
         import traceback
         content = f'```python\n{ctx.message.content}\n'
         for tb in traceback.format_tb(error.original.__traceback__):
@@ -124,6 +125,18 @@ async def on_command_error(ctx: commands.Context, error: commands.errors.Command
         content += str(error.original) + '```'
         msg = await bot.get_cog('Hamilton').bot_test.send(content)
         await ctx.reply(f'Hmm... Report ID: **{msg.id}**')
+
+
+@bot.event
+async def on_error(error):
+    import sys
+    import traceback
+    content = f'```python\n{error}()\n'
+    exception = sys.exc_info()
+    for tb in traceback.format_tb(exception[2]):
+        content += tb
+    content += str(exception[1]) + '```'
+    await bot.get_cog('Hamilton').bot_test.send(content)
 
 
 @bot.command(aliases=('bot',))
@@ -273,6 +286,7 @@ async def save(ctx):
 async def typing(ctx):
     if bot.arccore_typing:
         await bot.arccore_typing.__aexit__(None, None, None)
+        bot.arccore_typing = None
     else:
         bot.arccore_typing = await bot.sch.typing().__aenter__()
 
@@ -281,9 +295,9 @@ async def typing(ctx):
 @bot.command()
 async def hug(ctx):
     """Hugs you"""
-    gif = choice(['https://tenor.com/view/milk-and-mocha-bear-couple-line-hug-cant-breathe-gif-12687187',
+    gif = choice(('https://tenor.com/view/milk-and-mocha-bear-couple-line-hug-cant-breathe-gif-12687187',
                   'https://tenor.com/view/hugs-hug-ghost-hug-gif-4451998',
-                  'https://tenor.com/view/true-love-hug-miss-you-everyday-always-love-you-running-hug-gif-5534958'])
+                  'https://tenor.com/view/true-love-hug-miss-you-everyday-always-love-you-running-hug-gif-5534958'))
     await ctx.send(f'{gif}\nWe are friends again, {bot.eggy}\nHug {ctx.author.mention}')
 
 
@@ -310,7 +324,7 @@ async def hsv(ctx: commands.Context, h: int = 0, s: int = 0, v: int = 0):
 
 async def ready_tasks():
     bot.db = await aiosqlite.connect('DimBot.db')
-    # bot.add_cog(raceline.Ricciardo(bot))  # Enable when finishes async db
+    bot.add_cog(Ricciardo(bot))
     bot.add_cog(Verstapen(bot))
     bot.add_cog(Bottas(bot))
     bot.add_cog(bitbay.BitBay(bot))

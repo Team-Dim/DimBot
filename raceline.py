@@ -2,6 +2,7 @@ import asyncio
 import re
 from time import mktime
 
+import aiosql
 import discord
 import feedparser
 from bs4 import BeautifulSoup
@@ -19,7 +20,6 @@ class Ricciardo(missile.Cog):
     def __init__(self, bot):
         super().__init__(bot, 'Ricciardo')
         self.addon_ids = (274058, 306357, 274326)  # List of addon IDs for BBM operations
-        self.data = {}
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -31,14 +31,18 @@ class Ricciardo(missile.Cog):
     @commands.Cog.listener()
     async def on_guild_remove(self, guild: discord.Guild):
         """When the bot leaves a server, remove subscriptions related to the server."""
-        ch_ids = [ch.id for ch in guild.text_channels]
-        q_marks = ','.join(['?'] * len(ch_ids))
-        self.bot.cursor.execute(f"DELETE FROM BbmRole WHERE bbmChID IN ({q_marks})", (ch_ids,))
-        self.bot.cursor.execute(f"DELETE FROM BbmAddon WHERE bbmChID IN ({q_marks})", (ch_ids,))
-        self.bot.cursor.execute(f"DELETE FROM RssSub WHERE rssChID IN ({q_marks})", (ch_ids,))
-        self.bot.cursor.execute(f"DELETE FROM RssData WHERE url NOT IN (SELECT url FROM RssSub)")
-        self.bot.cursor.execute(f"DELETE FROM YtSub WHERE ytChID IN ({q_marks})", (ch_ids,))
-        self.bot.cursor.execute("DELETE FROM YtData WHERE channelID NOT IN (SELECT channelID FROM YtSub)")
+        ch_ids = f"({','.join(str(ch.id) for ch in guild.text_channels)})"
+        sql_str = f"""
+        --name: del_cfg#
+        DELETE FROM BbmRole WHERE bbmChID IN {ch_ids};
+        DELETE FROM BbmAddon WHERE bbmChID IN {ch_ids};
+        DELETE FROM RssSub WHERE rssChID IN {ch_ids};
+        DELETE FROM RssData WHERE url NOT IN (SELECT url FROM RssSub);
+        DELETE FROM YtSub WHERE ytChID IN {ch_ids};
+        DELETE FROM YtData WHERE channelID NOT IN (SELECT channelID FROM YtSub);
+        """
+        query = aiosql.from_str(sql_str, 'aiosqlite')
+        await query.del_cfg(self.bot.db)
 
     # noinspection PyBroadException
     async def raceline_task(self):
@@ -47,97 +51,94 @@ class Ricciardo(missile.Cog):
         for addon_id in self.addon_ids:
             bbm_futures[addon_id] = self.bot.loop.create_task(self.bbm_process(addon_id))  # Dispatch BBM tasks
         resultless_futures = []
-        rss_data = self.bot.cursor.execute('SELECT * FROM RssData').fetchall()
-        for index, row in enumerate(rss_data):
-            # Dispatches RSS tasks
-            resultless_futures.append(self.bot.loop.create_task(self.rss_process(index + 1, row)))
-        yt_data = self.bot.cursor.execute('SELECT * FROM YtData').fetchall()  # Fetches YouTube data from db
-        for row in yt_data:
-            # Dispatches YouTube tasks
-            resultless_futures.append(self.bot.loop.create_task(self.yt_process(row)))
-
+        async with self.bot.sql.get_rss_data_cursor(self.bot.db) as cursor:
+            url_id = 1
+            async for row in cursor:  # Dispatches RSS tasks
+                resultless_futures.append(self.bot.loop.create_task(self.rss_process(url_id, row)))
+                url_id += 1
+        async with self.bot.sql.get_yt_data_cursor(self.bot.db) as cursor:
+            async for row in cursor:  # Dispatches YouTube tasks
+                resultless_futures.append(self.bot.loop.create_task(self.yt_process(row)))
         # The tasks are running. Now prepares when all BBM tasks return.
-        # Fetches role subscriptions for BBM
-        bbm_role = self.bot.cursor.execute('SELECT * FROM BbmRole').fetchall()
         await asyncio.wait(bbm_futures.values())  # Wait for all BBM tasks to return
-        for row in bbm_role:
-            # Fetch addons that the text channel has subscribed
-            bbm_addon = self.bot.cursor.execute('SELECT addonID FROM BbmAddon WHERE bbmChID = ?',
-                                                (row[0],)).fetchall()
-            default_msg = ''
-            if row['roleID']:  # If the database contains a role in BBMRole, Ping it
-                default_msg = f"<@&{row['roleID']}>\n"
-            msg = default_msg
-            for addon in bbm_addon:
-                try:
-                    msg += bbm_futures[addon[0]].result()  # Adds actual BBM update message
-                except Exception as e:
-                    self.logger.critical(e.with_traceback(None))
-            if msg != default_msg:  # Only send if there are BBM updates
-                self.bot.loop.create_task(self.bot.get_channel(row[0]).send(msg))
-        try:
-            await asyncio.wait(resultless_futures)  # Wait for all tasks to be finished
-        except Exception as e:
-            self.logger.critical(e.with_traceback(None))
+        async with self.bot.sql.get_bbm_roles_cursor(self.bot.db) as bbm_role:  # Fetches role subscriptions for BBM
+            async for row in bbm_role:
+                default_msg = ''
+                if row[1]:  # If the database contains a role in BBMRole, Ping it
+                    default_msg = f"<@&{row[1]}>\n"
+                msg = default_msg
+                # Fetch addons that the text channel has subscribed
+                async with self.bot.sql.get_subscribed_addons_cursor(self.bot.db, id=row[0]) as bbm_addon:
+                    async for addon in bbm_addon:
+                        msg += bbm_futures[addon[0]].result()  # Adds actual BBM update message
+                    if msg != default_msg:  # Only send if there are BBM updates
+                        self.bot.loop.create_task(self.bot.get_channel(row[0]).send(msg))
+        # Wait for all tasks to be finished
+        await asyncio.wait(resultless_futures)
         self.logger.debug('Synced')
 
     async def rss_process(self, rowid, row):
         """The main algorithm for RSS feed detector"""
-        cursor = self.bot.get_cursor()  # Each thread requires an instance of cursor
-        self.logger.info(f"{rowid}: Checking RSS...")
-        async with self.bot.session.get(row['url']) as response:  # Sends a GET request to the URL
-            self.logger.debug(f"{rowid}: Fetching response...")
+        self.logger.info(f"RSS {rowid}: Checking RSS...")
+        async with self.bot.session.get(row[0]) as response:  # Sends a GET request to the URL
+            self.logger.debug(f"RSS {rowid}: Fetching response...")
             text = await response.text()
-        self.logger.debug(f"{rowid}: Parsing response...")
+        self.logger.debug(f"RSS {rowid}: Parsing response...")
         feed = feedparser.parse(text).entries[0]  # Converts RSS response to library objects and read the first entry
         pubtime = mktime(feed.published_parsed)  # Converts the feed's publish timestamp to an integer
 
         # A feed with a new title and the publish timestamp is newer than database's record
-        if row['newstitle'] != feed.title and pubtime > row['time']:
-            self.logger.info(f'{rowid}: Detected news: {feed.title}  Old: {row["newstitle"]}')
+        if row[1] != feed.title and pubtime > row[2]:
+            self.logger.info(f'RSS {rowid}: Detected news: {feed.title}  Old: {row[1]}')
             content = BeautifulSoup(feed.description, 'html.parser')  # HTML Parser for extracting RSS feed content
-            rss_sub = cursor.execute('SELECT rssChID, footer FROM RssSub WHERE url = ?',
-                                     (row['url'],)).fetchall()  # Fetch channels that subscribed to this RSS URL
             # Limits the content size to prevent spam
             description = (content.get_text()[:497] + '...') if len(content.get_text()) > 500 else content.get_text()
-            # Constructs base Embed object
-            emb = missile.Embed(feed.title, description, url=feed.link)
-            for row in rss_sub:
-                local_emb = emb.copy()
-                channel = self.bot.get_channel(row['rssChID'])
-                local_emb.set_footer(text=f"{row['footer']} | {feed.published}")  # Adds channel-specific footer
-                self.bot.loop.create_task(channel.send(embed=local_emb))
-            self.logger.info(f"{rowid}: Sent Discord")
-            cursor.execute('UPDATE RssData SET newstitle = ?, time = ? WHERE ROWID = ?',
-                           (feed.title, pubtime, rowid))  # Updates the database with the new feed
-        self.logger.info(f"{rowid}: Done")
+
+            # Fetch channels that subscribed to this RSS URL
+            async with self.bot.sql.get_rss_subscriptions_cursor(self.bot.db, url=row[0]) as rss_subs:
+                # Constructs base Embed object
+                self.logger.debug(f"RSS {rowid}: Begin reading RssSub")
+                emb = missile.Embed(feed.title, description, url=feed.link)
+                async for rss_sub in rss_subs:
+                    local_emb = emb.copy()
+                    channel = self.bot.get_channel(rss_sub[0])
+                    self.logger.debug(f"RSS {rowid}: RssSub channel {channel}")
+                    local_emb.set_footer(text=f"{rss_sub[1]} | {feed.published}")  # Adds channel-specific footer
+                    self.bot.loop.create_task(channel.send(embed=local_emb))
+            self.logger.info(f"RSS {rowid}: Dispatched Discord message tasks")
+            # Updates the database with the new feed
+            await self.bot.sql.update_rss_data(self.bot.db, title=feed.title, time=pubtime, id=rowid)
+            self.logger.debug(f"RSS {rowid}: Updated DB")
+        self.logger.info(f"RSS {rowid}: Done")
 
     async def bbm_process(self, addon_id: int):
         """The main algorithm for the BBM update detector"""
-        cursor = self.bot.get_cursor()  # Each thread requires an instance of cursor
         message = ''
-        records = cursor.execute('SELECT title FROM BbmData WHERE addonID = ?',
-                                 (addon_id,)).fetchall()  # Read BBM records from the database
-        self.logger.info(f"Checking BBM {addon_id}...")
+        # Read BBM records from the database
         # Check for BBM updates
         async with self.bot.session.get(f'https://addons-ecs.forgesvc.net/api/v2/addon/{addon_id}') as response:
             self.logger.debug(f'Fetching BBM {addon_id}...')
             addon = await response.json()
-        self.logger.debug(f'Parsing BBM {addon_id}...')
-        new = addon['latestFiles'].copy()  # Copies a list of BBM file names from the endpoint.
-        for latest_file in addon['latestFiles']:  # For each addon ID
-            for rec in records:  # Finds a database record with that addon ID
-                # If the file name from endpoint is same as the record, that means there is no update for that addon.
-                if latest_file['displayName'] == rec[0]:
-                    records.remove(rec)
-                    new.remove(latest_file)
-                    break
+        old_names = []
+        async with self.bot.sql.get_bbm_addons_cursor(self.bot.db, id=addon_id) as titles:
+            self.logger.debug(f"Reading addon titles for {addon_id}")
+            async for old_title in titles:
+                exists = False
+                for l_file in addon['latestFiles']:
+                    if old_title[0] == l_file['displayName']:
+                        exists = True
+                        addon['latestFiles'].remove(l_file)
+                        break
+                if not exists:
+                    old_names.append(old_title[0])
+                self.logger.info(f'BBM {addon_id} ({old_title[0]}) has update? {not exists}')
         # All that remains is addons that have updates
-        for i, latest_file in enumerate(new):
+        for i, latest_file in enumerate(addon['latestFiles']):
             # Fetch the changelog of that addon update
             async with self.bot.session.get(
                     f"https://addons-ecs.forgesvc.net/api/v2/addon/{addon_id}/file/{latest_file['id']}/changelog") \
                     as response:
+                self.logger.debug(f'BBM {addon_id} fetching changelogs')
                 change_log = await response.text()
             change_log = BeautifulSoup(change_log, 'html.parser')  # HTML Parser
             # Due to how inconsistent the endpoint is, sometimes there is literally missing information. Smh
@@ -146,11 +147,14 @@ class Ricciardo(missile.Cog):
             message += f"An update of **{addon['name']}** is now available!\n" \
                        f"__**{latest_file['displayName']}** for **{game_version}**__\n" \
                        f"{change_log.get_text()}\n\n"
-            cursor.execute('UPDATE BbmData SET title = ? WHERE title = ?',
-                           (latest_file['displayName'], records[i][0]))  # Updates the database
+            # Updates the database
+            await self.bot.sql.update_bbm_addon(self.bot.db, old=titles[i][0], new=latest_file['displayName'])
+            self.logger.debug(f'BBM {addon_id} updated DB')
+        self.logger.info(f'BBM {addon_id} completed')
         return message
 
     async def yt_process(self, row):
+        return
         """The main algorithm for detecting YouTube videos"""
         self.logger.info(f"Checking YouTube channel ID {row['channelID']}")
         # Fetch the channel's latest activity
