@@ -312,7 +312,7 @@ class BitBay(Cog):
         elif pp.viagra == 0:
             pp.viagra = 3
             pp.size *= 2
-            await ctx.send(f'{ctx.author.mention}has faith in his pp!!! New length: {pp.size}')
+            await ctx.send(f'{ctx.author.mention} has faith in his pp!!! New length: {pp.size}')
         else:
             await ctx.reply("You don't have viagra yet!")
 
