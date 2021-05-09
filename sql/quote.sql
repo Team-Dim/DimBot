@@ -28,7 +28,7 @@ WHERE uid = :uid;
 --name: get-keyword-quotes
 SELECT *, ROWID
 FROM Quote
-WHERE msg LIKE '%' + :kw + '%';
+WHERE msg LIKE :kw;
 
 --name: quote-exists$
 SELECT ROWID

@@ -150,7 +150,7 @@ class Bottas(commands.Cog):
     @quote.command(aliases=('m',))
     async def message(self, ctx: commands.Context, *, keyword):
         """Search quotes by keywords"""
-        quotes = await self.bot.sql.get_keyword_quotes(self.bot.db, kw=keyword)
+        quotes = await self.bot.sql.get_keyword_quotes(self.bot.db, kw=f'%{keyword}%')
         content = f'The following quotes contains **{keyword}**:\n>>> '
         no_msg = False
         for quote in quotes:

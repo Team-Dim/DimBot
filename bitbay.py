@@ -293,8 +293,8 @@ class BitBay(Cog):
             embed=missile.Embed(title, f"**{ctx.author.name}'s pp:**\n{my.draw()}\n"
                                        f"**{user.name}'s pp:**\n{his.draw()}\n\n{gain_msg}"))
 
-    @pp.command()
-    async def lb(self, ctx: Context):
+    @pp.command(aliases=('lb',))
+    async def leaderboard(self, ctx: Context):
         """Shows the pp leaderboard"""
         self.organs = dict(
             sorted(self.organs.items(), key=lambda item: item[1].score, reverse=True))  # Sort self.xp by score

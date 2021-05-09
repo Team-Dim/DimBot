@@ -27,7 +27,7 @@ intent.guilds = intent.members = intent.messages = intent.reactions = intent.voi
 intent.presences = True
 bot = missile.Bot(intents=intent)
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.10"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.11"
 logger = missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
@@ -110,7 +110,7 @@ async def on_command_error(ctx: commands.Context, error: commands.errors.Command
     elif isinstance(error, errors.RoleNotFound):  # Human error
         await ctx.reply("Invalid role. Maybe you've tagged the wrong one?")
     elif isinstance(error, errors.GuildNotFound):
-        await ctx.reply('Invalid server or I am not in that server.')
+        await ctx.reply('I am not in that server.')
     elif isinstance(error, errors.BadArgument):
         # Could be a human/program error
         await ctx.reply('Bad arguments.')
