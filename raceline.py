@@ -198,7 +198,7 @@ class Ricciardo(missile.Cog):
 
     @rss.command(name='subscribe', aliases=('s', 'sub'))
     @missile.is_channel_owner()
-    async def rss_subscribe(self, ctx: Context, url: str, *, footer: str, encode: bool):
+    async def rss_subscribe(self, ctx: Context, url: str, footer: str, encode: bool = False):
         # noinspection PyBroadException
         # Above comment suppresses Exception Too Broad for PyCharm.
         # Don't see why we have to check for specific exceptions
