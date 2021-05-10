@@ -145,7 +145,7 @@ class Bot(commands.Bot):
         if dimsecret.debug:
             self.ip = 'http://localhost/'
         else:
-            async with self.session.get('https://169.254.169.254/latest/meta-data/public-ipv4') as r:
+            async with self.session.get('http://169.254.169.254/latest/meta-data/public-ipv4') as r:
                 self.ip = f"http://{await r.text()}/"
 
     async def ask_msg(self, ctx, msg: str, timeout: int = 10):
