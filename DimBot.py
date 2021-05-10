@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 from random import choice, randint
 from typing import Union
 
@@ -26,7 +26,7 @@ intent.guilds = intent.members = intent.messages = intent.reactions = intent.voi
 intent.presences = True
 bot = missile.Bot(intents=intent)
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.12.1"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.13"
 logger = missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
@@ -290,6 +290,45 @@ async def typing(ctx):
         bot.arccore_typing = await bot.sch.typing().__aenter__()
 
 
+async def __maintenance__(context):
+    owner = context.author.id == bot.owner_id
+    if not owner:
+        await context.reply("My pog champ is taking care of me <:ikaros:823581166715928588>")
+    return owner
+
+@arccore.command()
+async def mt(ctx: commands.Context, minutes: int = 5):
+
+    if bot.maintenance:
+        bot.remove_check(__maintenance__)
+        bot.status = discord.Status.online
+        await bot.change_presence()
+        await ctx.reply('Removed maintenance')
+    elif await bot.ask_reaction(ctx, f'Enable maintenance mode after {minutes}min?'):
+        now = datetime.now() + timedelta(minutes=minutes)
+
+        async def prep(context: commands.Context):
+            stamp = (now - datetime.now()).total_seconds()
+            if stamp >= 60:
+                stamp = f"{stamp // 60}m {stamp % 60}s"
+            else:
+                stamp = f"{stamp:.0f}s"
+            await context.send(f"⚠Maintenance mode in **{stamp}**!")
+            return True
+
+        bot.add_check(prep)
+        bot.status = discord.Status.idle
+        await bot.change_presence(status=bot.status)
+        m = await ctx.send('Preparing maintenance')
+        await asyncio.sleep(minutes * 60)
+        bot.remove_check(prep)
+        bot.add_check(__maintenance__)
+        bot.maintenance = True
+        bot.status = discord.Status.dnd
+        await bot.change_presence(status=bot.status)
+        await missile.append_msg(m, 'Started')
+
+
 # Eggy requested this command
 @bot.command()
 async def hug(ctx):
@@ -343,7 +382,8 @@ async def ready_tasks():
         await bot.get_channel(reborn_channel).send("Arc-Cor𐑞: Pandora complete.")
     while True:
         activity = await bot.sql.get_activity(bot.db)
-        await bot.change_presence(activity=discord.Activity(name=activity[0], type=discord.ActivityType(activity[1])))
+        await bot.change_presence(activity=discord.Activity(name=activity[0], type=discord.ActivityType(activity[1])),
+                                  status=bot.status)
         await asyncio.sleep(300)
         await bot.db.commit()
         logger.debug('DB auto saved')

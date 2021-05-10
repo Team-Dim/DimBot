@@ -139,6 +139,8 @@ class Bot(commands.Bot):
         self._user_store = {}
         self.arccore_typing = None
         self.ip = ''
+        self.maintenance: bool = False
+        self.status: discord.Status = discord.Status.online
 
     async def async_init(self):
         self.db = await aiosqlite.connect('DimBot.db')
@@ -172,6 +174,7 @@ class Bot(commands.Bot):
 
             return True
         except asyncio.TimeoutError:
+            await append_msg(q, f'Timed out ({timeout})s')
             return False
 
     def user_store(self, uid: int):

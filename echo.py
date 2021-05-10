@@ -201,7 +201,10 @@ class Bottas(commands.Cog):
         if name:
             content = await self.bot.sql.get_tag_content(self.bot.db, name=name, guildID=ctx.guild.id)
             if content:
-                await ctx.reply(content[0])
+                if ctx.message.reference and ctx.message.reference.cached_message:
+                    await ctx.message.reference.cached_message.reply(content[0])
+                else:
+                    await ctx.reply(content[0])
             else:
                 await ctx.reply(f"Tag `{name}` not found.")
         else:
