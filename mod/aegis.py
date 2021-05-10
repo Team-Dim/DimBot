@@ -40,7 +40,7 @@ class Aegis(Cog):
         raw_mention_count = len(msg.raw_mentions)
         if raw_mention_count >= 5:  # Mass ping
             self.count[msg.author.id][1] += 3
-            self.bot.loop.create_task(ext.send(msg.channel,
+            self.bot.loop.create_task(ext.send(msg,
                                                f'Detected mass ping ({raw_mention_count}) by {msg.author.mention}. '
                                                f'Warn: {self.count[msg.author.id][1]}'))
             self.bot.loop.create_task(self.act(msg, 'Aegis: Mass ping'))

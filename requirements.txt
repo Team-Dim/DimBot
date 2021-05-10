@@ -5,3 +5,4 @@ boto3>=1.17
 aiohttp>=3.7.3 # Raceline GSMArena somehow needs 3.7
 aiosqlite
 aiosql
+matplotlib

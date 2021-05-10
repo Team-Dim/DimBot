@@ -26,7 +26,7 @@ intent.guilds = intent.members = intent.messages = intent.reactions = intent.voi
 intent.presences = True
 bot = missile.Bot(intents=intent)
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.13"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.14"
 logger = missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
@@ -124,18 +124,6 @@ async def on_command_error(ctx: commands.Context, error: commands.errors.Command
         content += str(error.original) + '```'
         msg = await bot.get_cog('Hamilton').bot_test.send(content)
         await ctx.reply(f'Hmm... Report ID: **{msg.id}**')
-
-
-@bot.event
-async def on_error(error):
-    import sys
-    import traceback
-    content = f'```python\n{error}()\n'
-    exception = sys.exc_info()
-    for tb in traceback.format_tb(exception[2]):
-        content += tb
-    content += str(exception[1]) + '```'
-    await bot.get_cog('Hamilton').bot_test.send(content)
 
 
 @bot.command(aliases=('bot',))
@@ -296,6 +284,7 @@ async def __maintenance__(context):
         await context.reply("My pog champ is taking care of me <:ikaros:823581166715928588>")
     return owner
 
+
 @arccore.command()
 async def mt(ctx: commands.Context, minutes: int = 5):
 
@@ -310,7 +299,7 @@ async def mt(ctx: commands.Context, minutes: int = 5):
         async def prep(context: commands.Context):
             stamp = (now - datetime.now()).total_seconds()
             if stamp >= 60:
-                stamp = f"{stamp // 60}m {stamp % 60}s"
+                stamp = f"{(stamp // 60):.0f}m {(stamp % 60):.0f}s"
             else:
                 stamp = f"{stamp:.0f}s"
             await context.send(f"⚠Maintenance mode in **{stamp}**!")
@@ -332,7 +321,7 @@ async def mt(ctx: commands.Context, minutes: int = 5):
 # Eggy requested this command
 @bot.command()
 async def hug(ctx):
-    """Hugs you"""
+    """Need some love?"""
     gif = choice(('https://tenor.com/view/milk-and-mocha-bear-couple-line-hug-cant-breathe-gif-12687187',
                   'https://tenor.com/view/hugs-hug-ghost-hug-gif-4451998',
                   'https://tenor.com/view/true-love-hug-miss-you-everyday-always-love-you-running-hug-gif-5534958'))

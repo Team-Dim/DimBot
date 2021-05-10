@@ -1,5 +1,7 @@
+import asyncio
 import math
 from datetime import datetime
+import matplotlib.pyplot as plt
 
 import discord
 from discord.ext import commands
@@ -119,3 +121,18 @@ class XP(missile.Cog):
                 content += f"Rank {count: >{count_pad}}: {str(self.bot.get_user(row[0])):-<37} {row[1]}\n"
         if content != og:
             await ctx.reply(content + '```')
+
+    @xp.command(aliases=('g',))
+    @missile.guild_only()
+    async def graph(self, ctx: commands.Context):
+        count, data = await asyncio.gather(
+            self.bot.sql.get_xp_count(self.bot.db, guildID=ctx.guild.id),
+            self.bot.sql.get_xp_graph(self.bot.db, guildID=ctx.guild.id)
+        )
+        plt.plot(range(count), [xp[0] for xp in data])
+        plt.xlabel('Rank')
+        plt.ylabel('XP')
+        plt.title(f'{ctx.guild.name} XP distribution')
+        plt.savefig('xp graph.png')
+        await ctx.reply(file=discord.File('xp graph.png'))
+
