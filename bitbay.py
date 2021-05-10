@@ -153,7 +153,7 @@ class BitBay(Cog):
         if ctx.channel.type == discord.ChannelType.text:
             await ctx.message.delete()
         if missile.is_url(url):
-            await ctx.send(f'<https://codebeautify.org/base64-decode?input={encode(url)}>')
+            await ctx.send(f'<{self.bot.ip}b64d?s={encode(url)}>')
         else:
             url = ctx.author.mention + ': ' + url
             await ctx.send(encode(url))

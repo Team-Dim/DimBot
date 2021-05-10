@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Union
 
 import aiosql
+import aiosqlite
 import discord
 from aiohttp import ClientSession
 from discord.ext import commands
@@ -137,6 +138,15 @@ class Bot(commands.Bot):
         self.sql = aiosql.from_path('sql', 'aiosqlite')
         self._user_store = {}
         self.arccore_typing = None
+        self.ip = ''
+
+    async def async_init(self):
+        self.db = await aiosqlite.connect('DimBot.db')
+        if dimsecret.debug:
+            self.ip = 'http://localhost/'
+        else:
+            async with self.session.get('https://169.254.169.254/latest/meta-data/public-ipv4') as r:
+                self.ip = f"http://{await r.text()}/"
 
     async def ask_msg(self, ctx, msg: str, timeout: int = 10):
         """Asks a follow-up question"""

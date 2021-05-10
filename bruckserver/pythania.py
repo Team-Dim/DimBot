@@ -1,11 +1,14 @@
+import binascii
+
 from aiohttp import web
 
+import bitbay
 import missile
 
 
 class Albon:
     """HTTP server sub-project used by Verstapen
-    Version 1.4"""
+    Version 1.5"""
 
     def __init__(self, bot):
         self._channels = []
@@ -83,6 +86,18 @@ class Albon:
             for channel in self._channels:
                 self.bot.loop.create_task(channel.send('Linux 🤝 DimBot. Please wait for Minecraft server to boot.'))
             return web.Response()
+
+        @routes.get('/b64d')
+        async def base64decode(request):
+            if 's' in request.rel_url.query:
+                try:
+                    decoded = bitbay.decode(request.rel_url.query['s'])
+                except (UnicodeDecodeError, binascii.Error):
+                    raise web.HTTPBadRequest(reason='Malformed base64 string')
+                if missile.is_url(decoded):
+                    raise web.HTTPFound(decoded)
+                return web.Response(body=decoded)
+            raise web.HTTPBadRequest(reason='Missing base64-encoded parameter')
 
         app = web.Application()
         app.add_routes(routes)

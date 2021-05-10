@@ -11,12 +11,12 @@ from bruckserver.pythania import Albon
 
 class Verstapen(missile.Cog):
     """Connects to AWS and communicates with a minecraft server instance.
-    Version 2.0"""
+    Version 2.0.1"""
 
     def __init__(self, bot):
         super().__init__(bot, 'Verstapen')
-        self.http_not_started = True
         self.albon = Albon(bot)
+        bot.loop.create_task(self.albon.run_server())
 
     async def boot_instance(self, ctx, region_id: str, level: int):
         msg = await ctx.send('Connecting to Amazon Web Service...')
@@ -71,8 +71,9 @@ class Verstapen(missile.Cog):
             spot_info = {"State": ""}
             while spot_info['State'] != 'active':
                 await asyncio.sleep(5)
-                spot_info = ec2.describe_spot_instance_requests(SpotInstanceRequestIds=
-                                                                [spot_request['SpotInstanceRequestId']])
+                spot_info = ec2.describe_spot_instance_requests(
+                    SpotInstanceRequestIds=[spot_request['SpotInstanceRequestId']]
+                )
                 spot_info = spot_info['SpotInstanceRequests'][0]
             await missile.append_msg(
                 msg, 'AWS has fulfilled our request in '
@@ -91,9 +92,6 @@ class Verstapen(missile.Cog):
         else:
             await ctx.send('Activating Albon')
         self.albon.add_channel(ctx.channel)
-        if self.http_not_started:
-            self.http_not_started = False
-            await self.albon.run_server()
 
     @commands.command()
     @missile.is_rainbow()

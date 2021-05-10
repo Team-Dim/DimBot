@@ -4,7 +4,6 @@ from random import choice, randint
 from typing import Union
 
 import aiosql
-import aiosqlite
 import discord
 from discord.ext import commands
 from discord.ext.commands import errors
@@ -27,7 +26,7 @@ intent.guilds = intent.members = intent.messages = intent.reactions = intent.voi
 intent.presences = True
 bot = missile.Bot(intents=intent)
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.11.1"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.12"
 logger = missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
@@ -323,7 +322,6 @@ async def hsv(ctx: commands.Context, h: int = 0, s: int = 0, v: int = 0):
 
 
 async def ready_tasks():
-    bot.db = await aiosqlite.connect('DimBot.db')
     bot.add_cog(Ricciardo(bot))
     bot.add_cog(Verstapen(bot))
     bot.add_cog(Bottas(bot))
@@ -350,6 +348,6 @@ async def ready_tasks():
         await bot.db.commit()
         logger.debug('DB auto saved')
 
-
+bot.loop.create_task(bot.async_init())
 bot.loop.create_task(ready_tasks())
 bot.run(dimsecret.discord)

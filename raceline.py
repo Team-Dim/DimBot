@@ -113,7 +113,7 @@ class Ricciardo(missile.Cog):
                 async for rss_sub in rss_subs:
                     local_emb = emb.copy()
                     if rss_sub[2]:
-                        local_emb.url = 'https://codebeautify.org/base64-decode?input=' + bitbay.encode(emb.url)
+                        local_emb.url = self.bot.ip + 'b64d?s=' + bitbay.encode(emb.url)
                     channel = self.bot.get_channel(rss_sub[0])
                     self.logger.debug(f"RSS {rowid}: RssSub channel {channel}")
                     local_emb.set_footer(text=f"{rss_sub[1]} | {feed.published}")  # Adds channel-specific footer

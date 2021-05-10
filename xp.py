@@ -111,7 +111,7 @@ class XP(missile.Cog):
     async def leaderboard(self, ctx: commands.Context, page: int = 0):
         """Shows the leaderboard"""
         count = page * 10
-        count_pad = math.ceil(math.log(count + 10, 10))
+        count_pad = math.floor(math.log(count + 10, 10)) + 1
         content = og = '```c\n'
         async with self.bot.sql.get_xp_leaderboard_cursor(self.bot.db, guildID=ctx.guild.id, offset=count) as lb:
             async for row in lb:
