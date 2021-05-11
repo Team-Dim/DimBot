@@ -108,31 +108,41 @@ class XP(missile.Cog):
             content = f"{user} has no XP record!"
         await ctx.reply(content)
 
-    @xp.command(aliases=('lb',))
+    @xp.command(aliases=('lb', 'glb', 'lbg'))
     @missile.guild_only()
     async def leaderboard(self, ctx: commands.Context, page: int = 0):
         """Shows the leaderboard"""
         count = page * 10
         count_pad = math.floor(math.log(count + 10, 10)) + 1
         content = og = '```c\n'
-        async with self.bot.sql.get_xp_leaderboard_cursor(self.bot.db, guildID=ctx.guild.id, offset=count) as lb:
+        if len(ctx.invoked_with) == 3:
+            coro = self.bot.sql.get_global_xp_leaderboard_cursor(self.bot.db, offset=count)
+        else:
+            coro = self.bot.sql.get_xp_leaderboard_cursor(self.bot.db, guildID=ctx.guild.id, offset=count)
+        async with coro as lb:
             async for row in lb:
                 count += 1
                 content += f"Rank {count: >{count_pad}}: {str(self.bot.get_user(row[0])):-<37} {row[1]}\n"
         if content != og:
             await ctx.reply(content + '```')
 
-    @xp.command(aliases=('g',))
+    @xp.command(aliases=('g', 'gg'))
     @missile.guild_only()
     async def graph(self, ctx: commands.Context):
-        count, data = await asyncio.gather(
-            self.bot.sql.get_xp_count(self.bot.db, guildID=ctx.guild.id),
-            self.bot.sql.get_xp_graph(self.bot.db, guildID=ctx.guild.id)
-        )
+        if ctx.invoked_with == 'gg':
+            coro1 = self.bot.sql.get_global_xp_count(self.bot.db)
+            coro2 = self.bot.sql.get_global_xp_graph(self.bot.db)
+            title = 'Global XP distribution'
+        else:
+            coro1 = self.bot.sql.get_xp_count(self.bot.db, guildID=ctx.guild.id)
+            coro2 = self.bot.sql.get_xp_graph(self.bot.db, guildID=ctx.guild.id)
+            title = ctx.guild.name + ' XP distribution'
+        count, data = await asyncio.gather(coro1, coro2)
         plt.plot(range(count), [xp[0] for xp in data])
         plt.xlabel('Rank')
         plt.ylabel('XP')
-        plt.title(f'{ctx.guild.name} XP distribution')
+        plt.title(title)
         plt.savefig('xp graph.png')
+        plt.close()
         await ctx.reply(file=discord.File('xp graph.png'))
 

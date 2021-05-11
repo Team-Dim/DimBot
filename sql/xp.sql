@@ -64,8 +64,22 @@ ORDER BY xp DESC
 LIMIT 10
 OFFSET :offset;
 
+--name: get-global-xp-leaderboard
+SELECT uid, xp
+FROM XP
+WHERE guildID is null
+ORDER BY xp DESC
+LIMIT 10
+OFFSET :offset;
+
 --name: get-xp-graph
 SELECT xp
 FROM XP
 WHERE guildID = :guildID
+ORDER BY xp DESC;
+
+--name: get-global-xp-graph
+SELECT xp
+FROM XP
+WHERE guildID is null
 ORDER BY xp DESC;
