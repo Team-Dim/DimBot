@@ -5,6 +5,7 @@ from typing import Union
 
 import aiosql
 import discord
+import psutil
 from discord.ext import commands
 from discord.ext.commands import errors
 
@@ -26,7 +27,7 @@ intent.guilds = intent.members = intent.messages = intent.reactions = intent.voi
 intent.presences = True
 bot = missile.Bot(intents=intent)
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.15"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.16"
 logger = missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
@@ -131,7 +132,7 @@ async def botinfo(ctx):
     """Displays bot information"""
     from platform import python_version
     embed = missile.Embed(sponsor_txt)
-    embed.add_field('Guild count', len(bot.guilds))
+    embed.add_field('Guild count', str(len(bot.guilds)))
     embed.add_field('Uptime', datetime.now() - bot.boot_time)
     embed.add_field('Python', python_version())
     embed.add_field('Discord.py', discord.__version__)
@@ -139,6 +140,18 @@ async def botinfo(ctx):
     embed.add_field('Devblog', '[Instagram](https://www.instagram.com/techdim)')
     embed.add_field('Source code', '[GitHub](https://github.com/TCLRainbow/DimBot)')
     embed.add_field('Discord server', '[6PjhjCD](https://discord.gg/6PjhjCD)')
+    process = psutil.Process()
+    with process.oneshot():
+        # Dynamic frequency only in Linux but production is Linux
+        embed.add_field('CPU clock frequency', f'{psutil.cpu_freq().current / 1000}GHz')
+        embed.add_field('CPU usage %', psutil.cpu_percent(percpu=True))
+        embed.add_field(
+            'Process RAM usage / available (MiB)',
+            f'{process.memory_info()[0] / 1024**2:.1f} / {psutil.virtual_memory().available / 1024**2:.1f}'
+        )
+    emoji = choice(tuple(e for e in bot.get_cog('Hamilton').guild.emojis if e.name.startswith('sayu')))
+    embed.set_footer(text='Mood: ' + emoji.name[4:])
+    embed.set_image(url=emoji.url)
     await ctx.send(embed=embed)
 
 
@@ -361,6 +374,7 @@ async def ready_tasks():
     await bot.wait_until_ready()
     bot.add_cog(tribe.Hamilton(bot))
     bot.eggy = await bot.fetch_user(226664644041768960)  # Special Discord user
+    psutil.cpu_percent(percpu=True)
     await bot.is_owner(bot.eggy)  # Trick to set bot.owner_id
     logger.info('Ready')
     # Then updates the nickname for each server that DimBot is listening to

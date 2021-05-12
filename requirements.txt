@@ -1,8 +1,9 @@
-beautifulsoup4
-feedparser
-discord.py>=1.7.1,<2
-boto3>=1.17
-aiohttp>=3.7.3 # Raceline GSMArena somehow needs 3.7
-aiosqlite
-aiosql
-matplotlib
+beautifulsoup4~=4.9.3
+feedparser~=6.0.2
+discord.py~=1.7
+boto3~=1.17
+aiohttp~=3.7.3 # Raceline GSMArena somehow needs 3.7
+aiosqlite~=0.17.0
+aiosql~=3.2.0
+matplotlib~=3.4.2
+psutil
