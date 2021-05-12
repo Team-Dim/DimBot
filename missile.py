@@ -88,6 +88,11 @@ async def prefix_process(bot, msg: discord.Message):
             return tag_mention.group(0)
         else:
             await msg.reply('Only my little pog champ can use authoritative orders!')
+            return ''
+    if msg.guild:
+        g_prefix = await bot.sql.get_guild_prefix(bot.db, guildID=msg.guild.id)
+        if g_prefix:
+            return g_prefix, bot.default_prefix
     return bot.default_prefix
 
 
@@ -129,7 +134,7 @@ class Bot(commands.Bot):
         # Stores the message for the snipe command
         self.snipe = Embed(description='No one has deleted anything yet...')
         self.sch = None
-        self.eggy = None  # Special Discordr user for d.hug
+        self.eggy = None  # Special Discord user for d.hug
         self.invoke_time = None  # Time needed to process a command
         self.boot_time = datetime.now()  # Time when bot started
         self.session = ClientSession()  # Central session for all aiohttp client requests

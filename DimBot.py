@@ -27,7 +27,7 @@ intent.guilds = intent.members = intent.messages = intent.reactions = intent.voi
 intent.presences = True
 bot = missile.Bot(intents=intent)
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.16"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.17"
 logger = missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
@@ -76,6 +76,8 @@ async def on_message(msg: discord.Message):
 @bot.event
 async def on_guild_join(guild: discord.Guild):
     """Updates DimBot's nickname in new servers"""
+    await bot.get_cog('Hamilton').bot_test.send('Joined server ' + str(guild.id))
+    await bot.sql.add_guild_cfg(bot.db, guildID=guild.id)
     await guild.me.edit(nick=nickname)
 
 
@@ -142,15 +144,17 @@ async def botinfo(ctx):
     embed.add_field('Discord server', '[6PjhjCD](https://discord.gg/6PjhjCD)')
     process = psutil.Process()
     with process.oneshot():
-        # Dynamic frequency only in Linux but production is Linux
-        embed.add_field('CPU clock frequency', f'{psutil.cpu_freq().current / 1000}GHz')
         embed.add_field('CPU usage %', psutil.cpu_percent(percpu=True))
+        embed.add_field('Threads', process.num_threads())
         embed.add_field(
             'Process RAM usage / available (MiB)',
             f'{process.memory_info()[0] / 1024**2:.1f} / {psutil.virtual_memory().available / 1024**2:.1f}'
         )
     emoji = choice(tuple(e for e in bot.get_cog('Hamilton').guild.emojis if e.name.startswith('sayu')))
     embed.set_footer(text='Mood: ' + emoji.name[4:])
+    embed.set_author(name='Click here to let me join your server!',
+                     url='https://discord.com/api/oauth2/authorize?client_id=574617418924687419&permissions=8&scope=bot'
+                     )
     embed.set_image(url=emoji.url)
     await ctx.send(embed=embed)
 
@@ -331,6 +335,13 @@ async def mt(ctx: commands.Context, minutes: int = 5):
         await missile.append_msg(m, 'Started')
 
 
+@arccore.command()
+async def up(ctx):
+    for g in bot.guilds:
+        await bot.sql.add_guild_cfg(bot.db, guildID=g.id)
+    await ctx.reply('Done')
+
+
 # Eggy requested this command
 @bot.command()
 async def hug(ctx):
@@ -360,6 +371,35 @@ async def hsv(ctx: commands.Context, h: int = 0, s: int = 0, v: int = 0):
         await bot.get_command('color')(ctx, discord.Colour.from_hsv(h, s, v))
     else:
         raise errors.BadColorArgument(color)
+
+
+@bot.group()
+@missile.guild_only()
+@commands.has_guild_permissions(manage_guild=True)
+async def guild(ctx: commands.Context):
+    """Settings for server"""
+    if not ctx.invoked_subcommand:
+        raise errors.CommandNotFound
+
+
+@guild.command()
+async def prefix(ctx: commands.Context, *, p: str = None):
+    """Changes the custom prefix of DimBot. Note that d. will still work. Send command without arguments to remove."""
+    if p and (p.lower().startswith('dimbot') or ctx.me.mention in p):
+        await ctx.reply('Only my little pog champ can use authoritative orders!')
+    else:
+        await bot.sql.update_guild_prefix(bot.db, guildID=ctx.guild.id, prefix=p)
+        await ctx.reply('Updated server prefix.')
+
+
+@bot.command()
+async def changelog(ctx):
+    """Shows the latest release notes of DimBot"""
+    await ctx.reply("""
+    **__0.9.7 (May 12, 2021 8:03PM GMT+1)__**\n\n
+    **Configurable prefix per guild**: You can now customise the prefix of DimBot per server by `d.guild prefix`!\n
+    `d.bot` now has even more details!
+    """)
 
 
 async def ready_tasks():
