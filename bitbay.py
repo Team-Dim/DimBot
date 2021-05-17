@@ -110,7 +110,7 @@ class BitBay(Cog):
             if re.search(r".*BSoD", msg.content):
                 await msg.reply('https://discord.com/channels/675477913411518485/675477914019430423/825823145315270687')
                 return
-            if re.search(r".*play.*(3D All Star|3d?AS)", msg.content, re.IGNORECASE):
+            if re.search(r"^((?!n('t|o)).)*(play.*(3D All Star|3d?AS))$", msg.content, re.IGNORECASE):
                 await msg.reply('YOU WHAT??? <:pepestab:725176431121793084>')
                 return
             if re.search(r".*(no one|who) care", msg.content, re.IGNORECASE):

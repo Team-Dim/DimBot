@@ -7,3 +7,4 @@ aiosqlite~=0.17.0
 aiosql~=3.2.0
 matplotlib~=3.4.2
 psutil
+git+https://github.com/Rapptz/discord-ext-menus

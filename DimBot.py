@@ -27,7 +27,7 @@ intent.guilds = intent.members = intent.messages = intent.reactions = intent.voi
 intent.presences = True
 bot = missile.Bot(intents=intent)
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.17"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.18"
 logger = missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
@@ -68,7 +68,11 @@ async def on_message(msg: discord.Message):
         logger.info(f"{msg.author} @{msg.guild} #{msg.channel}")
         logger.info(msg.content + '\n')
     if msg.guild and msg.content == msg.guild.me.mention:
-        await msg.channel.send(f'My prefix is **{bot.default_prefix}**')
+        p = await bot.get_prefix(msg)
+        if p == bot.default_prefix:
+            await msg.channel.send(f'My prefix is **{bot.default_prefix}**')
+        else:
+            await msg.channel.send(f"My prefixes are **{'**, **'.join(p)}**")
         return
     await bot.process_commands(msg)
 
@@ -152,7 +156,7 @@ async def botinfo(ctx):
         )
     emoji = choice(tuple(e for e in bot.get_cog('Hamilton').guild.emojis if e.name.startswith('sayu')))
     embed.set_footer(text='Mood: ' + emoji.name[4:])
-    embed.set_author(name='Click here to let me join your server!',
+    embed.set_author(name='Click here to let me join your server! [Open Beta]',
                      url='https://discord.com/api/oauth2/authorize?client_id=574617418924687419&permissions=8&scope=bot'
                      )
     embed.set_image(url=emoji.url)
@@ -335,13 +339,6 @@ async def mt(ctx: commands.Context, minutes: int = 5):
         await missile.append_msg(m, 'Started')
 
 
-@arccore.command()
-async def up(ctx):
-    for g in bot.guilds:
-        await bot.sql.add_guild_cfg(bot.db, guildID=g.id)
-    await ctx.reply('Done')
-
-
 # Eggy requested this command
 @bot.command()
 async def hug(ctx):
@@ -396,9 +393,12 @@ async def prefix(ctx: commands.Context, *, p: str = None):
 async def changelog(ctx):
     """Shows the latest release notes of DimBot"""
     await ctx.reply("""
-    **__0.9.7 (May 12, 2021 8:03PM GMT+1)__**\n\n
-    **Configurable prefix per guild**: You can now customise the prefix of DimBot per server by `d.guild prefix`!\n
-    `d.bot` now has even more details!
+    **__0.9.18 (May 17, 2021 2:36AM GMT+1)__**\n\n
+    When ghost-pinged, Aegis now doesn't PM you directly. Instead, you can use `d.whoping` to check who pinged you 
+    in that server!\n
+    `d.info w` now accepts an optional TextChannel argument which allows you to filter the webhooks that only 
+    belongs to that channel.\n
+    Adds multi-prefix support when simply pinging DimBot
     """)
 
 

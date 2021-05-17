@@ -1,9 +1,9 @@
 import asyncio
 import math
 from datetime import datetime
-import matplotlib.pyplot as plt
 
 import discord
+import matplotlib.pyplot as plt
 from discord.ext import commands
 
 import missile
@@ -65,8 +65,8 @@ class XP(missile.Cog):
             guild_s = min((stamp - last_guild_s).total_seconds(), 60)
             global_gain = get_xp_gain(global_s)
             guild_gain = get_xp_gain(guild_s)
-            self.logger.info(f"Global: {msg.author} spoke after {global_s}s, gain {global_gain}")
-            self.logger.info(f"Guild: {msg.author} spoke after {guild_s}s, gain {guild_gain}")
+            self.logger.debug(f"Global: {msg.author} spoke after {global_s}s, gain {global_gain}")
+            self.logger.debug(f"Guild: {msg.author} spoke after {guild_s}s, gain {guild_gain}")
             global_xp += global_gain
             guild_xp += guild_gain
             await self.bot.sql.update_global_xp(self.bot.db, xp=global_xp, uid=msg.author.id)

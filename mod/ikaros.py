@@ -194,6 +194,7 @@ class Ikaros(Cog):
 
     @command()
     @missile.guild_only()
+    @bot_has_guild_permissions(kick_members=True)
     async def preprune(self, ctx: Context, days: int):
         """Checks how many members will be pruned. Must specify the number of days before counting as inactive."""
         if 0 < days < 31:

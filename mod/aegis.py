@@ -1,7 +1,9 @@
 import asyncio
 import re
+from datetime import datetime
 
 import discord
+from discord.ext import commands
 from discord.ext.commands import Cog
 
 import bitbay
@@ -12,7 +14,7 @@ ext = missile.MsgExt('Aegis')
 
 class Aegis(Cog):
     """AutoMod system
-    Version 0.5"""
+    Version 0.6"""
 
     def __init__(self, bot):
         self.bot = bot
@@ -31,6 +33,8 @@ class Aegis(Cog):
         # Check whether message needs to be scanned by Aegis
         if not msg.guild or msg.author == msg.guild.me:
             return
+        if re.search(r".*who.+ping", msg.content, re.IGNORECASE):
+            await msg.reply('Try out `d.whoping`!')
         # Checks for crash gifs
         if re.search(r".*(gfycat.com/safeofficialharvestmouse|gfycat.com/grizzledwildinsect)", msg.content):
             await msg.delete()
@@ -93,44 +97,69 @@ class Aegis(Cog):
         """Event handler when a message has been deleted"""
         # Ghost ping detector
         # Check whether the message is related to the bot
-        if msg.author == msg.guild.me or msg.content.startswith(await self.bot.get_prefix(msg)):
+        if not msg.guild or msg.author == msg.guild.me or msg.content.startswith(await self.bot.get_prefix(msg)):
             return
-        if msg.guild and msg.id in self.ghost_pings.keys():  # The message has/used to have pings
+        if msg.id in self.ghost_pings.keys():  # The message has/used to have pings
             for m in self.ghost_pings[msg.id]:
                 # Tells the victim that he has been ghost pinged
-                await m.send(f'{msg.author.mention} ({msg.author}) pinged you in **{msg.guild.name}** and deleted it.')
+                await self.bot.sql.add_who_ping(
+                    self.bot.db,
+                    victim=m.id, pinger=msg.author.id, content=msg.content, time=datetime.now(), guild=msg.guild.id
+                )
             # Reports in the incident channel that the culprit deleted a ping
             await ext.send(msg, msg.author.mention + ' has deleted a ping')
             # Removes the message from the cache as it has been deleted on Discord
             self.ghost_pings.pop(msg.id)
-        elif msg.guild and msg.mentions and not msg.edited_at:  # The message has pings and has not been edited
+        elif msg.mentions and not msg.edited_at:  # The message has pings and has not been edited
+            has_pinged = False
             for m in msg.mentions:
-                if not m.bot:
+                if not m.bot and m != msg.author:
                     # Tells the victim that he has been ghost pinged
-                    try:
-                        await m.send(
-                            f'{msg.author.mention} ({msg.author}) pinged you in **{msg.guild.name}** and deleted it.')
-                    except discord.Forbidden:
-                        pass
+                    await self.bot.sql.add_who_ping(
+                        self.bot.db,
+                        victim=m.id, pinger=msg.author.id, content=msg.content, time=datetime.now(), guild=msg.guild.id
+                    )
+                    has_pinged = True
             # Reports in the incident channel that the culprit deleted a ping
-            await ext.send(msg, msg.author.mention + ' has deleted a ping')
+            if has_pinged:
+                await ext.send(msg, msg.author.mention + ' has deleted a ping')
 
     @Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
         """Event handler when a message has been edited. Detect ghost pings due to edited message"""
         if before.guild and not before.edited_at and before.mentions:  # A message that contains pings has been edited
             #  Add the message to ghost pings cache
-            self.ghost_pings[before.id] = [m for m in before.mentions if not m.bot]
+            pre = [m for m in before.mentions if not m.bot and m != before.author]
+            if pre:
+                self.ghost_pings[before.id] = pre
         if before.guild and before.id in self.ghost_pings.keys():  # Message requires ghost ping checking
             has_removed = False
             for m in self.ghost_pings[before.id]:
                 if m not in after.mentions:  # A ping has been removed
                     has_removed = True
                     # Tells the victim that he has been ghost pinged
-                    await m.send(f'{before.author.mention} pinged you in **{before.guild.name}** and deleted it.')
+                    await self.bot.sql.add_who_ping(
+                        self.bot.db,
+                        victim=m.id, pinger=before.author.id, content=before.content, time=datetime.now(),
+                        guild=before.guild.id
+                    )
                     self.ghost_pings[before.id].remove(m)
             if has_removed:
                 # Reports in the incident channel that the culprit deleted a ping
                 await ext.send(before, before.author.mention + ' has removed a ping from a message')
             if not self.ghost_pings[before.id]:  # All original pings have bene removed.
                 self.ghost_pings.pop(before.id)  # No longer have to track as there are no pings anymore.
+
+    @commands.group(invoke_without_command=True)
+    @missile.guild_only()
+    async def whoping(self, ctx: commands.Context):
+        """Ghost ping detector: Reports who pinged you in the server"""
+        pings = await self.bot.sql.get_who_ping(self.bot.db, guild=ctx.guild.id, victim=ctx.author.id)
+        pings = set(self.bot.get_user(ping[0]).mention for ping in pings)
+        await ctx.reply(embed=missile.Embed('This command is still work in progress!', f"{' '.join(pings)} pinged you" if pings else 'No one has ghost-pinged you.'))
+
+    @whoping.command()
+    async def read(self, ctx: commands.Context):
+        """Clears your WhoPing records"""
+        await self.bot.sql.delete_who_ping(self.bot.db, victim=ctx.author.id)
+        await ctx.reply('Cleared your WhoPing records.')

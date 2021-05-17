@@ -267,10 +267,10 @@ class Dimond(commands.Cog):
     @info.command(aliases=('w',))
     @missile.guild_only()
     @commands.bot_has_guild_permissions(manage_webhooks=True)
-    async def webhook(self, ctx: commands.Context, name):
+    async def webhook(self, ctx: commands.Context, name, channel: discord.TextChannel = None):
         """Shows info of a webhook"""
         for webhook in await ctx.guild.webhooks():
-            if webhook.name == name:
+            if webhook.name == name and (channel is None or webhook.channel == channel):
                 emb = missile.Embed(f'❄ ID: {webhook.id}')
                 emb.add_field(name='Created at', value=webhook.created_at)
                 emb.add_field(name='Channel', value=webhook.channel.mention)
