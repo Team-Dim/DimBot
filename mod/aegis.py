@@ -1,6 +1,6 @@
 import asyncio
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import discord
 from discord.ext import commands
@@ -8,13 +8,14 @@ from discord.ext.commands import Cog
 
 import bitbay
 import missile
+from menus import WhoPing
 
 ext = missile.MsgExt('Aegis')
 
 
 class Aegis(Cog):
     """AutoMod system
-    Version 0.6"""
+    Version 0.6.1"""
 
     def __init__(self, bot):
         self.bot = bot
@@ -107,7 +108,7 @@ class Aegis(Cog):
                     victim=m.id, pinger=msg.author.id, content=msg.content, time=datetime.now(), guild=msg.guild.id
                 )
             # Reports in the incident channel that the culprit deleted a ping
-            await ext.send(msg, msg.author.mention + ' has deleted a ping')
+            await ext.send(msg, msg.author.mention + ' has deleted a ping. Try out `d.whoping`!')
             # Removes the message from the cache as it has been deleted on Discord
             self.ghost_pings.pop(msg.id)
         elif msg.mentions and not msg.edited_at:  # The message has pings and has not been edited
@@ -122,7 +123,7 @@ class Aegis(Cog):
                     has_pinged = True
             # Reports in the incident channel that the culprit deleted a ping
             if has_pinged:
-                await ext.send(msg, msg.author.mention + ' has deleted a ping')
+                await ext.send(msg, msg.author.mention + ' has deleted a ping. Try out `d.whoping`!')
 
     @Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
@@ -150,16 +151,35 @@ class Aegis(Cog):
             if not self.ghost_pings[before.id]:  # All original pings have bene removed.
                 self.ghost_pings.pop(before.id)  # No longer have to track as there are no pings anymore.
 
+    @Cog.listener()
+    async def on_ready(self):
+        while True:
+            await self.bot.sql.daily_clean_who_ping(self.bot.db, time=datetime.now() - timedelta(days=1))
+            await asyncio.sleep(86400)
+
     @commands.group(invoke_without_command=True)
-    @missile.guild_only()
     async def whoping(self, ctx: commands.Context):
         """Ghost ping detector: Reports who pinged you in the server"""
-        pings = await self.bot.sql.get_who_ping(self.bot.db, guild=ctx.guild.id, victim=ctx.author.id)
-        pings = set(self.bot.get_user(ping[0]).mention for ping in pings)
-        await ctx.reply(embed=missile.Embed('This command is still work in progress!', f"{' '.join(pings)} pinged you" if pings else 'No one has ghost-pinged you.'))
+        is_guild = True
+        if ctx.guild:
+            pings = await self.bot.sql.get_who_ping(self.bot.db, guild=ctx.guild.id, victim=ctx.author.id)
+        else:
+            pings = await self.bot.sql.get_all_who_ping(self.bot.db, victim=ctx.author.id)
+            is_guild = False
+        if pings:
+            await WhoPing(pings, is_guild).start(ctx)
+        else:
+            await ctx.reply('No one has pinged you in this server yet!')
 
     @whoping.command()
+    @missile.guild_only()
     async def read(self, ctx: commands.Context):
-        """Clears your WhoPing records"""
-        await self.bot.sql.delete_who_ping(self.bot.db, victim=ctx.author.id)
-        await ctx.reply('Cleared your WhoPing records.')
+        """Clears your WhoPing records in the server"""
+        await self.bot.sql.clear_who_ping(self.bot.db, victim=ctx.author.id, guild=ctx.guild.id)
+        await ctx.reply('Cleared your WhoPing records in this server.')
+
+    @whoping.command()
+    async def clear(self, ctx: commands.Context):
+        """Clears your WhoPing records across all servers"""
+        await self.bot.sql.clear_all_who_ping(self.bot.db, victim=ctx.author.id)
+        await ctx.reply('Cleared all of your WhoPing records.')

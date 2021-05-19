@@ -188,6 +188,13 @@ class Bot(commands.Bot):
             self._user_store[uid] = UserStore()
         return self._user_store[uid]
 
+    async def ensure_user(self, uid: int):
+        """Ensures that a discord.User will be returned"""
+        user = self.get_user(uid)
+        if user:
+            return user
+        return await self.fetch_user(uid)
+
 
 class MsgExt:
 

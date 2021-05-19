@@ -27,7 +27,7 @@ intent.guilds = intent.members = intent.messages = intent.reactions = intent.voi
 intent.presences = True
 bot = missile.Bot(intents=intent)
 bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.18"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.19"
 logger = missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
