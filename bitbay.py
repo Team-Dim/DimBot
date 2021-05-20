@@ -113,7 +113,7 @@ class BitBay(Cog):
             if re.search(r"^((?!n('?t|o)).)*(play.*(3D All Star|3d?AS))$", msg.content, re.IGNORECASE):
                 await msg.reply('YOU WHAT??? <:pepestab:725176431121793084>')
                 return
-            if re.search(r".*(no one|who|don'?t) care", msg.content, re.IGNORECASE):
+            if re.search(r".*(no.*(one|body)|who|don'?t) care", msg.content, re.IGNORECASE):
                 await msg.reply('I CARE, BITCH')
                 return
             match = re.search(r".*(where|how) .*?(get|download|find|obtain|acquire) ", msg.content, re.IGNORECASE)

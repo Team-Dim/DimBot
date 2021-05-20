@@ -78,7 +78,7 @@ class Ikaros(Cog):
             role = None
             # Temporary mute system setup that only works in my server / 128BB
             if msg.guild.id == bitbay.guild_id:
-                role = msg.guild.get_role(844965555051692072)  # Muted Pirate
+                role = msg.guild.get_role(844741665248116796)  # Muted Pirate
             elif msg.guild.id == tribe.guild_id:
                 role = msg.guild.get_role(474578007156326412)  # Asteroid Belt
             if role:
@@ -96,7 +96,7 @@ class Ikaros(Cog):
         """Internal logic for unmuting member"""
         role = None
         if msg.guild.id == bitbay.guild_id:
-            role = msg.guild.get_role(718210713893601301)  # Muted Pirate
+            role = msg.guild.get_role(844741665248116796)  # Muted Pirate
         elif msg.guild.id == tribe.guild_id:
             role = msg.guild.get_role(474578007156326412)  # Asteroid Belt
         if role:
