@@ -26,7 +26,7 @@ intent = discord.Intents.none()
 intent.guilds = intent.members = intent.messages = intent.reactions = intent.voice_states = intent.typing = True
 intent.presences = True
 bot = missile.Bot(intents=intent)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.20"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.20.1"
 logger = missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
@@ -397,12 +397,9 @@ async def prefix(ctx: commands.Context, *, p: str = None):
 async def changelog(ctx):
     """Shows the latest release notes of DimBot"""
     await ctx.reply("""
-**__0.9.20 (May 20, 2021 1:58AM GMT+1)__**\n
-Fixes a typo in pp
-Updates the message of d.start to reflect latest changes
-WhoPing can now detect Role ghost pings.
-The mass ping limit for bots have been increased to 20.
-WhoPing now scans DimBot commands again.
+**__0.9.20.1 (May 20, 2021 7:37PM GMT+1)__**\n
+Aegis now has a new internal mechanism that allows some commands to SKIP the Ghost Ping Detector.
+Currently only `d.purge` utilises this feature.
     """)
 
 

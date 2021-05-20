@@ -7,7 +7,7 @@ Do **NOT** use `3.9.3` for any applications; The Python foundation itself has pu
 For `Albon` to work, you need root/sudo in Linux as it uses port 80 for HTTP server port
 ### dimsecret.py
 In order to run the bot, you have to provide some tokens for it to work.
-They should be stored inside `dimsecret.py` in the root directory.
+They should be stored inside `dimsecret.py` in the project root directory.
 
 The following are the variables that should be in the file:
 

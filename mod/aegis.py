@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 import re
 from datetime import datetime, timedelta
 
@@ -15,12 +16,15 @@ ext = missile.MsgExt('Aegis')
 
 class Aegis(Cog):
     """AutoMod system
-    Version 0.6.1"""
+    Version 0.6.2"""
 
     def __init__(self, bot):
         self.bot = bot
         self.count = {}
         self.ghost_pings = {}  # Ghost ping message cache
+        self.skip_ghost_ping = []  # List of channel IDs to temporarily skip ghost ping checks
+        # List of channel IDs to temporarily suppress ghost ping notifications
+        self.suppress_ghost_ping_notification = []
 
     def act_wrap(self, msg: discord.Message, warn_type: str):
         self.count[msg.author.id][1] += 1
@@ -99,7 +103,7 @@ class Aegis(Cog):
         """Event handler when a message has been deleted"""
         # Ghost ping detector
         # Check whether the message is related to the bot
-        if not msg.guild or msg.author == msg.guild.me:
+        if not msg.guild or msg.author == msg.guild.me or msg.channel.id in self.skip_ghost_ping:
             return
         if msg.id in self.ghost_pings.keys():  # The message has/used to have pings
             for m in self.ghost_pings[msg.id]:
@@ -109,9 +113,10 @@ class Aegis(Cog):
                     victim=m.id, pinger=msg.author.id, content=msg.content, time=datetime.now(), guild=msg.guild.id
                 )
             # Reports in the incident channel that the culprit deleted a ping
-            await ext.send(msg, msg.author.mention + ' has deleted a ping. Try out `d.whoping`!')
+            if msg.channel.id not in self.suppress_ghost_ping_notification:
+                await ext.send(msg, msg.author.mention + ' has deleted a ping. Try out `d.whoping`!')
             # Removes the message from the cache as it has been deleted on Discord
-            self.ghost_pings.pop(msg.id)
+            del self.ghost_pings[msg.id]
         elif (msg.mentions or msg.role_mentions) and not msg.edited_at:  # The message has pings and has not been edited
             members = set().union(msg.mentions, *(r.members for r in msg.role_mentions))
             has_pinged = False
@@ -124,15 +129,29 @@ class Aegis(Cog):
                     )
                     has_pinged = True
             # Reports in the incident channel that the culprit deleted a ping
-            if has_pinged:
+            if has_pinged and msg.channel.id not in self.suppress_ghost_ping_notification:
                 await ext.send(msg, msg.author.mention + ' has deleted a ping. Try out `d.whoping`!')
+
+    @contextlib.contextmanager
+    def no_ghost_ping_notification(self, ch: int):
+        self.suppress_ghost_ping_notification.append(ch)
+        yield
+        self.suppress_ghost_ping_notification.remove(ch)
+
+    @contextlib.contextmanager
+    def no_ghost_ping(self, ch: int):
+        self.skip_ghost_ping.append(ch)
+        yield
+        self.skip_ghost_ping.remove(ch)
 
     @Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
         """Event handler when a message has been edited. Detect ghost pings due to edited message"""
-        if before.guild and not before.edited_at and before.mentions:  # A message that contains pings has been edited
+        # A message that contains pings has been edited
+        if before.guild and not before.edited_at and (before.mentions or before.role_mentions):
             #  Add the message to ghost pings cache
-            pre = [m for m in before.mentions if not m.bot and m != before.author]
+            pre = set().union(before.mentions, *(r.members for r in before.role_mentions))
+            pre = set(m for m in pre if not m.bot and m != before.author)
             if pre:
                 self.ghost_pings[before.id] = pre
         if before.guild and before.id in self.ghost_pings.keys():  # Message requires ghost ping checking

@@ -77,10 +77,8 @@ class Ikaros(Cog):
             await self.ensure_target(msg, target, countdown)
             role = None
             # Temporary mute system setup that only works in my server / 128BB
-            import bitbay
-            import tribe
             if msg.guild.id == bitbay.guild_id:
-                role = msg.guild.get_role(718210713893601301)  # Muted Pirate
+                role = msg.guild.get_role(844965555051692072)  # Muted Pirate
             elif msg.guild.id == tribe.guild_id:
                 role = msg.guild.get_role(474578007156326412)  # Asteroid Belt
             if role:
@@ -97,8 +95,6 @@ class Ikaros(Cog):
     async def unmute(msg: discord.Message, target: discord.Member, reason: str):
         """Internal logic for unmuting member"""
         role = None
-        import bitbay
-        import tribe
         if msg.guild.id == bitbay.guild_id:
             role = msg.guild.get_role(718210713893601301)  # Muted Pirate
         elif msg.guild.id == tribe.guild_id:
@@ -184,13 +180,14 @@ class Ikaros(Cog):
     @missile.guild_only()
     async def purge(self, ctx: Context, amount_to_check: int, sender: discord.User = None):
         """Purges messages (excluding the command)"""
-        if sender:
-            msgs = await ctx.channel.purge(
-                check=lambda m: m.author == sender, limit=amount_to_check, before=ctx.message
-            )
-        else:
-            msgs = await ctx.channel.purge(limit=amount_to_check, before=ctx.message)
-        await ext.send(ctx, f'Purged {len(msgs)} messages.')
+        with self.bot.get_cog('Aegis').no_ghost_ping_notification(ctx.channel.id):
+            if sender:
+                msgs = await ctx.channel.purge(
+                    check=lambda m: m.author == sender, limit=amount_to_check, before=ctx.message
+                )
+            else:
+                msgs = await ctx.channel.purge(limit=amount_to_check, before=ctx.message)
+            await ext.send(ctx, f'Purged {len(msgs)} messages.')
 
     @command()
     @missile.guild_only()
