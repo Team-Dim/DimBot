@@ -11,7 +11,7 @@ from bruckserver.pythania import Albon
 
 class Verstapen(missile.Cog):
     """Connects to AWS and communicates with a minecraft server instance.
-    Version 2.0.1"""
+    Version 2.0.2"""
 
     def __init__(self, bot):
         super().__init__(bot, 'Verstapen')
@@ -88,10 +88,10 @@ class Verstapen(missile.Cog):
     @missile.in_guilds(tribe.guild_id, 686397146290979003)
     async def start(self, ctx, level: int = 0):
         if level == 0 or level == 1:
-            self.bot.loop.create_task(self.boot_instance(ctx, 'ap-southeast-1', level))
+            self.albon.add_channel(ctx.channel)
+            await self.boot_instance(ctx, 'ap-southeast-1', level)
         else:
-            await ctx.send('Activating Albon')
-        self.albon.add_channel(ctx.channel)
+            await ctx.reply('Invalid boot mode!')
 
     @commands.command()
     @missile.is_rainbow()

@@ -146,6 +146,8 @@ class Bot(commands.Bot):
         self.ip = ''
         self.maintenance: bool = False
         self.status: discord.Status = discord.Status.online
+        # self.help_command = _Help()
+        self.help_command = commands.DefaultHelpCommand(verify_checks=False)
 
     async def async_init(self):
         self.db = await aiosqlite.connect('DimBot.db')
@@ -238,3 +240,9 @@ class UserStore:
         if guild_id not in self.last_xp_time:
             self.last_xp_time[guild_id] = datetime.now()
         return self.last_xp_time[guild_id]
+
+
+class _Help(commands.HelpCommand):
+
+    def __init__(self):
+        super().__init__(verify_checks=False)

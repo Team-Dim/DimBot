@@ -26,8 +26,7 @@ intent = discord.Intents.none()
 intent.guilds = intent.members = intent.messages = intent.reactions = intent.voice_states = intent.typing = True
 intent.presences = True
 bot = missile.Bot(intents=intent)
-bot.help_command = commands.DefaultHelpCommand(verify_checks=False)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.19"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.20"
 logger = missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
@@ -339,6 +338,11 @@ async def mt(ctx: commands.Context, minutes: int = 5):
         await missile.append_msg(m, 'Started')
 
 
+@arccore.command()
+async def ms(ctx: commands.Context, user: discord.User):
+    await ctx.reply('\n'.join(set(g.name for g in user.mutual_guilds)) if user.mutual_guilds else 'None.')
+
+
 # Eggy requested this command
 @bot.command()
 async def hug(ctx):
@@ -393,12 +397,12 @@ async def prefix(ctx: commands.Context, *, p: str = None):
 async def changelog(ctx):
     """Shows the latest release notes of DimBot"""
     await ctx.reply("""
-    **__0.9.18 (May 17, 2021 2:36AM GMT+1)__**\n\n
-    When ghost-pinged, Aegis now doesn't PM you directly. Instead, you can use `d.whoping` to check who pinged you 
-    in that server!\n
-    `d.info w` now accepts an optional TextChannel argument which allows you to filter the webhooks that only 
-    belongs to that channel.\n
-    Adds multi-prefix support when simply pinging DimBot
+**__0.9.20 (May 20, 2021 1:58AM GMT+1)__**\n
+Fixes a typo in pp
+Updates the message of d.start to reflect latest changes
+WhoPing can now detect Role ghost pings.
+The mass ping limit for bots have been increased to 20.
+WhoPing now scans DimBot commands again.
     """)
 
 

@@ -34,7 +34,7 @@ class Aegis(Cog):
         # Check whether message needs to be scanned by Aegis
         if not msg.guild or msg.author == msg.guild.me:
             return
-        if re.search(r".*who.+ping", msg.content, re.IGNORECASE):
+        if re.search(r".*who +ping", msg.content, re.IGNORECASE):
             await msg.reply('Try out `d.whoping`!')
         # Checks for crash gifs
         if re.search(r".*(gfycat.com/safeofficialharvestmouse|gfycat.com/grizzledwildinsect)", msg.content):
@@ -43,7 +43,8 @@ class Aegis(Cog):
         if msg.author.id not in self.count:  # Creates record for the message author
             self.count[msg.author.id] = [[], 0]  # [Tracked messages, warn count]
         raw_mention_count = len(msg.raw_mentions)
-        if raw_mention_count >= 5:  # Mass ping
+        mass_ping_count = 20 if msg.author.bot else 5
+        if raw_mention_count >= mass_ping_count:  # Mass ping
             self.count[msg.author.id][1] += 3
             self.bot.loop.create_task(ext.send(msg,
                                                f'Detected mass ping ({raw_mention_count}) by {msg.author.mention}. '
@@ -98,7 +99,7 @@ class Aegis(Cog):
         """Event handler when a message has been deleted"""
         # Ghost ping detector
         # Check whether the message is related to the bot
-        if not msg.guild or msg.author == msg.guild.me or msg.content.startswith(await self.bot.get_prefix(msg)):
+        if not msg.guild or msg.author == msg.guild.me:
             return
         if msg.id in self.ghost_pings.keys():  # The message has/used to have pings
             for m in self.ghost_pings[msg.id]:
@@ -111,9 +112,10 @@ class Aegis(Cog):
             await ext.send(msg, msg.author.mention + ' has deleted a ping. Try out `d.whoping`!')
             # Removes the message from the cache as it has been deleted on Discord
             self.ghost_pings.pop(msg.id)
-        elif msg.mentions and not msg.edited_at:  # The message has pings and has not been edited
+        elif (msg.mentions or msg.role_mentions) and not msg.edited_at:  # The message has pings and has not been edited
+            members = set().union(msg.mentions, *(r.members for r in msg.role_mentions))
             has_pinged = False
-            for m in msg.mentions:
+            for m in members:
                 if not m.bot and m != msg.author:
                     # Tells the victim that he has been ghost pinged
                     await self.bot.sql.add_who_ping(

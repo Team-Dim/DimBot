@@ -57,7 +57,7 @@ class PPStunned(BasePPException):
 class PPLocked(BasePPException):
     def __init__(self, target_is_sender: bool):
         if target_is_sender:
-            super().__init__('Your pp is locked! Please use `{0}pp sf` to unlock!')
+            super().__init__('Your pp is locked! Please use `{0}pp lock` to unlock!')
         else:
             super().__init__('Target has enabled lock!')
 

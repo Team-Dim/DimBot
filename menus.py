@@ -12,7 +12,7 @@ class WhoPing(menus.Menu):
         self.index: int = 0
 
     async def get_embed(self):
-        emb = missile.Embed(f'WhoPing record ({self.index+1}/{len(self.pings)})', self.pings[self.index][2])
+        emb = missile.Embed(f'WhoPing record ({self.index + 1}/{len(self.pings)})', self.pings[self.index][2])
         user = await self.ctx.bot.ensure_user(self.pings[self.index][1])
         emb.add_field('Pinged by', user.mention)
         emb.add_field('Time', self.pings[self.index][3][5:-7])
@@ -55,3 +55,8 @@ class WhoPing(menus.Menu):
         await self.message.edit(content='WhoPing inspector ended.', embed=None)
         self.stop()
 
+
+class Help(menus.Menu):
+
+    async def send_initial_message(self, ctx, channel):
+        pass
