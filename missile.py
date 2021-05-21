@@ -72,6 +72,30 @@ def guild_only():
     return commands.check(check)
 
 
+def bot_has_perm(**kwargs):
+
+    async def check(ctx):
+        remote = ctx.guild.me.permissions_in(ctx.channel)
+        has = remote.is_superset(discord.Permissions(**kwargs))
+        if not has and remote.send_messages:
+            await ctx.reply(f"I'm missing permissions: {', '.join(kwargs.keys())}")
+        return has
+
+    return commands.check(check)
+
+
+def is_mod():
+
+    async def check(ctx):
+        role = ctx.guild.get_role(await ctx.bot.sql.get_mod_role(ctx.bot.db, guild=ctx.guild.id))
+        mod = role in ctx.author.roles or ctx.author.guild_permissions.manage_guild
+        if not mod:
+            await ctx.reply('You must be a moderator to execute this command!')
+        return mod
+
+    return commands.check(check)
+
+
 def is_url(url: str):
     """Uses RegEx to check whether a string is a HTTP(s) link"""
     # https://stackoverflow.com/a/17773849/8314159
@@ -88,7 +112,7 @@ async def prefix_process(bot, msg: discord.Message):
             return tag_mention.group(0)
         else:
             await msg.reply('Only my little pog champ can use authoritative orders!')
-            return ''
+            return '' + msg.content[0]
     if msg.guild:
         g_prefix = await bot.sql.get_guild_prefix(bot.db, guildID=msg.guild.id)
         if g_prefix:

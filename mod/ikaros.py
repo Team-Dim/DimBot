@@ -3,7 +3,7 @@ from typing import Union
 
 import discord
 from discord.ext.commands import Cog, command, Context, has_permissions, bot_has_permissions, has_guild_permissions, \
-    bot_has_guild_permissions, group
+    bot_has_guild_permissions
 
 import bitbay
 import missile
@@ -14,7 +14,7 @@ ext = missile.MsgExt('Ikaros')
 
 class Ikaros(Cog):
     """Moderation commands. For AutoMod please check out Aegis
-    Version 0.5.3"""
+    Version 0.6"""
 
     def __init__(self, bot):
         self.bot = bot
@@ -22,8 +22,8 @@ class Ikaros(Cog):
     async def ensure_target(self, msg: discord.Message, target: Union[discord.Member, discord.User], countdown: int,
                             check_role: bool = True):
         """A fancy way to ensure that the action can be applied on the target"""
-        if countdown > 550 or countdown < 0:
-            await ext.reply(msg, 'Countdown should be between 0 and 550!')
+        if countdown > 30 or countdown < 0:
+            await ext.reply(msg, 'Countdown should be between 0 and 30!')
             return
         msg = await ext.send(msg, "Attempting to lock target: " + target.mention)
         if isinstance(target, discord.Member) and check_role:
@@ -126,16 +126,16 @@ class Ikaros(Cog):
             await ext.reply(ctx, f'Assigned **{role.name}** to {target}')
 
     @command(name='kick')
+    @missile.bot_has_perm(kick_members=True)
     @has_permissions(kick_members=True)
-    @bot_has_permissions(kick_members=True)
     @missile.guild_only()
     async def kick_cmd(self, ctx: Context, target: discord.Member, countdown: int = 3):
         """Kicks a member"""
         await self.kick(ctx.message, target, countdown, f'Ikaros: Kicked by {ctx.author}')
 
     @command(name='ban')
+    @missile.bot_has_perm(ban_members=True)
     @has_permissions(ban_members=True)
-    @bot_has_permissions(ban_members=True)
     @missile.guild_only()
     async def ban_cmd(self, ctx: Context, target: Union[discord.Member, discord.User],
                       length: int = None, countdown: int = 3):
@@ -199,3 +199,54 @@ class Ikaros(Cog):
                 await ctx.reply(f'**{await ctx.guild.estimate_pruned_members(days=days)}** members will be pruned.')
         else:
             await ctx.reply('Days should be 1-30 inclusive.')
+
+    @command()
+    @missile.bot_has_perm(manage_permissions=True)
+    @missile.is_mod()
+    @missile.guild_only()
+    async def lockdown(self, ctx: Context, can_view_channel: bool = True):
+        """Locks down a server. If can_view_channel is True, then affected roles just can't send messages.
+        If false, then they can't even view the channels."""
+        async with ctx.typing():
+            tasks = []
+            og_perms = await self.bot.sql.get_lockdown(self.bot.db, guild=ctx.guild.id)
+            if og_perms:
+                for record in og_perms:
+                    role = ctx.guild.get_role(record[0])
+                    if role:
+                        tasks.append(role.edit(permissions=discord.Permissions(record[1]), reason='Removing lockdown'))
+                tasks.append(self.bot.sql.remove_lockdown(self.bot.db, guild=ctx.guild.id))
+                await asyncio.wait(tasks)
+                await ctx.reply('Removed lockdown.')
+            else:
+                mod = ctx.guild.get_role(await self.bot.sql.get_mod_role(self.bot.db, guild=ctx.guild.id))
+                roles = ctx.guild.roles
+                if mod:
+                    for i in range(len(roles)-1, -1, -1):
+                        if roles[i] >= mod or roles[i] >= ctx.guild.me.top_role:
+                            roles.pop(i)
+                        else:
+                            break
+                for role in roles:
+                    if can_view_channel:
+                        if role.permissions.send_messages:
+                            tasks.append(self.bot.sql.add_lockdown(
+                                    self.bot.db, guild=ctx.guild.id, role=role.id, perm=role.permissions.value
+                                ))
+                            tasks.append(role.edit(
+                                    permissions=discord.Permissions(role.permissions.value, send_messages=False),
+                                    reason='Manual lockdown'
+                                ))
+                    else:
+                        if role.permissions.view_channel:
+                            tasks.append(self.bot.sql.add_lockdown(
+                                    self.bot.db, guild=ctx.guild.id, role=role.id, perm=role.permissions.value
+                                ))
+                            tasks.append(role.edit(
+                                    permissions=discord.Permissions(role.permissions.value, view_channel=False),
+                                    reason='Manual Lockdown'
+                                ))
+                await asyncio.wait(tasks)
+                await ctx.reply('Lockdown.')
+
+

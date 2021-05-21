@@ -38,7 +38,7 @@ class Aegis(Cog):
         # Check whether message needs to be scanned by Aegis
         if not msg.guild or msg.author == msg.guild.me:
             return
-        if re.search(r".*who +ping", msg.content, re.IGNORECASE):
+        if re.search(r".*who +ping", msg.content, re.IGNORECASE) and not msg.author.bot:
             await msg.reply('Try out `d.whoping`!')
         # Checks for crash gifs
         if re.search(r".*(gfycat.com/safeofficialharvestmouse|gfycat.com/grizzledwildinsect)", msg.content):
