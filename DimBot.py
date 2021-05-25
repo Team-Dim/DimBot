@@ -26,7 +26,7 @@ intent = discord.Intents.none()
 intent.guilds = intent.members = intent.messages = intent.reactions = intent.voice_states = intent.typing = True
 intent.presences = True
 bot = missile.Bot(intents=intent)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.21"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.21.1"
 logger = missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
@@ -404,10 +404,10 @@ async def modrole(ctx: commands.Context, role: discord.Role):
 async def changelog(ctx):
     """Shows the latest release notes of DimBot"""
     await ctx.reply("""
-**__0.9.21 (May 21, 2021 7:13PM GMT+1)__**\n
-You can now define a mod role via `d.guild modrole <role>`.
-Introducing `d.lockdown`. This command allows you to lockdown your server. However it can't take care of specific 
-channel overwrites yet.
+**__0.9.21.1 (May 25, 2021 7:13PM GMT+1)__**\n
+__Raceline v5.2:__
+Fixes a bug in RSS detector which causes some news being repetitively sent.
+Adds `rss t` command to toggle the RSS detector
     """)
 
 
@@ -426,12 +426,12 @@ async def ready_tasks():
     psutil.cpu_percent(percpu=True)
     await bot.is_owner(bot.eggy)  # Trick to set bot.owner_id
     logger.info('Ready')
-    # Then updates the nickname for each server that DimBot is listening to
-    for guild in bot.guilds:
-        if guild.me.nick != nickname:
-            bot.loop.create_task(guild.me.edit(nick=nickname))
     if reborn_channel:  # Post-process Pandora if needed
         await bot.get_channel(reborn_channel).send("Arc-Cor𐑞: Pandora complete.")
+    # Then updates the nickname for each server that DimBot is listening to
+    for guild in bot.guilds:
+        if guild.me.nick != nickname and guild.me.guild_permissions.change_nickname:
+            bot.loop.create_task(guild.me.edit(nick=nickname))
     while True:
         activity = await bot.sql.get_activity(bot.db)
         await bot.change_presence(activity=discord.Activity(name=activity[0], type=discord.ActivityType(activity[1])),

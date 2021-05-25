@@ -16,11 +16,12 @@ from dimsecret import youtube
 
 class Ricciardo(missile.Cog):
     """Relaying RSS, BBM and YouTube feeds to discord channels.
-    Version 5.1"""
+    Version 5.2"""
 
     def __init__(self, bot):
         super().__init__(bot, 'Ricciardo')
         self.addon_ids = (274058, 306357, 274326)  # List of addon IDs for BBM operations
+        self.run_rss = True  # Whether the RSS detector should run or not.
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -52,11 +53,9 @@ class Ricciardo(missile.Cog):
         for addon_id in self.addon_ids:
             bbm_futures[addon_id] = self.bot.loop.create_task(self.bbm_process(addon_id))  # Dispatch BBM tasks
         resultless_futures = []
-        async with self.bot.sql.get_rss_data_cursor(self.bot.db) as cursor:
-            url_id = 1
-            async for row in cursor:  # Dispatches RSS tasks
-                resultless_futures.append(self.bot.loop.create_task(self.rss_process(url_id, row)))
-                url_id += 1
+        if self.run_rss:
+            for row in await self.bot.sql.get_rss_data(self.bot.db):  # Dispatches RSS tasks
+                resultless_futures.append(self.rss_process(row[0], row[1:]))
         async with self.bot.sql.get_yt_data_cursor(self.bot.db) as cursor:
             async for row in cursor:  # Dispatches YouTube tasks
                 resultless_futures.append(self.bot.loop.create_task(self.yt_process(row)))
@@ -236,6 +235,13 @@ class Ricciardo(missile.Cog):
                 await ctx.send('Unsubscribed.')
             else:
                 await ctx.send("This channel hasn't subscribed to this URL.")
+
+    @rss.command(name='toggle', aliases=('t',))
+    @missile.is_rainbow()
+    async def rss_toggle(self, ctx: Context):
+        """Toggles the RSS detector"""
+        self.run_rss = not self.run_rss
+        await ctx.reply(f'{"En" if self.run_rss else "Dis"}abled RSS detector.')
 
     @commands.group(invoke_without_command=True)
     async def bbm(self, ctx):

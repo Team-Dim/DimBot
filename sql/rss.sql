@@ -1,5 +1,5 @@
 --name: get-rss-data
-SELECT *
+SELECT ROWID, *
 FROM RssData;
 
 --name: get-rss-subscriptions
