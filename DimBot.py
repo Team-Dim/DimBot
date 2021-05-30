@@ -26,7 +26,7 @@ intent = discord.Intents.none()
 intent.guilds = intent.members = intent.messages = intent.reactions = intent.voice_states = intent.typing = True
 intent.presences = True
 bot = missile.Bot(intents=intent)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.21.1"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.22"
 logger = missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
@@ -79,7 +79,7 @@ async def on_message(msg: discord.Message):
 @bot.event
 async def on_guild_join(guild: discord.Guild):
     """Updates DimBot's nickname in new servers"""
-    await bot.get_cog('Hamilton').bot_test.send('Joined server ' + str(guild.id))
+    await bot.get_cog('Hamilton').bot_test.send(f'Joined server {guild.id} <@{bot.owner_id}>')
     await bot.sql.add_guild_cfg(bot.db, guildID=guild.id)
     await guild.me.edit(nick=nickname)
 
@@ -148,7 +148,6 @@ async def botinfo(ctx):
     process = psutil.Process()
     with process.oneshot():
         embed.add_field('CPU usage %', psutil.cpu_percent(percpu=True))
-        embed.add_field('Threads', process.num_threads())
         embed.add_field(
             'Process RAM usage / available (MiB)',
             f'{process.memory_info()[0] / 1024**2:.1f} / {psutil.virtual_memory().available / 1024**2:.1f}'
@@ -343,6 +342,14 @@ async def ms(ctx: commands.Context, user: discord.User):
     await ctx.reply('\n'.join(set(g.name for g in user.mutual_guilds)) if user.mutual_guilds else 'None.')
 
 
+@arccore.command()
+async def ls(ctx: commands.Context):
+    content = ''
+    for g in bot.guilds:
+        content += f'{g.id} {g.name}\n'
+    await ctx.reply(content)
+
+
 # Eggy requested this command
 @bot.command()
 async def hug(ctx):
@@ -404,11 +411,9 @@ async def modrole(ctx: commands.Context, role: discord.Role):
 async def changelog(ctx):
     """Shows the latest release notes of DimBot"""
     await ctx.reply("""
-**__0.9.21.1 (May 25, 2021 7:13PM GMT+1)__**\n
-__Raceline v5.2:__
-Fixes a bug in RSS detector which causes some news being repetitively sent.
-Adds `rss t` command to toggle the RSS detector
-    """)
+**__0.9.22 (May 30, 2021 4:36AM GMT+1)__**\n
+New help command design, tho it's not finished yet.
+""")
 
 
 async def ready_tasks():

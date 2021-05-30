@@ -54,9 +54,3 @@ class WhoPing(menus.Menu):
     async def on_stop(self, payload):
         await self.message.edit(content='WhoPing inspector ended.', embed=None)
         self.stop()
-
-
-class Help(menus.Menu):
-
-    async def send_initial_message(self, ctx, channel):
-        pass

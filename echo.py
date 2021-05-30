@@ -31,7 +31,7 @@ class Bottas(commands.Cog):
     @commands.group(invoke_without_command=True)
     async def quote(self, ctx):
         """
-        Wiki for interacting with quote database: https://github.com/TCLRainbow/DimBot/wiki/Project-Echo
+        Click me for wiki about interacting with message database https://github.com/TCLRainbow/DimBot/wiki/Project-Echo
         """
         raise commands.errors.CommandNotFound
 

@@ -73,7 +73,6 @@ def guild_only():
 
 
 def bot_has_perm(**kwargs):
-
     async def check(ctx):
         remote = ctx.guild.me.permissions_in(ctx.channel)
         has = remote.is_superset(discord.Permissions(**kwargs))
@@ -85,7 +84,6 @@ def bot_has_perm(**kwargs):
 
 
 def is_mod():
-
     async def check(ctx):
         role = ctx.guild.get_role(await ctx.bot.sql.get_mod_role(ctx.bot.db, guild=ctx.guild.id))
         mod = role in ctx.author.roles or ctx.author.guild_permissions.manage_guild
@@ -170,8 +168,7 @@ class Bot(commands.Bot):
         self.ip = ''
         self.maintenance: bool = False
         self.status: discord.Status = discord.Status.online
-        # self.help_command = _Help()
-        self.help_command = commands.DefaultHelpCommand(verify_checks=False)
+        self.help_command = _Help()
 
     async def async_init(self):
         self.db = await aiosqlite.connect('DimBot.db')
@@ -270,3 +267,39 @@ class _Help(commands.HelpCommand):
 
     def __init__(self):
         super().__init__(verify_checks=False)
+
+    async def send_bot_help(self, mapping: dict):
+        desc = ''
+        for cog in tuple(mapping.keys())[:-1]:
+            desc += f'**{cog.qualified_name}**: {cog.description.split("Version")[0]}'
+        embed = Embed('Modules', desc)
+        embed.set_author(name='Click me for Wiki', url='https://github.com/TCLRainbow/DimBot/wiki')
+        await self.context.reply(
+            f"Send `{await self.context.bot.get_prefix(self.context.message)}help <module/command>`!",
+            embed=embed
+        )
+
+    async def send_cog_help(self, cog: commands.Cog):
+        embed = Embed('Commands in ' + cog.qualified_name)
+        for cmd in cog.walk_commands():
+            embed.description += f'**{cmd.name}**: {cmd.help}\n'
+        await self.context.reply(embed=embed)
+
+    async def send_group_help(self, group: commands.Group):
+        embed = Embed(group.clean_params if group.clean_params else '', 'Subcommands:\n')
+        for cmd in group.walk_commands():
+            embed.description += f'**{cmd.name}**: {cmd.help}\n'
+        if 'http' in group.help:
+            split = group.help.split('http')
+            embed.set_author(name=split[0], url='http' + split[1])
+        else:
+            embed.set_author(name=group.help)
+        if group.aliases:
+            embed.add_field('Aliases', group.aliases)
+        await self.context.reply(embed=embed)
+
+    async def send_command_help(self, cmd: commands.Command):
+        embed = Embed(cmd.clean_params if cmd.clean_params else '', cmd.help)
+        if cmd.aliases:
+            embed.add_field('Aliases', cmd.aliases)
+        await self.context.reply(embed=embed)

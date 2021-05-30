@@ -7,7 +7,7 @@ import missile
 
 
 class Dimond(commands.Cog):
-    """Named by Anqaa' (uid: 98591077975465984)
+    """Named by <@98591077975465984>
     Report users/channels/servers details. Literally CIA
     Version: 1.3"""
 
