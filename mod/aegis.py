@@ -15,7 +15,7 @@ ext = missile.MsgExt('Aegis')
 
 
 class Aegis(Cog):
-    """AutoMod system
+    """Passive(Auto) moderation system
     Version 0.6.2"""
 
     def __init__(self, bot):
@@ -39,7 +39,7 @@ class Aegis(Cog):
         if not msg.guild or msg.author == msg.guild.me:
             return
         if re.search(r".*who +ping", msg.content, re.IGNORECASE) and not msg.author.bot:
-            await msg.reply('Try out `d.whoping`!')
+            await msg.reply('Someone ghost-pinged you? Try out `d.whoping`!')
         # Checks for crash gifs
         if re.search(r".*(gfycat.com/safeofficialharvestmouse|gfycat.com/grizzledwildinsect)", msg.content):
             await msg.delete()
@@ -134,12 +134,14 @@ class Aegis(Cog):
 
     @contextlib.contextmanager
     def no_ghost_ping_notification(self, ch: int):
+        """A message won't be sent to the channel when a ping has been deleted."""
         self.suppress_ghost_ping_notification.append(ch)
         yield
         self.suppress_ghost_ping_notification.remove(ch)
 
     @contextlib.contextmanager
     def no_ghost_ping(self, ch: int):
+        """Completely skips the Ghost Ping detector logic for that channel"""
         self.skip_ghost_ping.append(ch)
         yield
         self.skip_ghost_ping.remove(ch)

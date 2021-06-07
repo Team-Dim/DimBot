@@ -16,8 +16,7 @@ The following are the variables that should be in the file:
 | discord           | str  | Discord bot token. Obtained from Discord Developer Portal<br>ALWAYS REQUIRED |
 | youtube           | str  | YouTube API token<br>Required for YouTube subscription processing            |
 | debug             | bool | Whether the bot is in debug mode.<br>ALWAYS REQUIRED                         |
-| aws_access_key    | str  | Access Key from AWS IAM User security credentials<br>Required for Vireg  |
-| aws_secret_key    | str  | Secret key from AWS IAM User security credentials<br>Required for Vireg  |
+| digital_ocean     | str  | Token from DigitalOcean<br>Required for Vireg  |
 
 # Codenames
 `Barbados` is the codename given to the discord.py implementation of DimBot.

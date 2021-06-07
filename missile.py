@@ -104,13 +104,13 @@ def is_url(url: str):
 
 async def prefix_process(bot, msg: discord.Message):
     """Function for discord.py to extract applicable prefix based on the message"""
-    tag_mention = re.search(f'^(<@!{bot.user.id}>,? |DimBot, )', msg.content)
+    tag_mention = re.search(f'^(<@!?{bot.user.id}>,? |DimBot, )', msg.content)
     if tag_mention:
         if msg.author.id == bot.owner_id:  # Only I can use 'DimBot, xxx' or '@DimBot xxx'
             return tag_mention.group(0)
         else:
             await msg.reply('Only my little pog champ can use authoritative orders!')
-            return '' + msg.content[0]
+            return ' '  # Invalidates the prefix
     if msg.guild:
         g_prefix = await bot.sql.get_guild_prefix(bot.db, guildID=msg.guild.id)
         if g_prefix:
@@ -269,11 +269,11 @@ class _Help(commands.HelpCommand):
         super().__init__(verify_checks=False)
 
     async def send_bot_help(self, mapping: dict):
-        desc = ''
+        embed = Embed('Modules')
         for cog in tuple(mapping.keys())[:-1]:
-            desc += f'**{cog.qualified_name}**: {cog.description.split("Version")[0]}'
-        embed = Embed('Modules', desc)
-        embed.set_author(name='Click me for Wiki', url='https://github.com/TCLRainbow/DimBot/wiki')
+            embed.description += f'**{cog.qualified_name}**: {cog.description.split("Version")[0]}'
+        embed.set_author(name='Click me for Wiki',
+                         url='https://github.com/TCLRainbow/DimBot-Wiki/blob/master/README.md')
         await self.context.reply(
             f"Send `{await self.context.bot.get_prefix(self.context.message)}help <module/command>`!",
             embed=embed
@@ -283,23 +283,23 @@ class _Help(commands.HelpCommand):
         embed = Embed('Commands in ' + cog.qualified_name)
         for cmd in cog.walk_commands():
             embed.description += f'**{cmd.name}**: {cmd.help}\n'
-        await self.context.reply(embed=embed)
+        embed.set_footer(text='Version ' + cog.description.split('Version')[1])
+        await self.context.reply(
+            f"Send `{await self.context.bot.get_prefix(self.context.message)}help <command>`!",
+            embed=embed
+        )
 
     async def send_group_help(self, group: commands.Group):
-        embed = Embed(group.clean_params if group.clean_params else '', 'Subcommands:\n')
+        embed = Embed(group.short_doc, group.help if group.help != group.short_doc else '')
+        embed.description += '\n\nSubcommands:\n'
         for cmd in group.walk_commands():
-            embed.description += f'**{cmd.name}**: {cmd.help}\n'
-        if 'http' in group.help:
-            split = group.help.split('http')
-            embed.set_author(name=split[0], url='http' + split[1])
-        else:
-            embed.set_author(name=group.help)
+            embed.description += f'**{cmd.name}**: {cmd.short_doc}\n'
         if group.aliases:
-            embed.add_field('Aliases', group.aliases)
+            embed.add_field('Aliases', ', '.join(group.aliases))
         await self.context.reply(embed=embed)
 
     async def send_command_help(self, cmd: commands.Command):
-        embed = Embed(cmd.clean_params if cmd.clean_params else '', cmd.help)
+        embed = Embed(cmd.short_doc, cmd.help if cmd.help != cmd.short_doc else '')
         if cmd.aliases:
-            embed.add_field('Aliases', cmd.aliases)
+            embed.add_field('Aliases', ', '.join(cmd.aliases))
         await self.context.reply(embed=embed)

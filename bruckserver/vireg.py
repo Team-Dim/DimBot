@@ -1,97 +1,51 @@
-import asyncio
-
-import boto3
+import digitalocean
 from discord.ext import commands
 
-import dimsecret
 import missile
 import tribe
 from bruckserver.pythania import Albon
 
 
 class Verstapen(missile.Cog):
-    """Connects to AWS and communicates with a minecraft server instance.
-    Version 2.0.2"""
+    """Creates and communicates with a minecraft server instance.
+    Version 3.0"""
 
     def __init__(self, bot):
         super().__init__(bot, 'Verstapen')
         self.albon = Albon(bot)
+        self.starting = False
         bot.loop.create_task(self.albon.run_server())
-
-    async def boot_instance(self, ctx, region_id: str, level: int):
-        msg = await ctx.send('Connecting to Amazon Web Service...')
-        self.logger.info('Connecting to AWS')
-        session = boto3.session.Session(
-            region_name=region_id,
-            aws_access_key_id=dimsecret.aws_access_key,
-            aws_secret_access_key=dimsecret.aws_secret_key
-        )
-        ec2 = session.client('ec2')
-        instance = ec2.describe_instances(
-            Filters=[
-                {
-                    'Name': 'instance-state-name',
-                    'Values': ['running']
-                },
-                {
-                    'Name': 'tag:Name',
-                    'Values': ['bruck3 Spot']
-                }
-            ]
-        )
-        if not instance['Reservations']:  # There are no active bruck servers
-            ami = ec2.describe_images(
-                Filters=[{
-                    'Name': 'name',
-                    'Values': ['bruck3 SPOT']
-                }],
-                Owners=['self']
-            )['Images']
-            if not ami:
-                await missile.append_msg(msg, '⚠No AMI! Please ask Dim for help!')
-                return
-            ami = ami[0]
-            inst_type = 't4g.medium' if level else 't4g.small'
-            await missile.append_msg(msg, f"Requesting new **{inst_type}** instance")
-            spot_request = ec2.request_spot_instances(
-                LaunchSpecification={
-                    'SecurityGroups': ['default'],
-                    'BlockDeviceMappings': ami['BlockDeviceMappings'],
-                    'Placement': {
-                        'AvailabilityZone': 'ap-southeast-1a',
-                    },
-                    'ImageId': ami['ImageId'],
-                    'KeyName': 'SG',
-                    'InstanceType': inst_type,
-                    'EbsOptimized': True,
-                    'Monitoring': {'Enabled': True}
-                }
-            )['SpotInstanceRequests'][0]
-            await missile.append_msg(msg, 'Waiting for AWS to provide an instance...')
-            spot_info = {"State": ""}
-            while spot_info['State'] != 'active':
-                await asyncio.sleep(5)
-                spot_info = ec2.describe_spot_instance_requests(
-                    SpotInstanceRequestIds=[spot_request['SpotInstanceRequestId']]
-                )
-                spot_info = spot_info['SpotInstanceRequests'][0]
-            await missile.append_msg(
-                msg, 'AWS has fulfilled our request in '
-                     f'*{spot_request["LaunchSpecification"]["Placement"]["AvailabilityZone"]}*')
-            instance_id = spot_info['InstanceId']
-            ec2.create_tags(Resources=[instance_id], Tags=[{'Key': 'Name', 'Value': 'bruck3 Spot'}])
-            instance = ec2.describe_instances(InstanceIds=[instance_id])
-        instance = instance['Reservations'][0]['Instances'][0]
-        await missile.append_msg(msg, f'IP: **{instance["PublicIpAddress"]}**')
 
     @commands.command()
     @missile.in_guilds(tribe.guild_id, 686397146290979003)
-    async def start(self, ctx, level: int = 0):
-        if level == 0 or level == 1:
-            self.albon.add_channel(ctx.channel)
-            await self.boot_instance(ctx, 'ap-southeast-1', level)
-        else:
-            await ctx.reply('Invalid boot mode!')
+    async def start(self, ctx):
+        self.albon.add_channel(ctx.channel)
+        if self.starting:
+            await ctx.reply('Server is starting, please retry the command in 10 seconds!')
+            return
+        self.starting = True
+        region = 'lon1'
+        droplets = filter(lambda d: d.name == 'mcser', self.albon.mgr.get_all_droplets())
+        for droplet in droplets:
+            await ctx.reply('Server is already running: ' + droplet.ip_address)
+            return
+        droplet = digitalocean.Droplet(
+            token=self.albon.mgr.token,
+            name='mcser',
+            region=region,
+            image=85521198,
+            size_slug='s-2vcpu-4gb'
+        )
+        msg = await ctx.reply('Creating new instance')
+        droplet.create()
+        await missile.append_msg(msg, 'Attaching volume')
+        droplet.get_actions()[0].load()  # Simulates wait
+        self.albon.mgr.get_volume('8ae33506-c54a-11eb-bf8e-0a58ac14c198').attach(droplet.id, region)
+        await missile.append_msg(msg, 'Attaching firewall')
+        self.albon.mgr.get_firewall('b55786d5-0c03-497c-a30c-5fa2a8b5e340').add_droplets((droplet.id,))
+        droplet.load()
+        await missile.append_msg(msg, f'IP: **{droplet.ip_address}** Please wait for Linux to boot!')
+        self.starting = False
 
     @commands.command()
     @missile.is_rainbow()

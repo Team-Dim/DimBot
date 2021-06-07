@@ -31,13 +31,15 @@ class Bottas(commands.Cog):
     @commands.group(invoke_without_command=True)
     async def quote(self, ctx):
         """
-        Click me for wiki about interacting with message database https://github.com/TCLRainbow/DimBot/wiki/Project-Echo
+        Commands for interacting with quotes
         """
         raise commands.errors.CommandNotFound
 
-    @quote.command(aliases=('i',))
+    @quote.command(aliases=('i',), brief='Search a quote by ID')
     async def index(self, ctx, index: int = 0):
-        """Search a quote by its ID"""
+        """`quote i [ID]`
+        ID: Quote index. If the ID is invalid, the bot randomly picks a quote.
+        """
         quote = await self.bot.sql.get_quote(self.bot.db, id=index)
         content = ''
         if not quote:  # Provided Quote ID is invalid
@@ -60,9 +62,11 @@ class Bottas(commands.Cog):
             content += f" at {quote_obj.time.split('.')[0]}"
         await ctx.reply(content)
 
-    @quote.command(aliases=('q',))
+    @quote.command(aliases=('q',), brief='Search quote by quoter')
     async def quoter(self, ctx, *, quoter_msg):
-        """List quotes that are said by a quoter/a quoter group"""
+        """`quote q [quoter], [quoter group]`
+        Quoter, quoter group: The name of the quoter/quoter group.
+        """
         quoter, quoter_group = split_quoter(quoter_msg)
         quotes = await self.bot.sql.get_quoter_quotes(self.bot.db, quoter=quoter, QuoterGroup=quoter_group)
         content = f"The following are **{quoter_msg}**'s quotes:\n>>> "

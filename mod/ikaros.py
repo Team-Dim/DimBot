@@ -13,7 +13,7 @@ ext = missile.MsgExt('Ikaros')
 
 
 class Ikaros(Cog):
-    """Moderation commands. For AutoMod please check out Aegis
+    """Active moderation system
     Version 0.6"""
 
     def __init__(self, bot):
@@ -86,8 +86,9 @@ class Ikaros(Cog):
                 await ext.send(msg, f'Muting {target.mention} for {length}s')
                 if length:  # Unmutes if there is a mute time length
                     await asyncio.sleep(length)
-                    await target.remove_roles(role, reason='Deactivating ' + reason)
-                    await ext.send(msg, 'Unmuted ' + target.mention)
+                    if role in target.roles:
+                        await target.remove_roles(role, reason='Deactivating ' + reason)
+                        await ext.send(msg, 'Unmuted ' + target.mention)
         except PermissionError:
             return
 
@@ -170,7 +171,8 @@ class Ikaros(Cog):
     @missile.guild_only()
     async def surprise(self, ctx: Context, target: discord.Member, countdown: int = 3):
         """Gives the member a surprise"""
-        await ctx.message.delete()
+        with self.bot.get_cog('Aegis').no_ghost_ping(ctx.channel.id):
+            await ctx.message.delete()
         await self.ensure_target(ctx.message, target, countdown, False)
         await ctx.send('🥳 Surprise')
 

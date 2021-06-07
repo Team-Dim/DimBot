@@ -26,7 +26,7 @@ intent = discord.Intents.none()
 intent.guilds = intent.members = intent.messages = intent.reactions = intent.voice_states = intent.typing = True
 intent.presences = True
 bot = missile.Bot(intents=intent)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.22"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.23"
 logger = missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
@@ -411,8 +411,10 @@ async def modrole(ctx: commands.Context, role: discord.Role):
 async def changelog(ctx):
     """Shows the latest release notes of DimBot"""
     await ctx.reply("""
-**__0.9.22 (May 30, 2021 4:36AM GMT+1)__**\n
-New help command design, tho it's not finished yet.
+**__0.9.23 (Jun 7, 2021 7:33PM GMT+1)__**\n
+Finalised help command design. I will update the help message for each command soon.
+**Verstapen 3.0**: The `d.start` internal logic has been rewritten. You **no longer** have to send `d.start 1` as the bot
+will now only launch 4GB RAM servers.
 """)
 
 

@@ -1,20 +1,23 @@
 import binascii
 
+import digitalocean
 from aiohttp import web
 
 import bitbay
+import dimsecret
 import missile
 
 
 class Albon:
     """HTTP server sub-project used by Verstapen
-    Version 1.5"""
+    Version 1.6"""
 
     def __init__(self, bot):
         self._channels = []
         self.bot = bot
         self.online = []
         self.logger = missile.get_logger('Albon')
+        self.mgr = digitalocean.Manager(token=dimsecret.digital_ocean)
 
     @property
     def channels(self):
@@ -55,6 +58,9 @@ class Albon:
 
         @routes.post('/shutdown')
         async def shutdown(request: web.Request):
+            droplets = filter(lambda d: d.name == 'mcser', self.mgr.get_all_droplets())
+            for droplet in droplets:
+                droplet.destroy()
             name = await request.text()
             if name == '':
                 msg = ':angry: Minecraft server has been idle for 15 minutes. ' \
@@ -67,7 +73,6 @@ class Albon:
                 self.bot.loop.create_task(channel.send(msg))
             self._channels = []
             self.online = []
-            return web.Response()
 
         @routes.post('/exit')
         async def exit_code(request: web.Request):
