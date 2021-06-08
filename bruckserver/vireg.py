@@ -8,7 +8,7 @@ from bruckserver.pythania import Albon
 
 class Verstapen(missile.Cog):
     """Creates and communicates with a minecraft server instance.
-    Version 3.0"""
+    Version 3.0.1"""
 
     def __init__(self, bot):
         super().__init__(bot, 'Verstapen')
@@ -33,7 +33,7 @@ class Verstapen(missile.Cog):
             token=self.albon.mgr.token,
             name='mcser',
             region=region,
-            image=85521198,
+            image=85554660,
             size_slug='s-2vcpu-4gb'
         )
         msg = await ctx.reply('Creating new instance')
