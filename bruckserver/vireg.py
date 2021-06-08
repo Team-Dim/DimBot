@@ -17,7 +17,7 @@ class Verstapen(missile.Cog):
         bot.loop.create_task(self.albon.run_server())
 
     @commands.command()
-    @missile.in_guilds(tribe.guild_id, 686397146290979003)
+    @missile.in_guilds(tribe.guild_id)
     async def start(self, ctx):
         self.albon.add_channel(ctx.channel)
         if self.starting:
@@ -33,17 +33,22 @@ class Verstapen(missile.Cog):
             token=self.albon.mgr.token,
             name='mcser',
             region=region,
-            image=85554660,
+            image=85584648,
             size_slug='s-2vcpu-4gb'
         )
         msg = await ctx.reply('Creating new instance')
-        droplet.create()
+        await ctx.bot.loop.run_in_executor(None, droplet.create)
         await missile.append_msg(msg, 'Attaching volume')
-        droplet.get_actions()[0].load()  # Simulates wait
-        self.albon.mgr.get_volume('8ae33506-c54a-11eb-bf8e-0a58ac14c198').attach(droplet.id, region)
+        await ctx.bot.loop.run_in_executor(None, droplet.get_actions()[0].wait)
+        await ctx.bot.loop.run_in_executor(
+            None,
+            self.albon.mgr.get_volume('8ae33506-c54a-11eb-bf8e-0a58ac14c198').attach, droplet.id, region)
         await missile.append_msg(msg, 'Attaching firewall')
-        self.albon.mgr.get_firewall('b55786d5-0c03-497c-a30c-5fa2a8b5e340').add_droplets((droplet.id,))
-        droplet.load()
+        await ctx.bot.loop.run_in_executor(
+            None,
+            self.albon.mgr.get_firewall('b55786d5-0c03-497c-a30c-5fa2a8b5e340').add_droplets, (droplet.id,)
+        )
+        await ctx.bot.loop.run_in_executor(None, droplet.load)
         await missile.append_msg(msg, f'IP: **{droplet.ip_address}** Please wait for Linux to boot!')
         self.starting = False
 
