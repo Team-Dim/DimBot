@@ -23,12 +23,12 @@ class Verstapen(missile.Cog):
         if self.starting:
             await ctx.reply('Server is starting, please retry the command in 10 seconds!')
             return
-        self.starting = True
         region = 'lon1'
         droplets = filter(lambda d: d.name == 'mcser', self.albon.mgr.get_all_droplets())
         for droplet in droplets:
             await ctx.reply('Server is already running: ' + droplet.ip_address)
             return
+        self.starting = True
         droplet = digitalocean.Droplet(
             token=self.albon.mgr.token,
             name='mcser',
