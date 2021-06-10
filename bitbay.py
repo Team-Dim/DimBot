@@ -136,8 +136,9 @@ class BitBay(Cog):
                     elif re.search(r"(.* |^)mii", match, re.IGNORECASE):
                         await msg.reply("<#731478871823613962>")
                     elif re.search(r"(.* |^)firmware", match, re.IGNORECASE):
-                        await msg.reply("Yuzu doesn't need firmware. Unsubscribe from the guy that said it.\nSwitch firmware"
-                                        " link is in the oldest pin at <#718990080387317850> but I PMed you")
+                        await msg.reply(
+                            "Yuzu doesn't need firmware. Unsubscribe from the guy that said it.\n"
+                            "Switch firmware link is in the oldest pin at <#718990080387317850> but I PMed you")
                         await msg.author.send(decode('aHR0cHM6Ly9kYXJ0aHN0ZXJuaWUubmV0L3N3aXRjaC1maXJtd2FyZXMv'))
                 elif re.search(r"(.* |^)(cemu|wii ?u)", match, re.IGNORECASE):
                     await msg.reply("May I suggest you read <#718989936837263450> pins?")
@@ -151,8 +152,8 @@ class BitBay(Cog):
                     await msg.reply('Please specify the emulator you want e.g. `Where download switch games`\n'
                                     'Tips: You can send `d.dec <base64>` to decode all those aHxxxx text!')
                 elif re.search(r"(.* |^)amiibo", match, re.IGNORECASE):
-                    await msg.reply("You can get the amiibo files from <#796160202067017789> \n"
-                                    " Tip: Ryjinx does not need amiibo files to use amiibo, this is built into Ryujinx")
+                    await msg.reply("You can get the amiibo files from <#796160202067017789>\n"
+                                    "Tip: Ryujinx does not need amiibo files to use amiibo, this is built into Ryujinx")
 
     @command(aliases=('enc',))
     async def encode(self, ctx: Context, *, url: str):
