@@ -130,28 +130,30 @@ class BitBay(Cog):
                     elif re.search(r"(.* |^)change ?log", match, re.IGNORECASE):
                         await msg.reply("<#749927995183202376>")
                     elif re.search(r"(.* |^).*mod", match, re.IGNORECASE):
-                        await msg.reply("Please check pins in <#702621234835226744>")
+                        await msg.reply("Please check the pins in <#702621234835226744>")
                     elif re.search(r"(.* |^)save", match, re.IGNORECASE):
-                        await msg.reply("<#718565804345393182>")
+                        await msg.reply("There are several in <#718565804345393182>")
                     elif re.search(r"(.* |^)mii", match, re.IGNORECASE):
                         await msg.reply("<#731478871823613962>")
                     elif re.search(r"(.* |^)firmware", match, re.IGNORECASE):
-                        await msg.reply("Yuzu doesn't need firmware. Unsubscribe the guy that said it.\nSwitch firmware"
-                                        " link is in the oldest pin at <#718990080387317850> but I PMed you")
+                        await msg.reply(
+                            "Yuzu doesn't need firmware. Unsubscribe from the guy that said it.\n"
+                            "Switch firmware link is in the oldest pin at <#718990080387317850> but I PMed you")
                         await msg.author.send(decode('aHR0cHM6Ly9kYXJ0aHN0ZXJuaWUubmV0L3N3aXRjaC1maXJtd2FyZXMv'))
                 elif re.search(r"(.* |^)(cemu|wii ?u)", match, re.IGNORECASE):
-                    await msg.reply("May I suggest you <#718989936837263450> pins?")
+                    await msg.reply("May I suggest you read <#718989936837263450> pins?")
                 elif re.search(r"(.* |^)(citra|3ds) ", match, re.IGNORECASE):
-                    await msg.reply("May I suggest you <#750213635975938112> pins?")
+                    await msg.reply("May I suggest you read <#750213635975938112> pins?")
                 elif re.search(r"(.* |^)(gc|gamecube|wii|dolphin) ", match, re.IGNORECASE):
-                    await msg.reply("May I suggest you <#750178026704207944> pins?")
+                    await msg.reply("May I suggest you read <#750178026704207944> pins?")
                 elif re.search(r"(.* |^)n?ds", match, re.IGNORECASE):
-                    await msg.reply("May I suggest you <#749996667511767090> pins?")
+                    await msg.reply("May I suggest you read <#749996667511767090> pins?")
                 elif re.search(r"(.* |^)(rom|game|shader|mod|key|save|mii|firmware)", match, re.IGNORECASE):
                     await msg.reply('Please specify the emulator you want e.g. `Where download switch games`\n'
                                     'Tips: You can send `d.dec <base64>` to decode all those aHxxxx text!')
                 elif re.search(r"(.* |^)amiibo", match, re.IGNORECASE):
-                    await msg.reply('<#796160202067017789>')
+                    await msg.reply("You can get the amiibo files from <#796160202067017789>\n"
+                                    "Tip: Ryujinx does not need amiibo files to use amiibo, this is built into Ryujinx")
 
     @command(aliases=('enc',))
     async def encode(self, ctx: Context, *, url: str):
