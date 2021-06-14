@@ -26,7 +26,7 @@ intent = discord.Intents.none()
 intent.guilds = intent.members = intent.messages = intent.reactions = intent.voice_states = intent.typing = True
 intent.presences = True
 bot = missile.Bot(intents=intent)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.23.4"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.24"
 logger = missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
@@ -63,9 +63,6 @@ except FileNotFoundError:
 
 @bot.event
 async def on_message(msg: discord.Message):
-    if msg.author.id != bot.user.id:
-        logger.info(f"{msg.author} @{msg.guild} #{msg.channel}")
-        logger.info(msg.content + '\n')
     if msg.guild and msg.content == msg.guild.me.mention:
         p = await bot.get_prefix(msg)
         if p == bot.default_prefix:
@@ -350,6 +347,16 @@ async def ls(ctx: commands.Context):
     await ctx.reply(content)
 
 
+@arccore.command()
+@missile.guild_only()
+async def lch(ctx: commands.Context, g: discord.Guild = None):
+    g = g if g else ctx.guild
+    msg = ''
+    for ch in g.channels:
+        msg += f'{ch.id} {ch.type} {ch.name}\n'
+    await ctx.reply(msg)
+
+
 # Eggy requested this command
 @bot.command()
 async def hug(ctx):
@@ -411,10 +418,8 @@ async def modrole(ctx: commands.Context, role: discord.Role):
 async def changelog(ctx):
     """Shows the latest release notes of DimBot"""
     await ctx.reply("""
-**__0.9.23 (Jun 7, 2021 7:33PM GMT+1)__**\n
-Finalised help command design. I will update the help message for each command soon.
-**Verstapen 3.0**: The `d.start` internal logic has been rewritten. You **no longer** have to send `d.start 1` as the bot
-will now only launch 4GB RAM servers.
+**__0.9.24 (Jun 14, 2021 2:34AM GMT+1)__**\n
+BBM detector now skips temporarily removes an addon for that instance if data inconsistency is detected.
 """)
 
 

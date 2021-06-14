@@ -16,7 +16,7 @@ from dimsecret import youtube
 
 class Ricciardo(missile.Cog):
     """Relaying RSS, BBM and YouTube feeds to discord channels.
-    Version 5.2"""
+    Version 5.2.1"""
 
     def __init__(self, bot):
         super().__init__(bot, 'Ricciardo')
@@ -132,18 +132,38 @@ class Ricciardo(missile.Cog):
             self.logger.debug(f'Fetching BBM {addon_id}...')
             addon = await response.json()
         old_names = []
-        async with self.bot.sql.get_bbm_addons_cursor(self.bot.db, id=addon_id) as titles:
-            self.logger.debug(f"Reading addon titles for {addon_id}")
-            async for old_title in titles:
-                exists = False
-                for l_file in addon['latestFiles']:
-                    if old_title[0] == l_file['displayName']:
-                        exists = True
-                        addon['latestFiles'].remove(l_file)
-                        break
-                if not exists:
-                    old_names.append(old_title[0])
-                self.logger.info(f'BBM {addon_id} ({old_title[0]}) has update? {not exists}')
+        self.logger.debug(f"Reading addon titles for {addon_id}")
+        titles = await self.bot.sql.get_bbm_addons(self.bot.db, id=addon_id)
+        diff_size = False
+        if len(titles) != len(addon['latestFiles']):
+            diff_size = True
+            diff_size_msg = f'''
+            detected different amount of BBM addon files! ({addon_id})
+            title {titles}
+            Before process:
+            remote {tuple(f['displayName'] for f in addon['latestFiles'])}
+            '''
+        for old_title in titles:
+            exists = False
+            for l_file in addon['latestFiles']:
+                if old_title[0] == l_file['displayName']:
+                    exists = True
+                    addon['latestFiles'].remove(l_file)
+                    break
+            if not exists:
+                old_names.append(old_title[0])
+            self.logger.info(f'BBM {addon_id} ({old_title[0]}) has update? {not exists}')
+        if diff_size:
+            diff_size_msg += f'''
+            After process:
+            Old titles {old_names}
+            remote {tuple(f['displayName'] for f in addon['latestFiles'])}
+            '''
+            await self.bot.get_cog('Hamilton').bot_test.send('<@264756129916125184> ' + diff_size_msg)
+            new_addon_ids = list(self.addon_ids)
+            new_addon_ids.remove(addon_id)
+            self.addon_ids = tuple(new_addon_ids)
+            return ''
         # All that remains is addons that have updates
         for i, latest_file in enumerate(addon['latestFiles']):
             # Fetch the changelog of that addon update
