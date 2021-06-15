@@ -90,7 +90,7 @@ class Albon:
         async def boot(request):
             for channel in self._channels:
                 self.bot.loop.create_task(channel.send('Linux 🤝 DimBot. Please wait for Minecraft server to boot.'))
-            return web.Response(text=self.dir)
+            return web.Response(body=self.dir)
 
         @routes.get('/b64d')
         async def base64decode(request):
