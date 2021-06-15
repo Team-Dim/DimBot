@@ -18,7 +18,7 @@ class Albon:
         self.online = []
         self.logger = missile.get_logger('Albon')
         self.mgr = digitalocean.Manager(token=dimsecret.digital_ocean)
-        self.dir = ''
+        self.boot_response = web.Response()
 
     @property
     def channels(self):
@@ -90,7 +90,7 @@ class Albon:
         async def boot(request):
             for channel in self._channels:
                 self.bot.loop.create_task(channel.send('Linux 🤝 DimBot. Please wait for Minecraft server to boot.'))
-            return web.Response(body=self.dir)
+            return self.boot_response
 
         @routes.get('/b64d')
         async def base64decode(request):

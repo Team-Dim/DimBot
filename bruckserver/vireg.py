@@ -34,7 +34,7 @@ class Verstapen(missile.Cog):
             await ctx.reply('Server is already running: ' + droplet.ip_address)
             return
         self.starting = True
-        self.albon.dir = 'skyblock' if server == 's' else 'rlcraft'
+        self.albon.boot_response.body = 'skyblock' if server == 's' else 'rlcraft'
         droplet = digitalocean.Droplet(
             token=self.albon.mgr.token,
             name='mcser',
