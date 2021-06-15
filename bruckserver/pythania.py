@@ -10,7 +10,7 @@ import missile
 
 class Albon:
     """HTTP server sub-project used by Verstapen
-    Version 1.6"""
+    Version 1.7"""
 
     def __init__(self, bot):
         self._channels = []
@@ -18,6 +18,7 @@ class Albon:
         self.online = []
         self.logger = missile.get_logger('Albon')
         self.mgr = digitalocean.Manager(token=dimsecret.digital_ocean)
+        self.dir = ''
 
     @property
     def channels(self):
@@ -80,8 +81,7 @@ class Albon:
             code = await request.text()
             msg = 'Minecraft server exited with code ' + code
             if code == '137':
-                msg += '\n💥 Server crashed due to not enough RAM. ' \
-                       '/stop in game and send `d.start 1` if this continues.'
+                msg += '\n💥 Server crashed due to not enough RAM.'
             for channel in self._channels:
                 self.bot.loop.create_task(channel.send(msg))
             return web.Response()
@@ -90,7 +90,7 @@ class Albon:
         async def boot(request):
             for channel in self._channels:
                 self.bot.loop.create_task(channel.send('Linux 🤝 DimBot. Please wait for Minecraft server to boot.'))
-            return web.Response()
+            return web.Response(text=self.dir)
 
         @routes.get('/b64d')
         async def base64decode(request):

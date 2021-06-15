@@ -213,7 +213,8 @@ class Ricciardo(missile.Cog):
     @commands.group(invoke_without_command=True)
     async def rss(self, ctx):
         """Commands for RSS feed update detector"""
-        await self.bot.get_command('help rss')()
+        self.bot.help_command.context = ctx
+        await self.bot.help_command.send_group_help(ctx.command)
 
     @rss.command(name='subscribe', aliases=('s', 'sub'), brief='Subscribes to a RSS feed')
     @missile.is_channel_owner()
@@ -268,7 +269,8 @@ class Ricciardo(missile.Cog):
     @commands.group(invoke_without_command=True)
     async def bbm(self, ctx):
         """Commands for BigBangMods update detector"""
-        await self.bot.get_command('help bbm')()
+        self.bot.help_command.context = ctx
+        await self.bot.help_command.send_group_help(ctx.command)
 
     @bbm.command(name='subscribe', aliases=('s', 'sub'), brief='Subscribes to a BBM addon')
     @missile.is_channel_owner()
@@ -322,7 +324,8 @@ class Ricciardo(missile.Cog):
     @commands.group(invoke_without_command=True)
     async def yt(self, ctx):
         """Commands for YouTube video detector"""
-        await self.bot.get_command('help yt')()
+        self.bot.help_command.context = ctx
+        await self.bot.help_command.send_group_help(ctx.command)
 
     async def get_channel_id(self, query: str):
         """Returns the YouTube channel ID based on query type"""

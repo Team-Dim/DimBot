@@ -17,7 +17,8 @@ class Dimond(commands.Cog):
     @commands.group(invoke_without_command=True)
     async def info(self, ctx):
         """Commands for showing info of various objects"""
-        await self.bot.get_command('help info')()
+        self.bot.help_command.context = ctx
+        await self.bot.help_command.send_group_help(ctx.command)
 
     @info.command(aliases=('u',), brief='Shows user info')
     async def user(self, ctx, u: discord.User = None):

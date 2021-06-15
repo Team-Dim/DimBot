@@ -26,7 +26,7 @@ intent = discord.Intents.none()
 intent.guilds = intent.members = intent.messages = intent.reactions = intent.voice_states = intent.typing = True
 intent.presences = True
 bot = missile.Bot(intents=intent)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.25"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.26"
 logger = missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
@@ -36,6 +36,13 @@ async def binvk(ctx: commands.Context):
     if randint(1, 100) <= 5:
         await ctx.send(sponsor_txt)
 bot.before_invoke(binvk)
+
+
+async def ainvk(ctx: commands.Context):
+    emb = missile.Embed(description=ctx.message.content)
+    emb.add_field('By', ctx.author.mention)
+    emb.add_field('In', ctx.guild.id if ctx.guild else 'DM')
+    await bot.get_cog('Hamilton').bot_test.send(embed=emb)
 
 try:
     # If the bot is restarting, read the channel ID that invoked the restart command
@@ -165,7 +172,8 @@ async def noel(ctx):
 @bot.group(invoke_without_command=True)
 async def link(ctx):
     """Commands for generating links"""
-    await bot.get_command('help link')()
+    bot.help_command.context = ctx
+    await bot.help_command.send_group_help(ctx.command)
 
 
 @link.command()
@@ -380,7 +388,7 @@ async def hsv(ctx: commands.Context, h: int = 0, s: int = 0, v: int = 0):
     Same with `colour` command but accepts HSV values. Cannot randomly generates color."""
     color = discord.Colour.from_hsv(h, s, v)
     if 0 <= color.value <= 0xFFFFFF:
-        await bot.get_command('color')(ctx, discord.Colour.from_hsv(h, s, v))
+        await bot.get_command('color')(ctx, color)
     else:
         raise errors.BadColorArgument(color)
 
@@ -391,7 +399,8 @@ async def hsv(ctx: commands.Context, h: int = 0, s: int = 0, v: int = 0):
 async def guild(ctx: commands.Context):
     """Settings for server"""
     if not ctx.invoked_subcommand:
-        await bot.get_command('help guild')()
+        bot.help_command.context = ctx
+        await bot.help_command.send_group_help(ctx.command)
 
 
 @guild.command(brief='Changes the custom prefix of DimBot')
@@ -417,12 +426,9 @@ async def modrole(ctx: commands.Context, role: discord.Role):
 async def changelog(ctx):
     """Shows the latest release notes of DimBot"""
     await ctx.reply("""
-**__0.9.25 (Jun 15, 2021 1:53AM GMT+1)__**\n
-Adds `quote r` subcommand
-**Completes all help commands. WOW!**
-Uses Unicode emoji for `noel` instead of Discord-style colon strings
-All command groups, when supplied an invalid subcommand,
-now prints the help menu of the group instead of raising `CommandNotFound`
+**__0.9.26 (Jun 15, 2021 9:14PM GMT+1)__**\n
+Fixes help menu for invalid subcommands
+Introducing `d.start r` and `d.start s` respectively for RLCraft and Skyblock
 """)
 
 
@@ -437,6 +443,7 @@ async def ready_tasks():
     bot.add_cog(XP(bot))
     await bot.wait_until_ready()
     bot.add_cog(tribe.Hamilton(bot))
+    bot.after_invoke(ainvk)
     bot.eggy = await bot.fetch_user(226664644041768960)  # Special Discord user
     psutil.cpu_percent(percpu=True)
     await bot.is_owner(bot.eggy)  # Trick to set bot.owner_id

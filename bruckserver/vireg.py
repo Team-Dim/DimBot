@@ -8,7 +8,7 @@ from bruckserver.pythania import Albon
 
 class Verstapen(missile.Cog):
     """Creates and communicates with a minecraft server instance.
-    Version 3.0.1"""
+    Version 3.1"""
 
     def __init__(self, bot):
         super().__init__(bot, 'Verstapen')
@@ -18,9 +18,12 @@ class Verstapen(missile.Cog):
 
     @commands.command()
     @missile.in_guilds(tribe.guild_id)
-    async def start(self, ctx):
+    async def start(self, ctx, server: str):
         """Shows the IP of the minecraft server. If no mcser is running, it launches a new one and shows its IP.
         Only works in Dim's guild."""
+        if server not in ('r', 's'):
+            await ctx.reply('Server must be one of the following: `r s`')
+            return
         self.albon.add_channel(ctx.channel)
         if self.starting:
             await ctx.reply('Server is starting, please retry the command in 10 seconds!')
@@ -31,6 +34,7 @@ class Verstapen(missile.Cog):
             await ctx.reply('Server is already running: ' + droplet.ip_address)
             return
         self.starting = True
+        self.albon.dir = 'skyblock' if server == 's' else 'rlcraft'
         droplet = digitalocean.Droplet(
             token=self.albon.mgr.token,
             name='mcser',

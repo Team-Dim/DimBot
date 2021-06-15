@@ -33,7 +33,8 @@ class Bottas(commands.Cog):
         """
         Commands for interacting with quotes
         """
-        await self.bot.get_command('help quote')()
+        self.bot.help_command.context = ctx
+        await self.bot.help_command.send_group_help(ctx.command)
 
     @quote.command(aliases=('i',), brief='Search a quote by ID')
     async def index(self, ctx, index: int = 0):
