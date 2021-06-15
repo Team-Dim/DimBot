@@ -180,9 +180,9 @@ class Aegis(Cog):
             await self.bot.sql.daily_clean_who_ping(self.bot.db, time=datetime.now() - timedelta(days=1))
             await asyncio.sleep(86400)
 
-    @commands.group(invoke_without_command=True)
+    @commands.group(invoke_without_command=True, brief='Commands for the ghost ping detector')
     async def whoping(self, ctx: commands.Context):
-        """Ghost ping detector: Reports who pinged you in the server"""
+        """If no subcommand, displays an inspector menu for you to see who ghost pinged you."""
         is_guild = True
         if ctx.guild:
             pings = await self.bot.sql.get_who_ping(self.bot.db, guild=ctx.guild.id, victim=ctx.author.id)

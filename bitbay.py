@@ -155,20 +155,22 @@ class BitBay(Cog):
                     await msg.reply("You can get the amiibo files from <#796160202067017789>\n"
                                     "Tip: Ryujinx does not need amiibo files to use amiibo, this is built into Ryujinx")
 
-    @command(aliases=('enc',))
-    async def encode(self, ctx: Context, *, url: str):
-        """Encodes base64 via command"""
+    @command(aliases=('enc',), brief='Encodes a message to base64')
+    async def encode(self, ctx: Context, *, content: str):
+        """encode <content>
+        If the content is a URL, sends a link which will auto redirect to the original link.
+        If content is not a URL, prepends the content with an author ping, encodes then send it."""
         if ctx.channel.type == discord.ChannelType.text:
             await ctx.message.delete()
-        if missile.is_url(url):
-            await ctx.send(f'<{self.bot.ip}b64d?s={encode(url)}>')
+        if missile.is_url(content):
+            await ctx.send(f'<{self.bot.ip}b64d?s={encode(content)}>')
         else:
-            url = ctx.author.mention + ': ' + url
-            await ctx.send(encode(url))
+            content = ctx.author.mention + ': ' + content
+            await ctx.send(encode(content))
 
-    @command(aliases=('dec',))
+    @command(aliases=('dec',), brief='Decodes the base64 message and send it to your DM.')
     async def decode(self, ctx: Context, content: str):
-        """Decodes base64 via command"""
+        """decode <content>"""
         import binascii
         try:
             await ctx.author.send(decode(content))
@@ -193,10 +195,12 @@ class BitBay(Cog):
         pp.check_lock(b)
         return pp
 
-    @group(invoke_without_command=True)
+    @group(invoke_without_command=True, brief='Commands for interacting with your pp')
     async def pp(self, ctx: Context, user: discord.User = None):
         """
-        Wiki for the d.pp commands: https://github.com/TCLRainbow/DimBot/wiki/pp
+        If no valid subcommands are supplied, the command can be used in this way:
+        `pp [user]`
+        user: The target whose pp will be rerolled.
         """
         if user:  # If target already has pp, allows modifying. Else throw PPNotFound as you can't initialise others
             pp = self.get_pp(ctx, user.id)
@@ -219,16 +223,18 @@ class BitBay(Cog):
             pp = self.organs[user.id] = PP(size, viagra, sesami)
         await ctx.reply(embed=self.pp_embed(user, pp))
 
-    @pp.command()
+    @pp.command(brief='Display pp info of a user')
     async def info(self, ctx: Context, user: discord.User = None):
-        """Shows the pp info"""
+        """pp info [user]
+        user: The target to check. Defaults to command sender."""
         user = user if user else ctx.author
         pp = self.get_pp(ctx, user.id)
         await ctx.reply(embed=missile.Embed(f'pp size: {pp.size}', pp.draw()))
 
-    @pp.command()
+    @pp.command(brief='Use your pp to slap others')
     async def slap(self, ctx: Context, user: discord.User):
-        """Use pp to slap others"""
+        """pp slap <user>
+        user: The user to slap"""
         pp = self.get_pp(ctx, ctx.author.id)
         await ctx.send(embed=missile.Embed(description=pp.draw(), thumbnail=user.avatar_url))
 
@@ -259,10 +265,12 @@ class BitBay(Cog):
                 description=f"Ɛ\n{'Ξ' * pp.size}＞",
                 color=discord.Color.red()))
 
-    @pp.command(aliases=('sf',))
+    @pp.command(aliases=('sf',), brief='Use your pp as a weapon and fight')
     @cooldown(rate=1, per=10.0, type=BucketType.user)  # Each person can only call this once per 10s
     async def swordfight(self, ctx: Context, user: discord.User = None):
-        """Use your pp as a weapon and fight"""
+        """pp swordfight [user]
+        user: Your opponent. If you didn't specify a user as your opponent,
+        bot randomly picks a user that has a pp registered, **INCLUDING YOURSELF**"""
         if not user:
             user = self.bot.get_user(random.choice(list(self.organs.keys())))
         my = self.get_pp(ctx, ctx.author.id).check_lock(True)
@@ -311,9 +319,9 @@ class BitBay(Cog):
             base += f"{self.bot.get_user(key).name}: **{self.organs[key].score}** "
         await ctx.reply(base)
 
-    @pp.command()
+    @pp.command(brief='In your pp, WE TRUST')
     async def viagra(self, ctx: Context):
-        """In your pp, WE TRUST"""
+        """If you have viagra available, doubles your pp size for 3 rounds."""
         pp = self.get_pp_checked(ctx, ctx.author.id)
         if pp.viagra:
             await ctx.reply('You are already one with your pp! Rounds left: ' + str(pp.viagra))
@@ -324,9 +332,11 @@ class BitBay(Cog):
         else:
             await ctx.reply("You don't have viagra yet!")
 
-    @pp.command(aliases=('zen',))
+    @pp.command(aliases=('zen',), brief='Stuns your opponent')
     async def zenitsu(self, ctx: Context, user: discord.User = None):
-        """Stuns your opponent"""
+        """`pp zenitsu [user]`
+        user: The target to stun. If you didn't specify a user as your opponent,
+bot randomly picks a user that has a pp registered, **INCLUDING YOURSELF**"""
         my = self.get_pp_checked(ctx, ctx.author.id)
         if my.sesami_oil and my.viagra == 0:
             if not user:
@@ -352,6 +362,7 @@ class BitBay(Cog):
     @pp.command()
     @cooldown(rate=1, per=30.0, type=BucketType.user)  # Each person can only call this once per 30s
     async def lock(self, ctx: Context):
+        """Toggles your pp lock."""
         pp = self.get_pp(ctx, ctx.author.id)
         pp.lock = not pp.lock
         await ctx.reply(f'Your pp is now {"" if pp.lock else "un"}locked.')

@@ -73,10 +73,12 @@ class XP(missile.Cog):
             await self.bot.sql.update_xp(self.bot.db, xp=guild_xp, uid=msg.author.id, guildID=msg.guild.id)
             u_store.last_xp_time[msg.guild.id] = u_store.last_xp_time[None] = stamp
 
-    @commands.group(invoke_without_command=True)
+    @commands.group(invoke_without_command=True, brief='Commands for DimXP')
     @missile.guild_only()
     async def xp(self, ctx: commands.Context, user: discord.User = None):
-        """Shows the XP of someone"""
+        """If a subcommand is supplied, bot runs the subcommand.
+        If a User argument is supplied after `xp`, shows XP statistics of that user.
+        If nothing is supplied, shows XP statistics of the sender."""
         user = user if user else ctx.author
         global_xp = await self.bot.sql.get_global_xp(self.bot.db, uid=user.id)
         if global_xp:
@@ -108,17 +110,21 @@ class XP(missile.Cog):
             content = f"{user} has no XP record!"
         await ctx.reply(content)
 
-    @xp.command(aliases=('lb', 'glb', 'lbg'))
-    @missile.guild_only()
+    @xp.command(aliases=('lb', 'glb', 'lbg'), brief='Shows the leaderboard')
     async def leaderboard(self, ctx: commands.Context, page: int = 0):
-        """Shows the leaderboard"""
+        """`xp leaderboard`
+        If you send `xp leaderboard` or `xp lb`, it shows the leaderboard of the server that the command was sent.
+        If you send `xp glb` or `xp lbg`, it shows the global XP leaderboard."""
         count = page * 10
         count_pad = math.floor(math.log(count + 10, 10)) + 1
         content = og = '```c\n'
         if len(ctx.invoked_with) == 3:
             coro = self.bot.sql.get_global_xp_leaderboard_cursor(self.bot.db, offset=count)
-        else:
+        elif ctx.guild:
             coro = self.bot.sql.get_xp_leaderboard_cursor(self.bot.db, guildID=ctx.guild.id, offset=count)
+        else:
+            await ctx.reply('Server-specific leaderboard can only be viewed inside that server!')
+            return
         async with coro as lb:
             async for row in lb:
                 count += 1
@@ -126,9 +132,12 @@ class XP(missile.Cog):
         if content != og:
             await ctx.reply(content + '```')
 
-    @xp.command(aliases=('g', 'gg'))
+    @xp.command(aliases=('g', 'gg'), brief='Renders the XP graph')
     @missile.guild_only()
     async def graph(self, ctx: commands.Context):
+        """`xp graph`
+        If you send `xp graph` or `xp g`, then it renders the XP graph of the server that the command was sent.
+        If you send `xp gg`, then it renders the global XP graph."""
         if ctx.invoked_with == 'gg':
             coro1 = self.bot.sql.get_global_xp_count(self.bot.db)
             coro2 = self.bot.sql.get_global_xp_graph(self.bot.db)

@@ -104,12 +104,12 @@ class Ikaros(Cog):
             await target.remove_roles(role, reason=reason)
             await ext.send(msg, 'Unmuted ' + target.mention)
 
-    @command()
+    @command(brief='Assign/Remove a role from a member.')
     @has_guild_permissions(manage_roles=True)
     @bot_has_guild_permissions(manage_roles=True)
     @missile.guild_only()
     async def role(self, ctx: Context, role: discord.Role, target: discord.Member):
-        """Gives/removes a member's role"""
+        """`role <role> <target>`"""
         if role >= ctx.guild.me.top_role:
             await ext.reply(ctx, 'The role specified >= my highest role.')
             return
@@ -126,62 +126,76 @@ class Ikaros(Cog):
             await target.add_roles(role, reason=f'Ikaros: Added by {ctx.author}')
             await ext.reply(ctx, f'Assigned **{role.name}** to {target}')
 
-    @command(name='kick')
+    @command(name='kick', brief='Kicks a member')
     @missile.bot_has_perm(kick_members=True)
     @has_permissions(kick_members=True)
     @missile.guild_only()
     async def kick_cmd(self, ctx: Context, target: discord.Member, countdown: int = 3):
-        """Kicks a member"""
+        """`kick <target> [countdown]`
+        countdown: Number of seconds to countdown before actually kicking the member. Defaults to 3"""
         await self.kick(ctx.message, target, countdown, f'Ikaros: Kicked by {ctx.author}')
 
-    @command(name='ban')
+    @command(name='ban', brief='Bans a user')
     @missile.bot_has_perm(ban_members=True)
     @has_permissions(ban_members=True)
     @missile.guild_only()
     async def ban_cmd(self, ctx: Context, target: Union[discord.Member, discord.User],
                       length: int = None, countdown: int = 3):
+        """`ban <target> [length] [countdown]`
+        length: Time length of the ban in seconds.
+        countdown: Number of seconds to countdown before actually banning the member. Defaults to 3"""
         """Bans a member. Can define a time to auto unban"""
         await self.ban(ctx.message, target, length, countdown, f'Ikaros: Banned by {ctx.author}')
 
-    @command(name='unban')
+    @command(name='unban', brief='Unbans a user')
     @has_permissions(ban_members=True)
     @bot_has_permissions(ban_members=True)
     @missile.guild_only()
     async def unban_cmd(self, ctx: Context, target: discord.User):
-        """Unbans a user"""
+        """unban <target>"""
         await self.unban(ctx.message, target, f'Ikaros: Unbanned by {ctx.author}')
 
-    @command(name='mute')
+    @command(name='mute', brief='Mutes a member')
     @has_guild_permissions(mute_members=True)
     @bot_has_guild_permissions(manage_roles=True)
     @missile.in_guilds(bitbay.guild_id, tribe.guild_id)
     async def mute_cmd(self, ctx: Context, target: discord.Member, length: int = 0, countdown: int = 3):
+        """`mute <target> [length] [countdown]`
+        length: Time length of the mute in seconds.
+        countdown: Number of seconds to countdown before actually muting the member. Defaults to 3"""
         """Mutes a member. Can define a time to auto unmute"""
         await self.mute(ctx.message, target, length, countdown, f'Ikaros: Muted by {ctx.author}')
 
-    @command(name='unmute')
+    @command(name='unmute', brief='Unmutes a member')
     @has_guild_permissions(mute_members=True)
     @bot_has_guild_permissions(manage_roles=True)
     @missile.in_guilds(bitbay.guild_id, tribe.guild_id)
     async def unmute_cmd(self, ctx: Context, target: discord.Member):
-        """Unmutes a member"""
+        """unmute <target>"""
         await self.unmute(ctx.message, target, f'Ikaros: Unmuted by {ctx.author}')
 
-    @command()
+    @command(brief='Scares the member with a fake action')
     @missile.guild_only()
     async def surprise(self, ctx: Context, target: discord.Member, countdown: int = 3):
-        """Gives the member a surprise"""
+        """`surprise <target> [countdown]`
+        countdown: Number of seconds to countdown for the fake action. Defaults to 3
+        """
         with self.bot.get_cog('Aegis').no_ghost_ping(ctx.channel.id):
             await ctx.message.delete()
         await self.ensure_target(ctx.message, target, countdown, False)
         await ctx.send('🥳 Surprise')
 
-    @command()
+    @command(brief='Purges messages (excluding the command)')
     @has_guild_permissions(manage_messages=True)
     @bot_has_guild_permissions(manage_messages=True, read_message_history=True)
     @missile.guild_only()
     async def purge(self, ctx: Context, amount_to_check: int, sender: discord.User = None):
-        """Purges messages (excluding the command)"""
+        """`purge <amount to check> [sender]`
+        amount to check: The amount of messages to check whether it is eligible to be deleted.
+        Purge checks the messages in that channel from latest to oldest.
+        If `sender` is empty, bot should purge exactly the amount of messages specified in the check.
+        If `sender` is specified, bot will check the messages one by one and deletes those sent by the `sender`
+        until it has checked `amount to check` number of messages."""
         with self.bot.get_cog('Aegis').no_ghost_ping_notification(ctx.channel.id):
             if sender:
                 msgs = await ctx.channel.purge(
@@ -191,24 +205,26 @@ class Ikaros(Cog):
                 msgs = await ctx.channel.purge(limit=amount_to_check, before=ctx.message)
             await ext.send(ctx, f'Purged {len(msgs)} messages.')
 
-    @command()
+    @command(brief='Checks how many members will be pruned')
     @missile.guild_only()
     @bot_has_guild_permissions(kick_members=True)
     async def preprune(self, ctx: Context, days: int):
-        """Checks how many members will be pruned. Must specify the number of days before counting as inactive."""
+        """`preprune <days>`
+        days: The number of days before counting as inactive."""
         if 0 < days < 31:
             async with ctx.typing():
                 await ctx.reply(f'**{await ctx.guild.estimate_pruned_members(days=days)}** members will be pruned.')
         else:
             await ctx.reply('Days should be 1-30 inclusive.')
 
-    @command()
+    @command(brief='Locks down a server')
     @missile.bot_has_perm(manage_permissions=True)
     @missile.is_mod()
     @missile.guild_only()
     async def lockdown(self, ctx: Context, can_view_channel: bool = True):
-        """Locks down a server. If can_view_channel is True, then affected roles just can't send messages.
-        If false, then they can't even view the channels."""
+        """`lockdown <can_view_channel>`
+        If can_view_channel is True, then affected roles just can't send messages.
+        If False, then they can't even view the channels."""
         async with ctx.typing():
             tasks = []
             og_perms = await self.bot.sql.get_lockdown(self.bot.db, guild=ctx.guild.id)

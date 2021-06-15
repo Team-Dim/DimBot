@@ -64,3 +64,7 @@ VALUES (:id);
 UPDATE Quote
 SET msg = :msg, quoter = :quoter, QuoterGroup = :QuoterGroup
 WHERE ROWID = :id;
+
+--name: get-range-quotes
+SELECT *, ROWID FROM Quote
+WHERE ROWID BETWEEN :start AND :end;

@@ -19,6 +19,8 @@ class Verstapen(missile.Cog):
     @commands.command()
     @missile.in_guilds(tribe.guild_id)
     async def start(self, ctx):
+        """Shows the IP of the minecraft server. If no mcser is running, it launches a new one and shows its IP.
+        Only works in Dim's guild."""
         self.albon.add_channel(ctx.channel)
         if self.starting:
             await ctx.reply('Server is starting, please retry the command in 10 seconds!')
@@ -60,6 +62,8 @@ class Verstapen(missile.Cog):
 
     @commands.command()
     async def players(self, ctx: commands.Context):
+        """Shows the amount of players in the minecraft server.
+        ⚠This only works if the server was launched via d.start"""
         msg = f"There are **{len(self.albon.online)}** players online:\n"
         msg += '\n'.join(self.albon.online)
         await ctx.reply(msg)

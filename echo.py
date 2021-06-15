@@ -23,7 +23,7 @@ class Quote:
 
 class Bottas(commands.Cog):
     """Storing messages.
-    Version 3.0"""
+    Version 3.1"""
 
     def __init__(self, bot):
         self.bot = bot
@@ -33,7 +33,7 @@ class Bottas(commands.Cog):
         """
         Commands for interacting with quotes
         """
-        raise commands.errors.CommandNotFound
+        await self.bot.get_command('help quote')()
 
     @quote.command(aliases=('i',), brief='Search a quote by ID')
     async def index(self, ctx, index: int = 0):
@@ -82,9 +82,11 @@ class Bottas(commands.Cog):
                 content += f'{quote[0]} '
         await ctx.reply(content)
 
-    @quote.command(aliases=('u',))
+    @quote.command(aliases=('u',), brief='List quotes uploaded by a Discord user')
     async def uploader(self, ctx, user: discord.User = None):
-        """List quotes that are uploaded by a Discord user"""
+        """`quote u [user]`
+        user: The user to filter with
+        """
         user = user if user else ctx.author
         quotes = await self.bot.sql.get_uploader_quotes(self.bot.db, uid=user.id)
         content = f"The following are quotes uploaded by **{user}**:\n>>> "
@@ -100,9 +102,11 @@ class Bottas(commands.Cog):
                 content += f'{quote[0]} '
         await ctx.send(content)
 
-    @quote.command(name='add', aliases=('a',))
+    @quote.command(name='add', aliases=('a',), brief='Adds a quote')
     async def quote_add(self, ctx: commands.Context, *, quote):
-        """Adds a quote"""
+        """d.quote a <quote>
+        quote: The new quote to be added
+        """
         # Quote message validation
         await missile.check_arg(ctx, quote)
         # Check if a quote with the same content already exists in the database
@@ -131,9 +135,11 @@ class Bottas(commands.Cog):
                 )
             await ctx.send(f"Added quote #{last_row_id}")
 
-    @quote.command(name='delete', aliases=('d',))
+    @quote.command(name='delete', aliases=('d',), brief='Deletes a quote')
     async def quote_delete(self, ctx, index: int):
-        """Deletes a quote by its quote ID"""
+        """quote d <index>
+        index: The ID of the quote
+        """
         quote = await self.bot.sql.get_quote(self.bot.db, id=index)
         if quote:  # Checks if the quote exists
             quote = Quote(*quote)
@@ -151,9 +157,10 @@ class Bottas(commands.Cog):
         else:
             await ctx.send('No quote found!')
 
-    @quote.command(aliases=('m',))
+    @quote.command(aliases=('m',), brief='Filter quotes by keyword')
     async def message(self, ctx: commands.Context, *, keyword):
-        """Search quotes by keywords"""
+        """quote m <keyword>
+        keyword: The sentence that the quotes must contain. Case insensitive."""
         quotes = await self.bot.sql.get_keyword_quotes(self.bot.db, kw=f'%{keyword}%')
         content = f'The following quotes contains **{keyword}**:\n>>> '
         no_msg = False
@@ -172,9 +179,11 @@ class Bottas(commands.Cog):
                 content += f'{quote[-1]} '
         await ctx.reply(content)
 
-    @quote.command(aliases=('e',))
+    @quote.command(aliases=('e',), brief='Edits a quote')
     async def edit(self, ctx: commands.Context, index: int):
-        """Edits a quote"""
+        """quote e <index>
+        index: The ID of the quote to edit.
+        """
         quote = await self.bot.sql.get_quote(self.bot.db, id=index)
         if quote and (quote[2] == ctx.author.id or ctx.author.id == self.bot.owner_id):
             quote = Quote(*quote)
@@ -197,11 +206,41 @@ class Bottas(commands.Cog):
         else:
             await ctx.reply("You can't edit this quote!")
 
-    @commands.group(invoke_without_command=True)
+    @quote.command(name='range', aliases=('r',), brief='List quotes within that ID range')
+    async def quote_range(self, ctx: commands.Context, start: int, end: int):
+        """quote r <start> <end>
+        start, end: The range of the IDs, including both numbers."""
+        quotes = await self.bot.sql.get_range_quotes(self.bot.db, start=start, end=end)
+        content = '>>> '
+        for quote in quotes:
+            quote_obj = Quote(*quote)
+            user = self.bot.get_user(quote_obj.uid)
+            if not user:  # Ensures that user is not None
+                try:
+                    user = await self.bot.fetch_user(quote_obj.uid)
+                except discord.NotFound:
+                    user = '*unknown user*'
+            to_be_added = f"{quote[-1]}. {quote_obj.msg} - {quote_obj.quoter}"
+            if quote_obj.quoter_group:
+                to_be_added += f", {quote_obj.quoter_group}"
+            to_be_added += f"\n Uploaded by {user}"
+            if quote_obj.time:
+                to_be_added += f" at {quote_obj.time.split('.')[0]}"
+            to_be_added += '\n'
+            if len(content + to_be_added) > 2048:
+                break
+            else:
+                content += to_be_added
+        await ctx.reply(content)
+
+    @commands.group(
+        invoke_without_command=True,
+        brief='Commands related to tags. It can also be used as a command itself, with a single string argument.')
     async def tag(self, ctx: commands.Context, name: str = ''):
-        """Commands related to tags. If a subcommand is provided, d.tag runs the subcommand. If the provided argument
-        is not a subcommand, d.tag shows the content of the provided tag. If no arguments are provided, d.tag lists all
-        tags within the server."""
+        """
+        If a subcommand is provided, runs the subcommand.
+        If the provided argument is not a subcommand, it shows the content of the provided tag.
+        If no arguments are provided, lists all tags within the server."""
         if name:
             content = await self.bot.sql.get_tag_content(self.bot.db, name=name, guildID=ctx.guild.id)
             if content:
@@ -221,10 +260,10 @@ class Bottas(commands.Cog):
                     msg += row[0] + ', '
                 await ctx.reply(f"`{msg[:-2]}`")
 
-    @tag.command(name='add', aliases=['a'])
+    @tag.command(name='add', aliases=('a',), brief='Adds a tag')
     @commands.has_permissions(manage_messages=True)
     async def tag_add(self, ctx: commands.Context, name: str, url: str):
-        """Adds a tag."""
+        """tag a <name> <url>"""
         if not missile.is_url(url):
             await ctx.reply('Tag content must be a HTTP WWW link!')
             return
@@ -237,10 +276,10 @@ class Bottas(commands.Cog):
         await self.bot.sql.add_tag(self.bot.db, name=name, content=url, guildID=ctx.guild.id)
         await ctx.reply('Your tag has been created!')
 
-    @tag.command(name='delete', aliases=['d'])
+    @tag.command(name='delete', aliases=('d',), brief='Deletes a tag')
     @commands.has_permissions(manage_messages=True)
     async def tag_delete(self, ctx: commands.Context, name: str):
-        """Deletes a tag"""
+        """tag d <name>"""
         if await self.bot.sql.tag_name_exists(self.bot.db, name=name, guildID=ctx.guild.id):
             await self.bot.sql.delete_tag(self.bot.db, name=name, guildID=ctx.guild.id)
             await ctx.reply('Deleted tag.')

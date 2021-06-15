@@ -213,14 +213,16 @@ class Ricciardo(missile.Cog):
     @commands.group(invoke_without_command=True)
     async def rss(self, ctx):
         """Commands for RSS feed update detector"""
-        raise commands.errors.CommandNotFound
+        await self.bot.get_command('help rss')()
 
-    @rss.command(name='subscribe', aliases=('s', 'sub'))
+    @rss.command(name='subscribe', aliases=('s', 'sub'), brief='Subscribes to a RSS feed')
     @missile.is_channel_owner()
     async def rss_subscribe(self, ctx: Context, url: str, footer: str, encode: bool = False):
+        """`rss subscribe <url> <footer> [encode]`
+        url: The URL of the RSS feed
+        footer: The footer to print in the embed when a piece of news has been detected
+        encode: Whether the link to the news should be base64 encoded. Defaults to False."""
         # noinspection PyBroadException
-        # Above comment suppresses Exception Too Broad for PyCharm.
-        # Don't see why we have to check for specific exceptions
         try:  # Checks whether the URL is a RSS feed host
             async with self.bot.session.get(url) as resp:
                 text = await resp.text()
@@ -240,10 +242,10 @@ class Ricciardo(missile.Cog):
         await self.bot.sql.add_rss_sub(self.bot.db, ch=ctx.channel.id, url=url, footer=footer, encode=encode)
         await ctx.send('Subscribed!')
 
-    @rss.command(name='unsubscribe', aliases=('u', 'unsub'))
+    @rss.command(name='unsubscribe', aliases=('u', 'unsub'), brief='Unsubscribe from a RSS feed')
     @missile.is_channel_owner()
     async def rss_unsubscribe(self, ctx: Context, url: str):
-        """Unsubscribe from a RSS URL"""
+        """rss unsubscribe <url>"""
         # Attempts to delete the subscription record. If the record is deleted, count = 1.
         # If there was no such record, nothing will be deleted, so count = 0
         async with self.bot.sql.unsub_rss_cursor(self.bot.db, ch=ctx.channel.id, url=url) as cursor:
@@ -266,12 +268,14 @@ class Ricciardo(missile.Cog):
     @commands.group(invoke_without_command=True)
     async def bbm(self, ctx):
         """Commands for BigBangMods update detector"""
-        raise commands.errors.CommandNotFound
+        await self.bot.get_command('help bbm')()
 
-    @bbm.command(name='subscribe', aliases=['s', 'sub'])
+    @bbm.command(name='subscribe', aliases=('s', 'sub'), brief='Subscribes to a BBM addon')
     @missile.is_channel_owner()
     async def bbm_subscribe(self, ctx: Context, addon: int, role: discord.Role = None):
-        """Subscribe to a BBM addon"""
+        """`bbm subscribe <addon> [role]`
+        addon: The addon ID that you want to subscribe to
+        role: The role to ping when a BBM update has been released. Defaults to nothing."""
         if addon not in self.addon_ids:  # Ensures that the user has inputted a valid addon ID
             await ctx.send(f'The addon ID must be one of the following: {", ".join(map(str, self.addon_ids))}')
             return
@@ -287,10 +291,11 @@ class Ricciardo(missile.Cog):
         await self.bot.sql.add_bbm_addon(self.bot.db, ch=ctx.channel.id, addon=addon)
         await ctx.send('Subscribed!')
 
-    @bbm.command(name='unsubscribe', aliases=('u', 'unsub'))
+    @bbm.command(name='unsubscribe', aliases=('u', 'unsub'), brief='Unsubscribes from a BBM addon')
     @missile.is_channel_owner()
     async def bbm_unsubscribe(self, ctx: Context, addon: int):
-        """Unsubscribes from a BBM addon."""
+        """bbm unsubscribe <addon>
+        addon: The addon ID"""
         # Attempts to delete the subscription record. If the record is deleted, count = 1.
         # If there was no such record, nothing will be deleted, so count = 0
         async with self.bot.sql.delete_bbm_addon_cursor(self.bot.db, ch=ctx.channel.id, addon=addon) as cursor:
@@ -303,10 +308,11 @@ class Ricciardo(missile.Cog):
             else:
                 await ctx.send("This channel hasn't subscribed to this addon.")
 
-    @bbm.command(aliases=('r',))
+    @bbm.command(aliases=('r',), brief='Updates the role to be pinged when a BBM update is detected')
     @missile.is_channel_owner()
     async def role(self, ctx: Context, role: discord.Role = None):
-        """Modifies the role to be pinged if a BBM update has been detected."""
+        """`bbm role [role]`
+        role: Defaults to nothing."""
         if role:
             await self.bot.sql.update_bbm_role(self.bot.db, role=role.id, ch=ctx.channel.id)
         else:
@@ -316,7 +322,7 @@ class Ricciardo(missile.Cog):
     @commands.group(invoke_without_command=True)
     async def yt(self, ctx):
         """Commands for YouTube video detector"""
-        raise commands.errors.CommandNotFound
+        await self.bot.get_command('help yt')()
 
     async def get_channel_id(self, query: str):
         """Returns the YouTube channel ID based on query type"""
@@ -327,10 +333,11 @@ class Ricciardo(missile.Cog):
                 return j['items'][0]['id']
             raise ValueError
 
-    @yt.command(name='subscribe', aliases=('s', 'sub'))
+    @yt.command(name='subscribe', aliases=('s', 'sub'), brief="'Subscribes' to a YouTube channel")
     @missile.is_channel_owner()
     async def yt_subscribe(self, ctx: Context, ch: str):
-        """'Subscribe' to a YouTube channel/user"""
+        """`yt subscribe <ch>`
+        ch: The YouTube channel/user URL. Please make sure that the word after `.com/` is `user` or `channel`."""
         try:
             # Uses RegEx to ensure that the URL is a valid YouTube User/Channel link
             if not re.search(r"^((https?://)?(www\.)?youtube\.com/)(user/.+|channel/UC.+)", ch):
@@ -355,10 +362,10 @@ class Ricciardo(missile.Cog):
         except ValueError:
             await ctx.send('Invalid YouTube channel/user link.')
 
-    @yt.command(name='unsubscribe', aliases=('u', 'unsub'))
+    @yt.command(name='unsubscribe', aliases=('u', 'unsub'), brief="'Unsubscribes' from a YouTube channel")
     @missile.is_channel_owner()
     async def yt_unsubscribe(self, ctx: Context, ch: str):
-        """'Unsubscribe' from a YouTube channel/user"""
+        """yt unsubscribe <ch>"""
         try:
             # Uses RegEx to ensure that the URL is a valid YouTube User/Channel link
             if not re.search(r"^((https?://)?(www\.)?youtube\.com/)(user/.+|channel/UC.+)", ch):

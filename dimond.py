@@ -17,11 +17,11 @@ class Dimond(commands.Cog):
     @commands.group(invoke_without_command=True)
     async def info(self, ctx):
         """Commands for showing info of various objects"""
-        raise commands.errors.CommandNotFound
+        await self.bot.get_command('help info')()
 
-    @info.command(aliases=('u',))
+    @info.command(aliases=('u',), brief='Shows user info')
     async def user(self, ctx, u: discord.User = None):
-        """Shows user info"""
+        """`info user [user]`"""
         # https://discordpy.readthedocs.io/en/latest/api.html#discord.User
         u = u if u else ctx.author
         desc = f"Send `{self.bot.default_prefix}info f [user]` for flag details,\n`{self.bot.default_prefix}info p " \
@@ -35,13 +35,12 @@ class Dimond(commands.Cog):
         emb.add_field(name='Created at', value=u.created_at)
         member: Optional[discord.Member] = None
         # A hacky way to try getting data that can only be accessed as a Member
-        for g in self.bot.guilds:
+        for g in u.mutual_guilds:
             m = g.get_member(u.id)
             if m:
                 member = m
                 if m.voice:  # Searches whether the 'member' is in a VC
                     break  # A user can only be in 1 VC
-        # TODO: Use user.mutual_guilds to check status&activities instead when d.py 1.7 is released
         if member:  # Data that can only be accessed as a Member
             emb.add_field(name='Number of activities', value=str(len(member.activities)) if member.activities else '0')
             stat = str(member.status)
@@ -74,15 +73,16 @@ class Dimond(commands.Cog):
         emb.set_author(name=member.display_name if member else u.name, icon_url=u.default_avatar_url)
         await ctx.reply(embed=emb)
 
-    @info.command(aliases=('f',))
+    @info.command(aliases=('f',), brief='Display the public flags of a user')
     async def flags(self, ctx, u: discord.User = None):
-        """Shows public flags of a user"""
+        """`info flags [u]`
+        u: The user to inspect. Defaults to the command sender."""
         # https://discordpy.readthedocs.io/en/latest/api.html#discord.PublicUserFlags
         u = u if u else ctx.author
         bin_value = f'{u.public_flags.value:b}'
         hex_value = f'{u.public_flags.value:X}'
         emb = missile.Embed(u.name + "'s public flags",
-                        f"{u.public_flags.value}, 0b{bin_value.zfill(18)}, 0x{hex_value.zfill(5)}")
+                            f"{u.public_flags.value}, 0b{bin_value.zfill(18)}, 0x{hex_value.zfill(5)}")
         emb.add_field(name='Verified bot developer', value=u.public_flags.verified_bot_developer)  # 2^17
         emb.add_field(name='Verified bot', value=u.public_flags.verified_bot)  # 2^16
         if u.public_flags.bug_hunter_level_2:
@@ -104,38 +104,35 @@ class Dimond(commands.Cog):
         emb.add_field(name='Discord employee', value=u.public_flags.staff)  # 2^0
         await ctx.reply(embed=emb)
 
-    @info.command(aliases=('p',))
+    @info.command(aliases=('p',), brief="Shows a user's permission server/channel wise")
     @missile.guild_only()
-    async def permissions(self, ctx, *args):
-        """Shows a user's permission server/channel wise"""
-        # TODO: Maybe first arg use Union[User, TextCh, VC, Category, None],
-        #  second arg use Optional[TextCh, VC, Category]
-
-        # If cmd has no args, evaluates sender's perms server-wise
-        if len(args) == 0:
+    async def permissions(
+            self, ctx,
+            arg1: Union[discord.Member, discord.TextChannel, discord.VoiceChannel, discord.CategoryChannel,
+                        discord.StageChannel, None] = None,
+            arg2: Union[discord.TextChannel, discord.VoiceChannel, discord.CategoryChannel,
+                        discord.StageChannel, None] = None):
+        """`info permissions [arg1] [arg2]`
+        arg1 can be either a Member or a Channel
+        arg2 can only be a Channel.
+        You can have the following combinations:
+        ```info p Member
+        info p Channel
+        info p Member Channel```
+        *Note:* Channel can only be TextChannel, VoiceChannel, Category or StageChannel."""
+        if arg1:
+            if type(arg1) == discord.Member:
+                mem = arg1
+                if arg2:
+                    channel = arg2
+                else:
+                    channel = None
+            else:
+                channel = arg1
+                mem = ctx.author
+        else:
             mem = ctx.author
             channel = None
-        else:
-            # Process the first argument. If cmd only has 1 arg, its either member or channel
-            # So first attempt to process member.
-            try:
-                mem = await commands.MemberConverter().convert(ctx, args[0])
-            except commands.MemberNotFound:
-                mem = ctx.author
-            # Then attempt to process channel. If above failed, args[0] should be a channel so these converters should
-            # work. If above succeed, these converters should fail.
-            # If 2 args, then first arg must be a Member, which processed above. So 2nd arg should be a channel.
-            ch_wanna_be = args[0] if len(args) == 1 else args[1]
-            try:
-                channel = await commands.TextChannelConverter().convert(ctx, ch_wanna_be)
-            except commands.ChannelNotFound:
-                try:
-                    channel = await commands.VoiceChannelConverter().convert(ctx, ch_wanna_be)
-                except commands.ChannelNotFound:
-                    try:
-                        channel = await commands.CategoryChannelConverter().convert(ctx, ch_wanna_be)
-                    except commands.ChannelNotFound:
-                        channel = None
         if channel:  # If no channel specified, then  check permission server-wise
             perm = channel.permissions_for(mem)
             title = channel.name
@@ -147,7 +144,7 @@ class Dimond(commands.Cog):
         bin_value = f'{perm.value:b}'
         hex_value = f'{perm.value:X}'
         emb = missile.Embed(f'Permissions for {mem.name} in {title}',
-                        f"{perm.value}, 0b{bin_value.zfill(30)}, 0x{hex_value.zfill(8)}")
+                            f"{perm.value}, 0b{bin_value.zfill(30)}, 0x{hex_value.zfill(8)}")
         emb.add_field(name='Manage webhooks', value=perm.manage_webhooks)  # 2^29
         emb.add_field(name='Manage permissions and roles', value=perm.manage_permissions)  # 2^28
         emb.add_field(name='Manage nicknames', value=perm.manage_nicknames)  # 2^27
@@ -179,10 +176,10 @@ class Dimond(commands.Cog):
                                 f"Kick members: **{perm.kick_members}** "  # 2^1
                                 f"Create invites: **{perm.create_instant_invite}**", embed=emb)  # 2^0
 
-    @info.command(aliases=('r',))
+    @info.command(aliases=('r',), brief='Shows role info')
     @missile.guild_only()
     async def role(self, ctx: commands.Context, r: discord.Role):
-        """Shows role info"""
+        """info role <r>"""
         emb = discord.Embed(title=r.name, color=r.color)
         emb.set_author(name=f'Color: #{r.color.value:X}')
         if r.is_bot_managed():
@@ -202,9 +199,10 @@ class Dimond(commands.Cog):
         emb.add_field(name='Position', value=r.position)
         await ctx.reply(embed=emb)
 
-    @info.command()
+    @info.command(brief='Shows info about a voice channel')
     async def vc(self, ctx: commands.Context, ch: discord.VoiceChannel):
-        """Shows info of a voice channel. PM the command if the channel is not in that server."""
+        """`info vc <voice channel>`
+        PM the command if the VC is not in that server."""
         emb = missile.Embed(ch.name)
         if not ctx.guild:
             emb.add_field(name='Server ❄ID', value=ch.guild.id)
@@ -213,9 +211,10 @@ class Dimond(commands.Cog):
         await ctx.reply(embed=emb)
 
     # noinspection PyTypeChecker
-    @info.command(aliases=('s',))
+    @info.command(aliases=('s',), brief='Shows info about a server')
     async def server(self, ctx: commands.Context, s: discord.Guild = None):
-        """Shows info of a server"""
+        """`info server [s]`
+        s: The server, usually identified by its ID. Defaults to the server that the command was sent."""
         if not s:
             if ctx.guild:
                 s = ctx.guild
@@ -242,9 +241,10 @@ class Dimond(commands.Cog):
         emb.set_thumbnail(url=s.icon_url)
         await ctx.reply(embed=emb)
 
-    @info.command(aliases=('e',))
+    @info.command(aliases=('e',), brief='Shows info about a custom (non-Unicode) emoji')
     async def emoji(self, ctx: commands.Context, e: Union[discord.Emoji, discord.PartialEmoji]):
-        """Shows info of a custom(non-Unicode) emoji"""
+        """`info emoji <emoji>`
+        The emoji can be from other servers."""
         emb = missile.Embed(e.name)
         # noinspection PyTypeChecker
         emb.set_author(name=e)
@@ -264,11 +264,14 @@ class Dimond(commands.Cog):
         if isinstance(error, commands.errors.BadUnionArgument):
             await ctx.reply('Unknown emoji. This command currently does not support Unicode emojis.')
 
-    @info.command(aliases=('w',))
+    @info.command(aliases=('w',), brief='Shows info about a webhook')
     @missile.guild_only()
     @commands.bot_has_guild_permissions(manage_webhooks=True)
     async def webhook(self, ctx: commands.Context, name, channel: discord.TextChannel = None):
-        """Shows info of a webhook"""
+        """`info webhook <name> [channel]`
+        name: The webhook's name
+        In some cases you will encounter duplicate webhook names in different channels.
+        Specify `channel` to filter it."""
         for webhook in await ctx.guild.webhooks():
             if webhook.name == name and (channel is None or webhook.channel == channel):
                 emb = missile.Embed(f'❄ ID: {webhook.id}')
@@ -295,9 +298,10 @@ class Dimond(commands.Cog):
                 break
         await ctx.reply(embed=emb)
 
-    @info.command(aliases=('inv',))
+    @info.command(aliases=('inv',), brief='Shows info about an invite')
     async def invite(self, ctx: commands.Context, inv: discord.Invite):
-        """Shows info of an invite."""
+        """`info invite <inv>`
+        `inv` is usually the invite code or the invite link."""
         emb = missile.Embed(inv.code, url=inv.url)
         emb.add_field(name='Server ID', value=inv.guild.id)
         emb.add_field(name='Channel', value=inv.channel.mention)
@@ -318,6 +322,7 @@ class Dimond(commands.Cog):
     @missile.guild_only()
     @commands.bot_has_guild_permissions(manage_guild=True)
     async def server_integrations(self, ctx: commands.Context):
+        """Lists server integrations"""
         m = 'Please note that this command is currently for testing purposes only!\n'
         for i in await ctx.guild.integrations():
             m += str(i) + '\n'

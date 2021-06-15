@@ -26,7 +26,7 @@ intent = discord.Intents.none()
 intent.guilds = intent.members = intent.messages = intent.reactions = intent.voice_states = intent.typing = True
 intent.presences = True
 bot = missile.Bot(intents=intent)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.24"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.25"
 logger = missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
@@ -35,19 +35,7 @@ reborn_channel = None
 async def binvk(ctx: commands.Context):
     if randint(1, 100) <= 5:
         await ctx.send(sponsor_txt)
-    bot.invoke_time = datetime.now()
-
-
 bot.before_invoke(binvk)
-
-
-async def ainvk(ctx: commands.Context):
-    timedelta = (datetime.now() - bot.invoke_time).total_seconds() * 1000
-    await bot.wait_until_ready()
-    await bot.get_cog('Hamilton').bot_test.send(f'**{ctx.command}**: {timedelta}ms')
-
-
-bot.after_invoke(ainvk)
 
 try:
     # If the bot is restarting, read the channel ID that invoked the restart command
@@ -131,7 +119,7 @@ async def on_command_error(ctx: commands.Context, error: commands.errors.Command
 
 @bot.command(aliases=('bot',))
 async def botinfo(ctx):
-    """Displays bot information"""
+    """Displays bot info"""
     from platform import python_version
     embed = missile.Embed(sponsor_txt)
     embed.add_field('Guild count', str(len(bot.guilds)))
@@ -166,18 +154,18 @@ async def sponsor(ctx):
 
 @bot.command()
 async def noel(ctx):
-    """Listens to my heartbeat"""
-    msg = await ctx.reply(f':heartbeat: {bot.latency * 1000:.3f}ms')
+    """Listens to my heartbeat (gateway latency & total message reaction latency)"""
+    msg = await ctx.reply(f'💓 {bot.latency * 1000:.3f}ms')
     tic = datetime.now()
     await msg.add_reaction('📡')
     toc = datetime.now()
-    await msg.edit(content=msg.content + f' :satellite_orbital: {(toc - tic).total_seconds() * 1000:.3f}ms')
+    await msg.edit(content=msg.content + f' 🛰️ {(toc - tic).total_seconds() * 1000:.3f}ms')
 
 
 @bot.group(invoke_without_command=True)
 async def link(ctx):
     """Commands for generating links"""
-    raise commands.errors.CommandNotFound
+    await bot.get_command('help link')()
 
 
 @link.command()
@@ -199,8 +187,10 @@ async def galacticraft(ctx):
                    f'https://micdoodle8.com/new-builds/GC-{mc_ver}/{ga_build}/MicdoodleCore-{mc}-{ga}.jar')
 
 
-@link.command(aliases=('m',))
+@link.command(aliases=('m',), brief='Shows a Discord message link')
 async def message(ctx, msg: discord.Message):
+    """`link message <msg>
+    msg: The message, usually its ID."""
     await ctx.reply(msg.jump_url)
 
 
@@ -367,8 +357,13 @@ async def hug(ctx):
     await ctx.send(f'{gif}\nWe are friends again, {bot.eggy}\nHug {ctx.author.mention}')
 
 
-@bot.group(aliases=('color',), invoke_without_command=True)
+@bot.group(aliases=('color',), invoke_without_command=True, brief='Shows color')
 async def colour(ctx: commands.Context, c: discord.Colour = None):
+    """`colour [c]`
+    `c` can be an integer, a 6-digit hexadecimal number (optionally with a # prepending it),
+    or even `rgb(<r>, <g>, <b>)` which is a CSS representation. If `c` is not supplied,
+    randomly generates a HSV color with max saturation.
+    """
     if not c:
         c = discord.Colour.random()
     value = f'{c.value:X}'
@@ -381,6 +376,8 @@ async def colour(ctx: commands.Context, c: discord.Colour = None):
 
 @colour.command()
 async def hsv(ctx: commands.Context, h: int = 0, s: int = 0, v: int = 0):
+    """`colour hsv <h> <s> <v>`
+    Same with `colour` command but accepts HSV values. Cannot randomly generates color."""
     color = discord.Colour.from_hsv(h, s, v)
     if 0 <= color.value <= 0xFFFFFF:
         await bot.get_command('color')(ctx, discord.Colour.from_hsv(h, s, v))
@@ -394,12 +391,14 @@ async def hsv(ctx: commands.Context, h: int = 0, s: int = 0, v: int = 0):
 async def guild(ctx: commands.Context):
     """Settings for server"""
     if not ctx.invoked_subcommand:
-        raise errors.CommandNotFound
+        await bot.get_command('help guild')()
 
 
-@guild.command()
+@guild.command(brief='Changes the custom prefix of DimBot')
 async def prefix(ctx: commands.Context, *, p: str = None):
-    """Changes the custom prefix of DimBot. Note that d. will still work. Send command without arguments to remove."""
+    """`guild  prefix [p]`
+    `p` is a SENTENCE so you can send like `Super bad prefix` as `p` without quotation marks.
+    Note that d. will still work. Send the command without arguments to remove the custom prefix."""
     if p and (p.lower().startswith('dimbot') or ctx.me.mention in p):
         await ctx.reply('Only my little pog champ can use authoritative orders!')
     else:
@@ -407,9 +406,9 @@ async def prefix(ctx: commands.Context, *, p: str = None):
         await ctx.reply('Updated server prefix.')
 
 
-@guild.command()
+@guild.command(brief='Sets the moderation role of the server')
 async def modrole(ctx: commands.Context, role: discord.Role):
-    """Sets the moderation role of the server"""
+    """guild modrole <role>"""
     await bot.sql.set_mod_role(bot.db, role=role.id, guild=ctx.guild.id)
     await ctx.reply('Updated moderation role to ' + role.name)
 
@@ -418,8 +417,12 @@ async def modrole(ctx: commands.Context, role: discord.Role):
 async def changelog(ctx):
     """Shows the latest release notes of DimBot"""
     await ctx.reply("""
-**__0.9.24 (Jun 14, 2021 2:34AM GMT+1)__**\n
-BBM detector now skips temporarily removes an addon for that instance if data inconsistency is detected.
+**__0.9.25 (Jun 15, 2021 1:53AM GMT+1)__**\n
+Adds `quote r` subcommand
+**Completes all help commands. WOW!**
+Uses Unicode emoji for `noel` instead of Discord-style colon strings
+All command groups, when supplied an invalid subcommand,
+now prints the help menu of the group instead of raising `CommandNotFound`
 """)
 
 

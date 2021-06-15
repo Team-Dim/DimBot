@@ -157,7 +157,6 @@ class Bot(commands.Bot):
         self.snipe = Embed(description='No one has deleted anything yet...')
         self.sch = None
         self.eggy = None  # Special Discord user for d.hug
-        self.invoke_time = None  # Time needed to process a command
         self.boot_time = datetime.now()  # Time when bot started
         self.session = ClientSession()  # Central session for all aiohttp client requests
         # Initialise database connection
