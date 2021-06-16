@@ -39,7 +39,7 @@ class Verstapen(missile.Cog):
             token=self.albon.mgr.token,
             name='mcser',
             region=region,
-            image=85584648,
+            image=86060155,
             size_slug='s-2vcpu-4gb'
         )
         msg = await ctx.reply('Creating new instance')
