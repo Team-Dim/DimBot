@@ -24,6 +24,7 @@ class Verstapen(missile.Cog):
         if server not in ('r', 's'):
             await ctx.reply('Server must be one of the following: `r s`')
             return
+        self.albon.path = 'skyblock' if server == 's' else 'rlcraft'
         self.albon.add_channel(ctx.channel)
         if self.starting:
             await ctx.reply('Server is starting, please retry the command in 10 seconds!')
@@ -34,7 +35,6 @@ class Verstapen(missile.Cog):
             await ctx.reply('Server is already running: ' + droplet.ip_address)
             return
         self.starting = True
-        self.albon.boot_response.body = 'skyblock' if server == 's' else 'rlcraft'
         droplet = digitalocean.Droplet(
             token=self.albon.mgr.token,
             name='mcser',
