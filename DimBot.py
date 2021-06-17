@@ -26,7 +26,7 @@ intent = discord.Intents.none()
 intent.guilds = intent.members = intent.messages = intent.reactions = intent.voice_states = intent.typing = True
 intent.presences = True
 bot = missile.Bot(intents=intent)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.26"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.27"
 logger = missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
@@ -35,14 +35,19 @@ reborn_channel = None
 async def binvk(ctx: commands.Context):
     if randint(1, 100) <= 5:
         await ctx.send(sponsor_txt)
+
+
 bot.before_invoke(binvk)
 
 
 async def ainvk(ctx: commands.Context):
+    if ctx.command.qualified_name.startswith('arccore'):
+        return
     emb = missile.Embed(description=ctx.message.content)
     emb.add_field('By', ctx.author.mention)
     emb.add_field('In', ctx.guild.id if ctx.guild else 'DM')
     await bot.get_cog('Hamilton').bot_test.send(embed=emb)
+
 
 try:
     # If the bot is restarting, read the channel ID that invoked the restart command
@@ -70,10 +75,17 @@ async def on_message(msg: discord.Message):
 
 @bot.event
 async def on_guild_join(guild: discord.Guild):
-    """Updates DimBot's nickname in new servers"""
-    await bot.get_cog('Hamilton').bot_test.send(f'Joined server {guild.id} <@{bot.owner_id}>')
+    await bot.get_cog('Hamilton').bot_test.send(f'Joined server {guild.id} {guild.name} <@{bot.owner_id}>')
+    if await bot.sql.is_guild_banned(bot.db, id=guild.id):
+        await guild.leave()
+        return
     await bot.sql.add_guild_cfg(bot.db, guildID=guild.id)
     await guild.me.edit(nick=nickname)
+
+
+@bot.event
+async def on_guild_remove(guild: discord.Guild):
+    await bot.get_cog('Hamilton').bot_test.send(f'Left server {guild.id} {guild.name}')
 
 
 @bot.event
@@ -142,7 +154,7 @@ async def botinfo(ctx):
         embed.add_field('CPU usage %', psutil.cpu_percent(percpu=True))
         embed.add_field(
             'Process RAM usage / available (MiB)',
-            f'{process.memory_info()[0] / 1024**2:.1f} / {psutil.virtual_memory().available / 1024**2:.1f}'
+            f'{process.memory_info()[0] / 1024 ** 2:.1f} / {psutil.virtual_memory().available / 1024 ** 2:.1f}'
         )
     emoji = choice(tuple(e for e in bot.get_cog('Hamilton').guild.emojis if e.name.startswith('sayu')))
     embed.set_footer(text='Mood: ' + emoji.name[4:])
@@ -301,7 +313,6 @@ async def __maintenance__(context):
 
 @arccore.command()
 async def mt(ctx: commands.Context, minutes: int = 5):
-
     if bot.maintenance:
         bot.remove_check(__maintenance__)
         bot.status = discord.Status.online
@@ -353,6 +364,13 @@ async def lch(ctx: commands.Context, g: discord.Guild = None):
     for ch in g.channels:
         msg += f'{ch.id} {ch.type} {ch.name}\n'
     await ctx.reply(msg)
+
+
+@arccore.command()
+async def bs(ctx: commands.Context, server: int):
+    if await bot.ask_reaction(ctx, f'Confirm?'):
+        await bot.sql.ban_guild(bot.db, id=server)
+        await ctx.reply('Banned')
 
 
 # Eggy requested this command
@@ -461,6 +479,7 @@ async def ready_tasks():
         await asyncio.sleep(300)
         await bot.db.commit()
         logger.debug('DB auto saved')
+
 
 bot.loop.create_task(bot.async_init())
 bot.loop.create_task(ready_tasks())

@@ -77,7 +77,7 @@ class Aegis(Cog):
     async def act(self, msg: discord.Message, reason: str):
         """Takes action"""
         if type(msg.author) == discord.User:
-            await msg.channel.send('⚠DETECTED UNUSUAL WEBHOOK ACTIVITIES, DELETING THE WEBHOOK\nPlease notify'
+            await msg.channel.send('⚠DETECTED UNUSUAL WEBHOOK ACTIVITIES, DELETING THE WEBHOOK\nPlease notify '
                                    'admins in this server!')
             webhooks = await msg.channel.webhooks()
             for webhook in webhooks:

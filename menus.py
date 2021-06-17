@@ -54,3 +54,15 @@ class WhoPing(menus.Menu):
     async def on_stop(self, payload):
         await self.message.edit(content='WhoPing inspector ended.', embed=None)
         self.stop()
+
+
+class QuoteMenu(menus.Menu):
+
+    def __init__(self, start: int, end: int = None):
+        super().__init__()
+        self.start = start
+        self.end = end if end else start
+
+    async def send_initial_message(self, ctx, channel):
+        return
+
