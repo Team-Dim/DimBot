@@ -3,7 +3,6 @@ import binascii
 import digitalocean
 from aiohttp import web
 
-import bitbay
 import dimsecret
 import missile
 
@@ -96,7 +95,7 @@ class Albon:
         async def base64decode(request):
             if 's' in request.rel_url.query:
                 try:
-                    decoded = bitbay.decode(request.rel_url.query['s'])
+                    decoded = missile.decode(request.rel_url.query['s'])
                 except (UnicodeDecodeError, binascii.Error):
                     raise web.HTTPBadRequest(reason='Malformed base64 string')
                 if missile.is_url(decoded):

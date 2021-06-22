@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import Cog
 
-import bitbay
+import diminator
 import missile
 from menus import WhoPing
 
@@ -54,8 +54,7 @@ class Aegis(Cog):
                                                f'Detected mass ping ({raw_mention_count}) by {msg.author.mention}. '
                                                f'Warn: {self.count[msg.author.id][1]}'))
             self.bot.loop.create_task(self.act(msg, 'Aegis: Mass ping'))
-        elif msg.channel.id not in (
-                bitbay.spam_ch_id, bitbay.bot_ch_id, 826418682154188851):  # Checks whether channel ignores spam
+        elif msg.channel.id != 826418682154188851:  # Checks whether channel ignores spam
             ml = len(self.count[msg.author.id][0])
             if ml == 9:  # There are 9 previous messages:
                 if (msg.created_at - self.count[msg.author.id][0][0]).total_seconds() < 10:  # 10 msg in 10s

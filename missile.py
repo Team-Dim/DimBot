@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import logging
 import re
 from datetime import datetime
@@ -28,6 +29,18 @@ def get_logger(name: str) -> logging.Logger:
     logger.addHandler(ch)
     return logger
 
+
+def encode(text: str) -> str:
+    """Converts the given string to base64"""
+    b: bytes = text.encode()
+    encoded: bytes = base64.b64encode(b)
+    return encoded.decode()
+
+
+def decode(text: str) -> str:
+    b: bytes = text.encode()
+    decoded: bytes = base64.b64decode(b)
+    return decoded.decode()
 
 async def append_msg(msg: discord.Message, content: str, delimiter: str = '\n'):
     await msg.edit(content=f'{msg.content}{delimiter}{content}')

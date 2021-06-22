@@ -5,7 +5,7 @@ import discord
 from discord.ext.commands import Cog, command, Context, has_permissions, bot_has_permissions, has_guild_permissions, \
     bot_has_guild_permissions
 
-import bitbay
+import diminator
 import missile
 import tribe
 
@@ -76,10 +76,8 @@ class Ikaros(Cog):
                 return
             await self.ensure_target(msg, target, countdown)
             role = None
-            # Temporary mute system setup that only works in my server / 128BB
-            if msg.guild.id == bitbay.guild_id:
-                role = msg.guild.get_role(844741665248116796)  # Muted Pirate
-            elif msg.guild.id == tribe.guild_id:
+            # Temporary mute system setup that only works in my server
+            if msg.guild.id == tribe.guild_id:
                 role = msg.guild.get_role(474578007156326412)  # Asteroid Belt
             if role:
                 await target.add_roles(role, reason=reason)
@@ -96,9 +94,7 @@ class Ikaros(Cog):
     async def unmute(msg: discord.Message, target: discord.Member, reason: str):
         """Internal logic for unmuting member"""
         role = None
-        if msg.guild.id == bitbay.guild_id:
-            role = msg.guild.get_role(844741665248116796)  # Muted Pirate
-        elif msg.guild.id == tribe.guild_id:
+        if msg.guild.id == tribe.guild_id:
             role = msg.guild.get_role(474578007156326412)  # Asteroid Belt
         if role:
             await target.remove_roles(role, reason=reason)
@@ -158,7 +154,7 @@ class Ikaros(Cog):
     @command(name='mute', brief='Mutes a member')
     @has_guild_permissions(mute_members=True)
     @bot_has_guild_permissions(manage_roles=True)
-    @missile.in_guilds(bitbay.guild_id, tribe.guild_id)
+    @missile.in_guilds(tribe.guild_id)
     async def mute_cmd(self, ctx: Context, target: discord.Member, length: int = 0, countdown: int = 3):
         """`mute <target> [length] [countdown]`
         length: Time length of the mute in seconds.
@@ -169,7 +165,7 @@ class Ikaros(Cog):
     @command(name='unmute', brief='Unmutes a member')
     @has_guild_permissions(mute_members=True)
     @bot_has_guild_permissions(manage_roles=True)
-    @missile.in_guilds(bitbay.guild_id, tribe.guild_id)
+    @missile.in_guilds(tribe.guild_id)
     async def unmute_cmd(self, ctx: Context, target: discord.Member):
         """unmute <target>"""
         await self.unmute(ctx.message, target, f'Ikaros: Unmuted by {ctx.author}')

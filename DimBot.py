@@ -9,7 +9,7 @@ import psutil
 from discord.ext import commands
 from discord.ext.commands import errors
 
-import bitbay
+import diminator
 import dimond
 import dimsecret
 import missile
@@ -112,7 +112,7 @@ async def on_command_error(ctx: commands.Context, error: commands.errors.Command
                             errors.BadInviteArgument, errors.BadColourArgument)) \
             or isinstance(error, errors.BadUnionArgument) and not ctx.command.has_error_handler():
         await ctx.reply(str(error))
-    elif isinstance(error, bitbay.BasePPException):  # Human error
+    elif isinstance(error, diminator.BasePPException):  # Human error
         await ctx.reply(str(error).format(ctx.bot.default_prefix))
     elif isinstance(error, errors.ChannelNotFound):  # Human error
         await ctx.reply("Invalid channel. Maybe you've tagged the wrong one?")
@@ -450,11 +450,36 @@ Introducing `d.start r` and `d.start s` respectively for RLCraft and Skyblock
 """)
 
 
+@bot.command(aliases=('enc',), brief='Encodes a message to base64')
+async def encode(ctx: commands.Context, *, content: str):
+    """encode <content>
+    If the content is a URL, sends a link which will auto redirect to the original link.
+    If content is not a URL, prepends the content with an author ping, encodes then send it."""
+    if ctx.channel.type == discord.ChannelType.text:
+        await ctx.message.delete()
+    if missile.is_url(content):
+        await ctx.send(f'<{bot.ip}b64d?s={missile.encode(content)}>')
+    else:
+        content = ctx.author.mention + ': ' + content
+        await ctx.send(missile.encode(content))
+
+
+@bot.command(aliases=('dec',), brief='Decodes the base64 message and send it to your DM.')
+async def decode(ctx: commands.Context, content: str):
+    """decode <content>"""
+    import binascii
+    try:
+        await ctx.author.send(missile.decode(content))
+        await ctx.message.add_reaction('✅')
+    except (UnicodeDecodeError, binascii.Error):
+        await ctx.send('Malformed base64 string.')
+
+
 async def ready_tasks():
     bot.add_cog(Ricciardo(bot))
     bot.add_cog(Verstapen(bot))
     bot.add_cog(Bottas(bot))
-    bot.add_cog(bitbay.BitBay(bot))
+    bot.add_cog(diminator.Diminator(bot))
     bot.add_cog(dimond.Dimond(bot))
     bot.add_cog(Ikaros(bot))
     bot.add_cog(Aegis(bot))
