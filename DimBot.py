@@ -26,7 +26,7 @@ intent = discord.Intents.none()
 intent.guilds = intent.members = intent.messages = intent.reactions = intent.voice_states = intent.typing = True
 intent.presences = True
 bot = missile.Bot(intents=intent)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.27"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.28"
 logger = missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
@@ -368,8 +368,13 @@ async def lch(ctx: commands.Context, g: discord.Guild = None):
 
 @arccore.command()
 async def bs(ctx: commands.Context, server: int):
-    if await bot.ask_reaction(ctx, f'Confirm?'):
-        await bot.sql.ban_guild(bot.db, id=server)
+    if await bot.ask_reaction(ctx, 'Confirm?'):
+        await asyncio.wait((
+            bot.sql.ban_guild(bot.db, id=server),
+            bot.sql.remove_guild_cfg(bot.db, guildID=server),
+            bot.sql.remove_guild_tags(bot.db, guildID=server),
+            bot.sql.clear_guild_xp(bot.db, guildID=server)
+        ))
         await ctx.reply('Banned')
 
 
@@ -444,9 +449,10 @@ async def modrole(ctx: commands.Context, role: discord.Role):
 async def changelog(ctx):
     """Shows the latest release notes of DimBot"""
     await ctx.reply("""
-**__0.9.26 (Jun 15, 2021 9:14PM GMT+1)__**\n
-Fixes help menu for invalid subcommands
-Introducing `d.start r` and `d.start s` respectively for RLCraft and Skyblock
+**__0.9.28 (Jul 3, 2021 2:45AM GMT+8)__**\n
+The entire `quote` command group as well as `xp leaderboard` now rock a new UI!!!
+`quote i <id>` has been changed to `quote <id>`.
+`quote r` is removed as its obsolete with the new UI.
 """)
 
 

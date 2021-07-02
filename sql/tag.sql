@@ -30,3 +30,7 @@ SELECT EXISTS(
 --name: delete-tag!
 DELETE FROM Tag
 WHERE name = :name AND guildID = :guildID;
+
+--name: delete-guild-tags!
+DELETE FROM Tag
+WHERE guildID = :guildID;

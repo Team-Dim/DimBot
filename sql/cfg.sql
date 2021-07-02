@@ -11,3 +11,7 @@ WHERE guildID = :guild;
 UPDATE GuildCfg
 SET modRole = :role
 WHERE guildID = :guild;
+
+--name: remove-guild-cfg!
+DELETE FROM GuildCfg
+WHERE guildID = :guildID;

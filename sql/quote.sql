@@ -3,37 +3,43 @@ SELECT *
 FROM Quote
 WHERE ROWID = :id;
 
---name: get-random-quote^
-SELECT *, ROWID
+--name: get-random-id^
+SELECT ROWID
 FROM Quote
-WHERE ROWID = (
-    SELECT ROWID FROM Quote ORDER BY random() LIMIT 1
-    );
+ORDER BY random()
+LIMIT 1;
 
 --name: get-quotes-count$
 SELECT COUNT(ROWID)
 FROM Quote;
 
 --name: get-quoter-quotes
-SELECT ROWID, msg
+SELECT ROWID, *
 FROM Quote
 WHERE (:quoter is '' OR quoter = :quoter)
   AND (:QuoterGroup is null OR QuoterGroup = :QuoterGroup);
 
 --name: get-uploader-quotes
-SELECT ROWID, msg, quoter
+SELECT ROWID, *
 FROM Quote
 WHERE uid = :uid;
 
 --name: get-keyword-quotes
-SELECT *, ROWID
+SELECT ROWID, *
 FROM Quote
 WHERE msg LIKE :kw;
 
---name: quote-exists$
+--name: quote-msg-exists$
 SELECT ROWID
 FROM Quote
 WHERE msg = :msg;
+
+--name: quote-id-exists$
+SELECT EXISTS(
+    SELECT 1
+    FROM Quote
+    WHERE ROWID = :id
+           );
 
 --name: get-next-row-id$
 SELECT id
@@ -65,6 +71,16 @@ UPDATE Quote
 SET msg = :msg, quoter = :quoter, QuoterGroup = :QuoterGroup
 WHERE ROWID = :id;
 
---name: get-range-quotes
-SELECT *, ROWID FROM Quote
-WHERE ROWID BETWEEN :start AND :end;
+--name: get-previous-quote^
+SELECT ROWID, *
+FROM Quote
+WHERE ROWID < :id
+ORDER BY ROWID DESC
+LIMIT 1;
+
+--name: get-next-quote^
+SELECT ROWID, *
+FROM Quote
+WHERE ROWID > :id
+ORDER BY ROWID
+LIMIT 1

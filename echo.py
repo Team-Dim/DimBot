@@ -3,7 +3,9 @@ import re
 import discord
 from discord.ext import commands
 
+import menus
 import missile
+from sql import Quote
 
 
 def split_quoter(quoter: str):
@@ -11,77 +13,40 @@ def split_quoter(quoter: str):
     return quoter[0], quoter[1] if len(quoter) > 1 else None
 
 
-class Quote:
-
-    def __init__(self, *args):
-        self.msg = args[0]
-        self.quoter = args[1]
-        self.uid = args[2]
-        self.quoter_group = args[3]
-        self.time = args[4]
-
-
 class Bottas(commands.Cog):
     """Storing messages.
-    Version 3.1"""
+    Version 3.2"""
 
     def __init__(self, bot):
         self.bot = bot
 
     @commands.group(invoke_without_command=True)
-    async def quote(self, ctx):
+    async def quote(self, ctx, index: int = 0):
         """
-        Commands for interacting with quotes
+        Commands for interacting with quotes.
+        `quote [subcommand | ID]`
+        If no subcommand is provided, it takes an optional argument which is the ID of a quote and displays it.
+        If no quote ID or quote ID is invalid, shows a random quote.
         """
-        self.bot.help_command.context = ctx
-        await self.bot.help_command.send_group_help(ctx.command)
-
-    @quote.command(aliases=('i',), brief='Search a quote by ID')
-    async def index(self, ctx, index: int = 0):
-        """`quote i [ID]`
-        ID: Quote index. If the ID is invalid, the bot randomly picks a quote.
-        """
-        quote = await self.bot.sql.get_quote(self.bot.db, id=index)
-        content = ''
-        if not quote:  # Provided Quote ID is invalid
-            count = await self.bot.sql.get_quotes_count(self.bot.db)
-            quote = await self.bot.sql.get_random_quote(self.bot.db)
-            index = quote[-1]
-            content = f'That quote ID is invalid. There are **{count}** quotes in the database. This is a random one:\n'
-        quote_obj = Quote(*quote)
-        user = self.bot.get_user(quote_obj.uid)
-        if not user:  # Ensures that user is not None
-            try:
-                user = await self.bot.fetch_user(quote_obj.uid)
-            except discord.NotFound:
-                user = '*unknown user*'
-        content += f"Quote #{index}:\n> {quote_obj.msg} - {quote_obj.quoter}"
-        if quote_obj.quoter_group:
-            content += f", {quote_obj.quoter_group}"
-        content += f"\n Uploaded by {user}"
-        if quote_obj.time:
-            content += f" at {quote_obj.time.split('.')[0]}"
-        await ctx.reply(content)
+        count = await self.bot.sql.get_quotes_count(self.bot.db)
+        if await self.bot.sql.quote_id_exists(self.bot.db, id=index):
+            await menus.QuoteMenu(index, count).start(ctx)
+        else:
+            index = await self.bot.sql.get_random_id(self.bot.db)
+            await menus.QuoteMenu(index[0], count).start(ctx)
 
     @quote.command(aliases=('q',), brief='Search quote by quoter')
     async def quoter(self, ctx, *, quoter_msg):
         """`quote q [quoter], [quoter group]`
-        Quoter, quoter group: The name of the quoter/quoter group.
+        Quoter, quoter group: A sentence. The name of the quoter/quoter group.
         """
         quoter, quoter_group = split_quoter(quoter_msg)
         quotes = await self.bot.sql.get_quoter_quotes(self.bot.db, quoter=quoter, QuoterGroup=quoter_group)
-        content = f"The following are **{quoter_msg}**'s quotes:\n>>> "
-        no_msg = False
-        for quote in quotes:
-            content += f'{quote[0]}. {quote[1]}\n'
-            if len(content) >= 2048:
-                no_msg = True
-                break
-        if no_msg:
-            content = f"The following are IDs of **{quoter_msg}**'s quotes:\n"
-            for quote in quotes:
-                content += f'{quote[0]} '
-        await ctx.reply(content)
+        if quotes:
+            quotes = tuple(map(lambda q: Quote(*q), quotes))
+            await menus.QuotesMenu(quotes).start(ctx)
+        else:
+            await ctx.reply(f'There are no quotes by **{quoter_msg}**!')
 
     @quote.command(aliases=('u',), brief='List quotes uploaded by a Discord user')
     async def uploader(self, ctx, user: discord.User = None):
@@ -90,18 +55,11 @@ class Bottas(commands.Cog):
         """
         user = user if user else ctx.author
         quotes = await self.bot.sql.get_uploader_quotes(self.bot.db, uid=user.id)
-        content = f"The following are quotes uploaded by **{user}**:\n>>> "
-        no_msg = False
-        for quote in quotes:
-            content += f'{quote[0]}. {quote[1]} - {quote[2]}\n'
-            if len(content) >= 2048:
-                no_msg = True
-                break
-        if no_msg:
-            content = f"The following are IDs of quotes uploaded by **{user}:\n"
-            for quote in quotes:
-                content += f'{quote[0]} '
-        await ctx.send(content)
+        if quotes:
+            quotes = tuple(map(lambda q: Quote(*q), quotes))
+            await menus.QuotesMenu(quotes).start(ctx)
+        else:
+            await ctx.reply(f'There are no quotes uploaded by **{user}**!')
 
     @quote.command(name='add', aliases=('a',), brief='Adds a quote')
     async def quote_add(self, ctx: commands.Context, *, quote):
@@ -111,7 +69,7 @@ class Bottas(commands.Cog):
         # Quote message validation
         await missile.check_arg(ctx, quote)
         # Check if a quote with the same content already exists in the database
-        rowid = await self.bot.sql.quote_exists(self.bot.db, msg=quote)
+        rowid = await self.bot.sql.quote_msg_exists(self.bot.db, msg=quote)
         if rowid:
             await ctx.send(f'This quote duplicates with #{rowid}')
             return
@@ -143,7 +101,7 @@ class Bottas(commands.Cog):
         """
         quote = await self.bot.sql.get_quote(self.bot.db, id=index)
         if quote:  # Checks if the quote exists
-            quote = Quote(*quote)
+            quote = Quote(index, *quote)
             # Check if sender is quote uploader or sender is me (db admin)
             if quote.uid == ctx.author.id or ctx.author.id == self.bot.owner_id:
                 # Confirmation
@@ -163,22 +121,11 @@ class Bottas(commands.Cog):
         """quote m <keyword>
         keyword: The sentence that the quotes must contain. Case insensitive."""
         quotes = await self.bot.sql.get_keyword_quotes(self.bot.db, kw=f'%{keyword}%')
-        content = f'The following quotes contains **{keyword}**:\n>>> '
-        no_msg = False
-        for quote in quotes:
-            q = Quote(*quote)
-            content += f'{quote[-1]}. {q.msg} - {q.quoter}'
-            if q.quoter_group:
-                content += ', ' + q.quoter_group
-            content += '\n'
-            if len(content) >= 2048:
-                no_msg = True
-                break
-        if no_msg:
-            content = f"The following are IDs of quotes that contain **{keyword}**:\n"
-            for quote in quotes:
-                content += f'{quote[-1]} '
-        await ctx.reply(content)
+        if quotes:
+            quotes = tuple(map(lambda q: Quote(*q), quotes))
+            await menus.QuotesMenu(quotes).start(ctx)
+        else:
+            await ctx.reply(f'There are no quotes with the keyword **{keyword}**!')
 
     @quote.command(aliases=('e',), brief='Edits a quote')
     async def edit(self, ctx: commands.Context, index: int):
@@ -187,7 +134,7 @@ class Bottas(commands.Cog):
         """
         quote = await self.bot.sql.get_quote(self.bot.db, id=index)
         if quote and (quote[2] == ctx.author.id or ctx.author.id == self.bot.owner_id):
-            quote = Quote(*quote)
+            quote = Quote(index, *quote)
             content = await self.bot.ask_msg(ctx, 'Enter the new quote: (wait 10 seconds if it is the same)')
             if content:  # Quote message validation
                 await missile.check_arg(ctx, content)
@@ -206,33 +153,6 @@ class Bottas(commands.Cog):
             await ctx.reply('Quote updated')
         else:
             await ctx.reply("You can't edit this quote!")
-
-    @quote.command(name='range', aliases=('r',), brief='List quotes within that ID range')
-    async def quote_range(self, ctx: commands.Context, start: int, end: int):
-        """quote r <start> <end>
-        start, end: The range of the IDs, including both numbers."""
-        quotes = await self.bot.sql.get_range_quotes(self.bot.db, start=start, end=end)
-        content = '>>> '
-        for quote in quotes:
-            quote_obj = Quote(*quote)
-            user = self.bot.get_user(quote_obj.uid)
-            if not user:  # Ensures that user is not None
-                try:
-                    user = await self.bot.fetch_user(quote_obj.uid)
-                except discord.NotFound:
-                    user = '*unknown user*'
-            to_be_added = f"{quote[-1]}. {quote_obj.msg} - {quote_obj.quoter}"
-            if quote_obj.quoter_group:
-                to_be_added += f", {quote_obj.quoter_group}"
-            to_be_added += f"\n Uploaded by {user}"
-            if quote_obj.time:
-                to_be_added += f" at {quote_obj.time.split('.')[0]}"
-            to_be_added += '\n'
-            if len(content + to_be_added) > 2048:
-                break
-            else:
-                content += to_be_added
-        await ctx.reply(content)
 
     @commands.group(
         invoke_without_command=True,

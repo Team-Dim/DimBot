@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from discord.ext import commands
 
 import missile
+from menus import XPMenu
 
 l_naught = 50
 r = 2.4
@@ -39,7 +40,7 @@ def get_lvl_info(xp: int):
 
 class XP(missile.Cog):
     """Experience point system
-    Version 0.2"""
+    Version 0.2.1"""
 
     def __init__(self, bot):
         super(XP, self).__init__(bot, 'XP')
@@ -115,22 +116,7 @@ class XP(missile.Cog):
         """`xp leaderboard`
         If you send `xp leaderboard` or `xp lb`, it shows the leaderboard of the server that the command was sent.
         If you send `xp glb` or `xp lbg`, it shows the global XP leaderboard."""
-        count = page * 10
-        count_pad = math.floor(math.log(count + 10, 10)) + 1
-        content = og = '```c\n'
-        if len(ctx.invoked_with) == 3:
-            coro = self.bot.sql.get_global_xp_leaderboard_cursor(self.bot.db, offset=count)
-        elif ctx.guild:
-            coro = self.bot.sql.get_xp_leaderboard_cursor(self.bot.db, guildID=ctx.guild.id, offset=count)
-        else:
-            await ctx.reply('Server-specific leaderboard can only be viewed inside that server!')
-            return
-        async with coro as lb:
-            async for row in lb:
-                count += 1
-                content += f"Rank {count: >{count_pad}}: {str(self.bot.get_user(row[0])):-<37} {row[1]}\n"
-        if content != og:
-            await ctx.reply(content + '```')
+        await XPMenu(page).start(ctx)
 
     @xp.command(aliases=('g', 'gg'), brief='Renders the XP graph')
     @missile.guild_only()

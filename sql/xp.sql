@@ -83,3 +83,7 @@ SELECT xp
 FROM XP
 WHERE guildID is null
 ORDER BY xp DESC;
+
+--name: clear-guild-xp!
+DELETE FROM xp
+WHERE guildID = :guildID;

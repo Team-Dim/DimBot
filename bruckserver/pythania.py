@@ -8,8 +8,8 @@ import missile
 
 
 class Albon:
-    """HTTP server sub-project used by Verstapen
-    Version 1.7"""
+    """HTTP server
+    Version 1.8"""
 
     def __init__(self, bot):
         self._channels = []
@@ -18,6 +18,7 @@ class Albon:
         self.logger = missile.get_logger('Albon')
         self.mgr = digitalocean.Manager(token=dimsecret.digital_ocean)
         self.path = ''
+        self.github_webhook = None
 
     @property
     def channels(self):
@@ -103,6 +104,12 @@ class Albon:
                 return web.Response(body=decoded)
             raise web.HTTPBadRequest(reason='Missing base64-encoded parameter')
 
+        @routes.post('/ghub-webhook')
+        async def github_webhook(request: web.Request):
+            payload = await request.json()
+            if not payload['repository']['private']:
+                raise web.HTTPTemporaryRedirect(self.github_webhook)
+
         app = web.Application()
         app.add_routes(routes)
         runner = web.AppRunner(app)
@@ -110,3 +117,10 @@ class Albon:
         site = web.TCPSite(runner, '0.0.0.0', 80)
         await site.start()
         self.logger.info('Site now running')
+
+        # Fetches the webhook for #job
+        await self.bot.wait_until_ready()
+        for webhook in await self.bot.get_channel(435009339632123904).webhooks():
+            if webhook.id == 476326171655667722:
+                self.github_webhook = webhook.url
+                break

@@ -21,6 +21,8 @@ class Verstapen(missile.Cog):
     async def start(self, ctx, server: str):
         """Shows the IP of the minecraft server. If no mcser is running, it launches a new one and shows its IP.
         Only works in Dim's guild."""
+        await ctx.reply('Nope')
+        return
         if server not in ('r', 's'):
             await ctx.reply('Server must be one of the following: `r s`')
             return
