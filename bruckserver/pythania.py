@@ -108,8 +108,9 @@ class Albon:
         async def github_webhook(request: web.Request):
             payload = await request.json()
             if not payload['repository']['private']:
-                async with self.bot.session.post(self.github_webhook, data=payload):
-                    self.logger.info('Relayed GitHub webhook')
+                async with self.bot.session.post(self.github_webhook, json=payload) as r:
+                    self.logger.info(f'Relayed GitHub webhook. Response: {r.status}')
+                raise web.Response
 
         app = web.Application()
         app.add_routes(routes)
