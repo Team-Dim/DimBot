@@ -104,14 +104,6 @@ class Albon:
                 return web.Response(body=decoded)
             raise web.HTTPBadRequest(reason='Missing base64-encoded parameter')
 
-        @routes.post('/ghub-webhook')
-        async def github_webhook(request: web.Request):
-            payload = await request.json()
-            if not payload['repository']['private']:
-                async with self.bot.session.post(self.github_webhook, json=payload, headers=request.headers) as r:
-                    self.logger.info(f'Relayed GitHub webhook. Response: {r.status}')
-                    return web.Response(status=r.status, headers=r.headers, body=await r.text())
-
         app = web.Application()
         app.add_routes(routes)
         runner = web.AppRunner(app)
@@ -119,10 +111,3 @@ class Albon:
         site = web.TCPSite(runner, '0.0.0.0', 80)
         await site.start()
         self.logger.info('Site now running')
-
-        # Fetches the webhook for #job
-        await self.bot.wait_until_ready()
-        for webhook in await self.bot.get_channel(435009339632123904).webhooks():
-            if webhook.id == 476326171655667722:
-                self.github_webhook = webhook.url + '/github'
-                break

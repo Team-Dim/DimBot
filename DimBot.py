@@ -26,7 +26,7 @@ intent = discord.Intents.none()
 intent.guilds = intent.members = intent.messages = intent.reactions = intent.voice_states = intent.typing = True
 intent.presences = True
 bot = missile.Bot(intents=intent)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.9.28"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.10"
 logger = missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
@@ -449,10 +449,18 @@ async def modrole(ctx: commands.Context, role: discord.Role):
 async def changelog(ctx):
     """Shows the latest release notes of DimBot"""
     await ctx.reply("""
-**__0.9.28 (Jul 3, 2021 2:45AM GMT+8)__**\n
-The entire `quote` command group as well as `xp leaderboard` now rock a new UI!!!
-`quote i <id>` has been changed to `quote <id>`.
-`quote r` is removed as its obsolete with the new UI.
+**__0.10 (Jul 3, 2021 2:45PM GMT+8)__  The UI update**
+
+After 2 months of somewhat relaxing development, I am pleased to announce v0.10, with 29 modified files, 2236 new lines and 1068 deleted lines.
+
+The development began with a database interconnect rewrite, which not only supports concurrent access,
+but also an easier way to code SQL.
+Followed by the addition of `d.xp` commands, I've stored over 1000 entries of xp records, before the 128BB incident.
+Next, the UI of the entire help & quote commands, as well as `xp lb` are redesigned to be menu-driven, allowing users to
+access the commands in a much easier fashion.
+
+In the near future, I am focusing on resolving GitHub issues, which are basically features to be added. A major goal is
+to make Aegis much more configurable.
 """)
 
 
