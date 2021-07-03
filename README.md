@@ -22,5 +22,9 @@ The following are the variables that should be in the file:
 `Barbados` is the codename given to the discord.py implementation of DimBot.
 |Name|Represents|English|
 |------|-----------|---------|
+|みずはら|0.10|Mizuhara|
 |뾆|0.9|Bbwaelp|
 |ζ|0.8|Zeta|
+
+# Icon links
+Not sure why, but I'll still document this. https://imgur.com/a/9h6DyhE

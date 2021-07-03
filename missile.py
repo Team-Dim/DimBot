@@ -42,6 +42,7 @@ def decode(text: str) -> str:
     decoded: bytes = base64.b64decode(b)
     return decoded.decode()
 
+
 async def append_msg(msg: discord.Message, content: str, delimiter: str = '\n'):
     await msg.edit(content=f'{msg.content}{delimiter}{content}')
 
@@ -150,15 +151,6 @@ def in_guilds(*guilds):
         return False
 
     return commands.check(check)
-
-
-async def check_arg(ctx, arg: str, user_mention=True, newline=True):
-    if user_mention and '<@' in arg:
-        await ctx.reply("You can't mention others!")
-        raise commands.errors.CheckFailure
-    if newline and '\n' in arg:
-        await ctx.reply('It should only be a single line!')
-        raise commands.errors.CheckFailure
 
 
 class Bot(commands.Bot):

@@ -13,9 +13,19 @@ def split_quoter(quoter: str):
     return quoter[0], quoter[1] if len(quoter) > 1 else None
 
 
+async def verify_quoter(ctx, quoter, quoter_group):
+    if quoter_group:
+        if '<@' in quoter_group:
+            await ctx.reply('You can only mention a user as a quoter, but not a quoter group.')
+            raise commands.errors.CheckFailure
+        if '\n' in quoter or '\n' in quoter_group:
+            await ctx.reply('Quoter must be single line!')
+            raise commands.errors.CheckFailure
+
+
 class Bottas(commands.Cog):
     """Storing messages.
-    Version 3.2"""
+    Version 3.2.1"""
 
     def __init__(self, bot):
         self.bot = bot
@@ -66,8 +76,6 @@ class Bottas(commands.Cog):
         """d.quote a <quote>
         quote: The new quote to be added
         """
-        # Quote message validation
-        await missile.check_arg(ctx, quote)
         # Check if a quote with the same content already exists in the database
         rowid = await self.bot.sql.quote_msg_exists(self.bot.db, msg=quote)
         if rowid:
@@ -76,9 +84,8 @@ class Bottas(commands.Cog):
         # Asks for the quoter who said the quote
         quoter = await self.bot.ask_msg(ctx, 'Quoter?')
         if quoter:
-            # Quote message validation
-            await missile.check_arg(ctx, quoter)
             quoter, quoter_group = split_quoter(quoter)
+            await verify_quoter(ctx, quoter, quoter_group)  # Quoter validation
             # Determines the ROWID to be used for inserting the quote
             rowid = await self.bot.sql.get_next_row_id(self.bot.db)
             if rowid:  # Use ROWID from QuoteRowID if available. These IDs exist when a quote was deleted
@@ -136,14 +143,12 @@ class Bottas(commands.Cog):
         if quote and (quote[2] == ctx.author.id or ctx.author.id == self.bot.owner_id):
             quote = Quote(index, *quote)
             content = await self.bot.ask_msg(ctx, 'Enter the new quote: (wait 10 seconds if it is the same)')
-            if content:  # Quote message validation
-                await missile.check_arg(ctx, content)
-            else:
+            if not content:
                 content = quote.msg
             quoter = await self.bot.ask_msg(ctx, "Enter new quoter: (wait 10 seconds if it is the same)")
-            if quoter:  # Quoter validation
-                await missile.check_arg(ctx, quoter)
+            if quoter:
                 quoter, quoter_group = split_quoter(quoter)
+                await verify_quoter(ctx, quoter, quoter_group)  # Quoter validation
             else:
                 quoter = quote.quoter
                 quoter_group = quote.quoter_group
