@@ -124,5 +124,5 @@ class Albon:
         await self.bot.wait_until_ready()
         for webhook in await self.bot.get_channel(435009339632123904).webhooks():
             if webhook.id == 476326171655667722:
-                self.github_webhook = webhook.url
+                self.github_webhook = webhook.url + '/github'
                 break
