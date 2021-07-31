@@ -1,0 +1,19 @@
+from enum import Enum
+
+
+class UltraRockPaperScissor(Enum):
+    ROCK = 0x0
+    GUN = 0x1
+    LIGHTNING = 0x2
+    DEVIL = 0x3
+    DRAGON = 0x4
+    WATER = 0x5
+    AIR = 0x6
+    PAPER = 0x7
+    SPONGE = 0x8
+    WOLF = 0x9
+    TREE = 0xA
+    HUMAN = 0xB
+    SNAKE = 0xC
+    SCISSOR = 0xD
+    FIRE = 0xE

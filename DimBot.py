@@ -16,6 +16,7 @@ import missile
 import tribe
 from bruckserver.vireg import Verstapen
 from echo import Bottas
+from games.cog import Games
 from mod.aegis import Aegis
 from mod.ikaros import Ikaros
 from raceline import Ricciardo
@@ -489,10 +490,11 @@ async def ready_tasks():
     bot.add_cog(Ikaros(bot))
     bot.add_cog(Aegis(bot))
     bot.add_cog(XP(bot))
+    bot.add_cog(Games(bot))
     await bot.wait_until_ready()
     bot.add_cog(tribe.Hamilton(bot))
     bot.after_invoke(ainvk)
-    bot.eggy = await bot.fetch_user(226664644041768960)  # Special Discord user
+    bot.eggy = await bot.ensure_user(226664644041768960)  # Special Discord user
     psutil.cpu_percent(percpu=True)
     await bot.is_owner(bot.eggy)  # Trick to set bot.owner_id
     logger.info('Ready')
