@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import IntEnum
 
 
-class UltraRockPaperScissor(Enum):
+class UltraRockPaperScissor(IntEnum):
     ROCK = 0
     GUN = 1
     LIGHTNING = 2

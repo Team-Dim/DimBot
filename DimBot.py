@@ -133,7 +133,7 @@ async def on_command_error(ctx: commands.Context, error: commands.errors.Command
         for tb in traceback.format_tb(error.original.__traceback__):
             content += tb
         content += str(error.original) + '```'
-        msg = await bot.get_cog('Hamilton').bot_test.send(content)
+        msg = await bot.get_cog('Hamilton').bot_test.send(content[4000:])
         await ctx.reply(f'Hmm... Report ID: **{msg.id}**')
 
 
@@ -450,9 +450,10 @@ async def modrole(ctx: commands.Context, role: discord.Role):
 async def changelog(ctx):
     """Shows the latest release notes of DimBot"""
     await ctx.reply("""
-**__0.10.1 (Jul 3, 2021 8:33PM GMT+8)__**
-You can now mention others as well as having multiple lines in quote message.
-You can now mention others as a Quoter (but not quoter group).
+**__0.10.2 (Aug 2, 2021 1:12AM GMT+8)__**
+Introducing a new minigame: `Ultra Rock Paper Scissor`!!!
+https://user-images.githubusercontent.com/25037295/127674723-c60882ad-2077-4060-a51c-c4608a57c3b9.png
+Send `d.urps` to randomly pick a choice, or `d.urps <0-14>` to choose by yourself!
 """)
 
 
