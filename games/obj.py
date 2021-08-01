@@ -2,18 +2,27 @@ from enum import Enum
 
 
 class UltraRockPaperScissor(Enum):
-    ROCK = 0x0
-    GUN = 0x1
-    LIGHTNING = 0x2
-    DEVIL = 0x3
-    DRAGON = 0x4
-    WATER = 0x5
-    AIR = 0x6
-    PAPER = 0x7
-    SPONGE = 0x8
-    WOLF = 0x9
-    TREE = 0xA
-    HUMAN = 0xB
-    SNAKE = 0xC
-    SCISSOR = 0xD
-    FIRE = 0xE
+    ROCK = 0
+    GUN = 1
+    LIGHTNING = 2
+    DEVIL = 3
+    DRAGON = 4
+    WATER = 5
+    AIR = 6
+    PAPER = 7
+    SPONGE = 8
+    WOLF = 9
+    TREE = 10
+    HUMAN = 11
+    SNAKE = 12
+    SCISSOR = 13
+    FIRE = 14
+
+    def resolve(self, opponent):
+        if self == opponent:
+            return 0
+        if opponent < self:
+            opponent += 15
+        if opponent - self > 7:
+            return 1
+        return -1

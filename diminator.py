@@ -77,7 +77,7 @@ class PP:
 
 
 class Diminator(Cog):
-    """PP command group
+    """Named by <@259576375424319489>, PP command group
     Version 0.1"""
 
     def __init__(self, bot):

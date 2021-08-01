@@ -27,7 +27,7 @@ intent = discord.Intents.none()
 intent.guilds = intent.members = intent.messages = intent.reactions = intent.voice_states = intent.typing = True
 intent.presences = True
 bot = missile.Bot(intents=intent)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.10.1"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.10.2"
 logger = missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
@@ -96,10 +96,10 @@ async def on_message_delete(msg: discord.Message):
         return
     # Stores the deleted message for snipe command
     content = msg.content if msg.content else msg.embeds[0].title
-    bot.snipe = missile.Embed(msg.author.display_name, content,
+    bot.snipe = missile.Embed(msg.guild.name, content,
                               msg.embeds[0].colour if msg.embeds else discord.Colour.random(),
                               msg.guild.icon_url)
-    bot.snipe.set_author(name=msg.guild.name, icon_url=msg.author.avatar_url)
+    bot.snipe.set_author(name=msg.author.display_name, icon_url=msg.author.avatar_url)
 
 
 @bot.event
