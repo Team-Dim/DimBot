@@ -1,4 +1,5 @@
 import asyncio
+import time
 from datetime import datetime, timedelta
 from random import choice, randint
 from typing import Union
@@ -27,7 +28,7 @@ intent = discord.Intents.none()
 intent.guilds = intent.members = intent.messages = intent.reactions = intent.voice_states = intent.typing = True
 intent.presences = True
 bot = missile.Bot(intents=intent)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.10.2"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.10.3"
 logger = missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
@@ -133,7 +134,7 @@ async def on_command_error(ctx: commands.Context, error: commands.errors.Command
         for tb in traceback.format_tb(error.original.__traceback__):
             content += tb
         content += str(error.original) + '```'
-        msg = await bot.get_cog('Hamilton').bot_test.send(content[4000:])
+        msg = await bot.get_cog('Hamilton').bot_test.send(content)
         await ctx.reply(f'Hmm... Report ID: **{msg.id}**')
 
 
@@ -172,7 +173,7 @@ async def sponsor(ctx):
     await ctx.send(sponsor_txt)
 
 
-@bot.command()
+@bot.command(aliases=('ping', 'heartbeat'))
 async def noel(ctx):
     """Listens to my heartbeat (gateway latency & total message reaction latency)"""
     msg = await ctx.reply(f'💓 {bot.latency * 1000:.3f}ms')
@@ -379,14 +380,41 @@ async def bs(ctx: commands.Context, server: int):
         await ctx.reply('Banned')
 
 
-# Eggy requested this command
-@bot.command()
-async def hug(ctx):
-    """Need some love?"""
-    gif = choice(('https://tenor.com/view/milk-and-mocha-bear-couple-line-hug-cant-breathe-gif-12687187',
-                  'https://tenor.com/view/hugs-hug-ghost-hug-gif-4451998',
-                  'https://tenor.com/view/true-love-hug-miss-you-everyday-always-love-you-running-hug-gif-5534958'))
-    await ctx.send(f'{gif}\nWe are friends again, {bot.eggy}\nHug {ctx.author.mention}')
+hug_gifs = ('https://tenor.com/view/milk-and-mocha-bear-couple-line-hug-cant-breathe-gif-12687187',
+            'https://tenor.com/view/hugs-hug-ghost-hug-gif-4451998',
+            'https://tenor.com/view/true-love-hug-miss-you-everyday-always-love-you-running-hug-gif-5534958')
+
+
+@bot.command(brief='Hug one another every day for streaks!')
+@missile.guild_only()
+async def hug(ctx, target: discord.Member = None):
+    """Original idea by <@226664644041768960>
+    `hug <user>` to start hugging them and earn streaks. You can also just `hug` if you want to..."""
+    if target:
+        if target.bot or target == ctx.author:
+            await ctx.reply("You can't hug a bot or yourself! Maybe you should hug my pog champ instead?")
+        else:
+            gif = choice(hug_gifs)
+            t = time.time()
+            hug_record = await bot.sql.get_hug(bot.db, hugger=ctx.author.id, huggie=target.id)
+            if hug_record:
+                delta = t - hug_record[1]
+                if delta < 86400:
+                    await ctx.reply(f"{gif}\nYou've already hugged {target} today! Streaks: **{hug_record[0]}**")
+                elif delta < 172800:
+                    new_streak = hug_record[0] + 1
+                    await bot.sql.update_hug(bot.db, hugger=ctx.author.id, huggie=target.id, streak=new_streak, hugged=t)
+                    await ctx.reply(f'{gif}\nYou hugged {target}! Streaks: **{new_streak}**\n'
+                                    'Send the command again tomorrow to earn streaks!')
+                else:
+                    await bot.sql.update_hug(bot.db, hugger=ctx.author.id, huggie=target.id, streak=1, hugged=t)
+                    await ctx.reply(f"{gif}\nYou haven't hugged {target} for 2 days so you've lost your streak!")
+            else:
+                await bot.sql.add_hug(bot.db, hugger=ctx.author.id, huggie=target.id, hugged=t)
+                await ctx.reply(f'{gif}\nYou hugged {target}! Streaks: **1**')
+    else:
+        await ctx.reply('Fine, I guess I will give you a hug\n'
+                        'https://tenor.com/view/dance-moves-dancing-singer-groovy-gif-17029825')
 
 
 @bot.group(aliases=('color',), invoke_without_command=True, brief='Shows color')
@@ -450,10 +478,14 @@ async def modrole(ctx: commands.Context, role: discord.Role):
 async def changelog(ctx):
     """Shows the latest release notes of DimBot"""
     await ctx.reply("""
-**__0.10.2 (Aug 2, 2021 1:12AM GMT+8)__**
+**__0.10.3 (Aug 3, 2021 0:03AM GMT+8)__**
 Introducing a new minigame: `Ultra Rock Paper Scissor`!!!
 https://user-images.githubusercontent.com/25037295/127674723-c60882ad-2077-4060-a51c-c4608a57c3b9.png
 Send `d.urps` to randomly pick a choice, or `d.urps <0-14>` to choose by yourself!
+
+Also introducing **Hug Streaks**
+You can now `d.hug <user>` to hug one another. Hug each other once per day earns streaks. However if you don't hug a
+person for 2 days, you'll lose your streaks!
 """)
 
 
@@ -495,9 +527,8 @@ async def ready_tasks():
     await bot.wait_until_ready()
     bot.add_cog(tribe.Hamilton(bot))
     bot.after_invoke(ainvk)
-    bot.eggy = await bot.ensure_user(226664644041768960)  # Special Discord user
     psutil.cpu_percent(percpu=True)
-    await bot.is_owner(bot.eggy)  # Trick to set bot.owner_id
+    await bot.is_owner(bot.user)  # Trick to set bot.owner_id
     logger.info('Ready')
     if reborn_channel:  # Post-process Pandora if needed
         await bot.get_channel(reborn_channel).send("Arc-Cor𐑞: Pandora complete.")
