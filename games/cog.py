@@ -17,21 +17,21 @@ class Games(commands.Cog):
 
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.command(name='urps')
-    async def urps_cmd(self, ctx: commands.Context, h: int = 15):
+    async def urps_cmd(self, ctx: commands.Context, h: int = 16):
         """Ultra Rock Paper Scissor
-        `urps [0-14]` to pick a choice. If you didn't provide a number or
-        the number is not 0-14, randomly chooses for you.
+        `urps [1-15]` to pick a choice. If you didn't provide a number or
+        the number is not 1-15, randomly chooses for you.
 
         If you started the round, you have to wait 10s. During this period, any person can send this command to join."""
-        if not 0 <= h <= 14:
-            h = randint(0, 14)
+        if not 1 <= h <= 15:
+            h = randint(1, 15)
         if ctx.author.id not in self.urps:
             self.urps[ctx.author.id] = [ctx.message, UltraRockPaperScissor(h), 0]
         self.bot.loop.create_task(ctx.message.add_reaction('✅'))
         if len(self.urps) == 1:
             fake_ctx = copy(ctx.message)
             fake_ctx.author = self.bot.user
-            self.urps[self.bot.user.id] = [fake_ctx, UltraRockPaperScissor(randint(0, 14)), 0]
+            self.urps[self.bot.user.id] = [fake_ctx, UltraRockPaperScissor(randint(1, 15)), 0]
             await asyncio.sleep(10)
             keys = tuple(self.urps)
             for i, key in enumerate(keys):

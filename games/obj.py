@@ -2,21 +2,21 @@ from enum import IntEnum
 
 
 class UltraRockPaperScissor(IntEnum):
-    ROCK = 0
-    GUN = 1
-    LIGHTNING = 2
-    DEVIL = 3
-    DRAGON = 4
-    WATER = 5
-    AIR = 6
-    PAPER = 7
-    SPONGE = 8
-    WOLF = 9
-    TREE = 10
-    HUMAN = 11
-    SNAKE = 12
-    SCISSOR = 13
-    FIRE = 14
+    ROCK = 1
+    GUN = 2
+    LIGHTNING = 3
+    DEVIL = 4
+    DRAGON = 5
+    WATER = 6
+    AIR = 7
+    PAPER =8
+    SPONGE = 9
+    WOLF = 10
+    TREE = 11
+    HUMAN = 12
+    SNAKE = 13
+    SCISSOR = 14
+    FIRE = 15
 
     def resolve(self, opponent):
         if self == opponent:

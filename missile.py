@@ -158,8 +158,7 @@ class Bot(commands.Bot):
     def __init__(self, **options):
         super().__init__(command_prefix=prefix_process, **options)
         self.default_prefix = 't.' if dimsecret.debug else 'd.'
-        # Stores the message for the snipe command
-        self.snipe = Embed(description='No one has deleted anything yet...')
+        self.guild_store = {}
         self.sch = None
         self.boot_time = datetime.now()  # Time when bot started
         self.session = ClientSession()  # Central session for all aiohttp client requests

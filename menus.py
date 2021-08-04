@@ -21,7 +21,7 @@ class WhoPing(menus.Menu):
         emb.add_field('Time', self.pings[self.index][3][5:-7])
         if not self.in_guild:
             emb.add_field('Server', self.ctx.bot.get_guild(self.pings[self.index][4]))
-        emb.set_footer(text=self.pings[self.index][0])
+        emb.set_footer(text=f'WhoPing ID #{self.pings[self.index][0]}')
         return emb
 
     async def send_initial_message(self, ctx, channel):

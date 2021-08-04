@@ -28,7 +28,7 @@ intent = discord.Intents.none()
 intent.guilds = intent.members = intent.messages = intent.reactions = intent.voice_states = intent.typing = True
 intent.presences = True
 bot = missile.Bot(intents=intent)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.10.3"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.10.4"
 logger = missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
@@ -93,14 +93,19 @@ async def on_guild_remove(guild: discord.Guild):
 @bot.event
 async def on_message_delete(msg: discord.Message):
     """Event handler when a message has been deleted"""
-    if msg.author == msg.guild.me or msg.content.startswith(await missile.prefix_process(bot, msg)):
+    if not msg.guild or msg.author == msg.guild.me or msg.content.startswith(await missile.prefix_process(bot, msg)):
         return
     # Stores the deleted message for snipe command
-    content = msg.content if msg.content else msg.embeds[0].title
-    bot.snipe = missile.Embed(msg.guild.name, content,
-                              msg.embeds[0].colour if msg.embeds else discord.Colour.random(),
-                              msg.guild.icon_url)
-    bot.snipe.set_author(name=msg.author.display_name, icon_url=msg.author.avatar_url)
+    snipe_cfg = await bot.sql.get_snipe_cfg(bot.db, guild=msg.guild.id)
+    if snipe_cfg:
+        content = msg.content if msg.content else msg.embeds[0].title
+        emb = missile.Embed(msg.guild.name, content,
+                            msg.embeds[0].colour if msg.embeds else discord.Colour.random(),
+                            msg.guild.icon_url)
+        emb.set_author(name=msg.author.display_name, icon_url=msg.author.avatar_url)
+        bot.guild_store[msg.guild.id] = emb
+        if snipe_cfg == 2:
+            bot.guild_store[0] = emb
 
 
 @bot.event
@@ -216,10 +221,12 @@ async def message(ctx, msg: discord.Message):
     await ctx.reply(msg.jump_url)
 
 
-@bot.command()
+@bot.command(aliases=('gsnipe',))
+@missile.guild_only()
 async def snipe(ctx):
-    """Displays the last deleted message"""
-    await ctx.send(embed=bot.snipe)
+    """Displays the last deleted message in this server. `gsnipe` to display last deleted message across servers"""
+    gid = 0 if ctx.invoked_with[0] == 'g' else ctx.guild.id
+    await ctx.send(embed=bot.guild_store.get(gid, missile.Embed(description='No one has deleted anything yet...')))
 
 
 @bot.group()
@@ -403,7 +410,8 @@ async def hug(ctx, target: discord.Member = None):
                     await ctx.reply(f"{gif}\nYou've already hugged {target} today! Streaks: **{hug_record[0]}**")
                 elif delta < 172800:
                     new_streak = hug_record[0] + 1
-                    await bot.sql.update_hug(bot.db, hugger=ctx.author.id, huggie=target.id, streak=new_streak, hugged=t)
+                    await bot.sql.update_hug(bot.db, hugger=ctx.author.id, huggie=target.id, streak=new_streak,
+                                             hugged=t)
                     await ctx.reply(f'{gif}\nYou hugged {target}! Streaks: **{new_streak}**\n'
                                     'Send the command again tomorrow to earn streaks!')
                 else:
@@ -411,7 +419,8 @@ async def hug(ctx, target: discord.Member = None):
                     await ctx.reply(f"{gif}\nYou haven't hugged {target} for 2 days so you've lost your streak!")
             else:
                 await bot.sql.add_hug(bot.db, hugger=ctx.author.id, huggie=target.id, hugged=t)
-                await ctx.reply(f'{gif}\nYou hugged {target}! Streaks: **1**')
+                await ctx.reply(f'{gif}\nYou hugged {target}! Streaks: **1**\n'
+                                'Send the command again tomorrow to earn streaks!')
     else:
         await ctx.reply('Fine, I guess I will give you a hug\n'
                         'https://tenor.com/view/dance-moves-dancing-singer-groovy-gif-17029825')
@@ -474,18 +483,33 @@ async def modrole(ctx: commands.Context, role: discord.Role):
     await ctx.reply('Updated moderation role to ' + role.name)
 
 
+@guild.command(name='snipe', brief='Sets snipe discovery for the server')
+async def guild_snipe(ctx: commands.Context, level: int = 2):
+    """This command sets whether snipes can work and whether they are visible in other servers.
+
+    0: Snipe/GSnipe will not detect deleted messages in this server at all.
+    1: Snipe will detect but the detected messages are only visible in this server (`gsnipe` won't display)
+    2 (default): Snipe will detect and they are visible in other servers (`gsnipe` can display this server's snipes)"""
+    if 0 <= level <= 2:
+        await bot.sql.set_snipe_cfg(bot.db, snipe=level, guild=ctx.guild.id)
+        await ctx.reply('Updated snipe discovery level')
+    else:
+        await ctx.reply(f'Invalid discovery level! Please send `{await bot.get_prefix(ctx.message)}help guild snipe`!')
+
+
 @bot.command()
 async def changelog(ctx):
     """Shows the latest release notes of DimBot"""
     await ctx.reply("""
-**__0.10.3 (Aug 3, 2021 0:03AM GMT+8)__**
-Introducing a new minigame: `Ultra Rock Paper Scissor`!!!
-https://user-images.githubusercontent.com/25037295/127674723-c60882ad-2077-4060-a51c-c4608a57c3b9.png
-Send `d.urps` to randomly pick a choice, or `d.urps <0-14>` to choose by yourself!
+**__0.10.4 (Aug 5, 2021 1:35AM GMT+8)__**
+Introducing **Local Snipes**!
 
-Also introducing **Hug Streaks**
-You can now `d.hug <user>` to hug one another. Hug each other once per day earns streaks. However if you don't hug a
-person for 2 days, you'll lose your streaks!
+Since `d.snipe` has debuted, the detected messages are visible across servers. There was pretty much no customisation for it,
+and some of you had given me feedbacks about it. With this update, you can now use `d.snipe` for **local** snipes that scans
+only in your server, as well as the OG `d.gsnipe` for **global** snipes.
+
+You can even customise whether other servers can view your snipes, or simply disable the entire snipe command in your server.
+More info can be found in `d.help guild snipe`. Happy sniping!
 """)
 
 

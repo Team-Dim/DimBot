@@ -7,7 +7,6 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import Cog
 
-import diminator
 import missile
 from menus import WhoPing
 
