@@ -24,11 +24,10 @@ from raceline import Ricciardo
 from xp import XP
 
 # Variables needed for initialising the bot
-intent = discord.Intents.none()
-intent.guilds = intent.members = intent.messages = intent.reactions = intent.voice_states = intent.typing = True
-intent.presences = True
+intent = discord.Intents()
+intent.value = 0b1111110000011  # https://discord.com/developers/docs/topics/gateway#list-of-intents
 bot = missile.Bot(intents=intent)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.10.4"
+nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.10.5"
 logger = missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
@@ -141,6 +140,26 @@ async def on_command_error(ctx: commands.Context, error: commands.errors.Command
         content += str(error.original) + '```'
         msg = await bot.get_cog('Hamilton').bot_test.send(content)
         await ctx.reply(f'Hmm... Report ID: **{msg.id}**')
+
+
+async def solo_vc(vs):
+    print('Counting')
+    await asyncio.sleep(vs.channel.guild.afk_timeout)
+    print('Done counting')
+    if len(vs.channel.members) == 1:
+        await vs.channel.members[0].move_to(None, reason='Solo AFKing in a VC')
+
+
+@bot.event
+async def on_voice_state_update(m: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
+    if before.channel and len(before.channel.members) == 1 and not after.channel \
+            and before.channel.guild.me.guild_permissions.move_members:
+        await solo_vc(before)
+    elif after.channel and after.channel.guild.me.guild_permissions.move_members:
+        if after.afk:
+            await m.move_to(None, reason='Joined AFK VC')
+        elif len(after.channel.members) == 1:
+            await solo_vc(after)
 
 
 @bot.command(aliases=('bot',))
@@ -407,7 +426,9 @@ async def hug(ctx, target: discord.Member = None):
             if hug_record:
                 delta = t - hug_record[1]
                 if delta < 86400:
-                    await ctx.reply(f"{gif}\nYou've already hugged {target} today! Streaks: **{hug_record[0]}**")
+                    wait = time.gmtime(86400 - delta)
+                    await ctx.reply(f"{gif}\nYou've already hugged {target} today! Streaks: **{hug_record[0]}**\n"
+                                    f"Please wait for {wait.tm_hour}h {wait.tm_min}m {wait.tm_sec}s")
                 elif delta < 172800:
                     new_streak = hug_record[0] + 1
                     await bot.sql.update_hug(bot.db, hugger=ctx.author.id, huggie=target.id, streak=new_streak,
@@ -495,6 +516,12 @@ async def guild_snipe(ctx: commands.Context, level: int = 2):
         await ctx.reply('Updated snipe discovery level')
     else:
         await ctx.reply(f'Invalid discovery level! Please send `{await bot.get_prefix(ctx.message)}help guild snipe`!')
+
+
+@guild.command(brief='Toggles auto kicking members from VC when they afk')
+async def antiafk(ctx: commands.Context, enable: bool = True):
+    await bot.sql.set_anti_afk(bot.db, antiafk=enable, guild=ctx.guild.id)
+    await ctx.reply('Updated!')
 
 
 @bot.command()

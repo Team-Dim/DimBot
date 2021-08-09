@@ -22,6 +22,11 @@ UPDATE GuildCfg
 SET snipe = :snipe
 WHERE guildID = :guild;
 
+--name: set-anti-afk!
+UPDATE GuildCfg
+SET antiVCAFK = :antiafk
+WHERE guildID = :guild;
+
 --name: remove-guild-cfg!
 DELETE FROM GuildCfg
 WHERE guildID = :guildID;
