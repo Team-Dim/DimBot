@@ -5,7 +5,6 @@ import discord
 from discord.ext.commands import Cog, command, Context, has_permissions, bot_has_permissions, has_guild_permissions, \
     bot_has_guild_permissions
 
-import diminator
 import missile
 import tribe
 
@@ -262,5 +261,3 @@ class Ikaros(Cog):
                                 ))
                 await asyncio.wait(tasks)
                 await ctx.reply('Lockdown.')
-
-

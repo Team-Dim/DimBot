@@ -1,133 +1,97 @@
+import asyncio
 import random
-from random import randint
+from copy import copy
 
 import discord
-from discord.ext.commands import Cog, Context, group, cooldown, BucketType, CommandError
+from discord.ext import commands
+from discord.ext.commands import Context, BucketType
 
 import missile
-
-max_pp_size = 69
-
-
-class BasePPException(CommandError):
-    def __init__(self, message=None, *args):
-        self.message = message
-        super().__init__(message, args)
-
-    def __str__(self):
-        return self.message
+from diminator.obj import UltraRockPaperScissor, PPNotFound, PP, max_pp_size
 
 
-class PPNotFound(BasePPException):
-
-    def __init__(self, target_is_sender: bool):
-        if target_is_sender:
-            super().__init__("Please set up your pp by `{0}pp`!")
-        else:
-            super().__init__('Target has no pp.')
+def pp_embed(user: discord.User, pp: PP):
+    return missile.Embed(user.display_name + "'s pp", pp.draw())
 
 
-class PPStunned(BasePPException):
-    def __init__(self, target_is_sender: bool):
-        if target_is_sender:
-            super().__init__('Your pp is stunned! Please use `{0}pp sf` to remove the effect!')
-        else:
-            super().__init__('Target is stunned!')
-
-
-class PPLocked(BasePPException):
-    def __init__(self, target_is_sender: bool):
-        if target_is_sender:
-            super().__init__('Your pp is locked! Please use `{0}pp lock` to unlock!')
-        else:
-            super().__init__('Target has enabled lock!')
-
-
-class PP:
-
-    def __init__(self, size: int, viagra, sesami, stun=0):
-        self.size: int = size
-        self.viagra: int = viagra  # -1: Not available 0: Not activated 1-3: rounds left
-        self.score = 0
-        self.sesami_oil: bool = sesami
-        self.stun: int = stun
-        self.lock: bool = False
-
-    def draw(self) -> str:
-        """Returns the string for displaying pp"""
-        description = f'Ɛ{"Ξ" * self.size}＞'
-        if self.lock:
-            description = f"🔒Locked\n{description}"
-        if self.viagra > 0:
-            description = f'**{description}**\nViagra rounds left: {self.viagra}'
-        elif self.viagra == 0:
-            description += '\nViagra available!'
-        if self.sesami_oil:
-            description += '\nSesami oil'
-        if self.size == max_pp_size:
-            description += '\n**MAX POWER**'
-        if self.stun:
-            description += f'\n**STUNNED:** {self.stun} rounds left'
-        return description
-
-    def check_lock(self, b):
-        if self.lock:
-            raise PPLocked(b)
-        return self
-
-
-class Diminator(Cog):
-    """Named by <@259576375424319489>, PP command group
-    Version 0.1"""
+class Diminator(commands.Cog):
+    """Named by <@259576375424319489>, Mini games
+    Version 0.2"""
 
     def __init__(self, bot):
         self.bot: missile.Bot = bot
-        self.organs: dict = {}  # Dict for storing pp size
+        self.urps = {}
 
-    @staticmethod
-    def pp_embed(user: discord.User, pp: PP):
-        return missile.Embed(user.display_name + "'s pp", pp.draw())
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.command(name='urps')
+    async def urps_cmd(self, ctx: commands.Context, h: int = 16):
+        """Ultra Rock Paper Scissor
+        `urps [1-15]` to pick a choice. If you didn't provide a number or
+        the number is not 1-15, randomly chooses for you.
+
+        If you started the round, you have to wait 10s. During this period, any person can send this command to join."""
+        if not 1 <= h <= 15:
+            h = random.randint(1, 15)
+        if ctx.author.id not in self.urps:
+            self.urps[ctx.author.id] = [ctx.message, UltraRockPaperScissor(h), 0]
+        self.bot.loop.create_task(ctx.message.add_reaction('✅'))
+        if len(self.urps) == 1:
+            fake_ctx = copy(ctx.message)
+            fake_ctx.author = self.bot.user
+            self.urps[self.bot.user.id] = [fake_ctx, UltraRockPaperScissor(random.randint(1, 15)), 0]
+            await asyncio.sleep(10)
+            keys = tuple(self.urps)
+            for i, key in enumerate(keys):
+                for opponent in keys[i+1:]:
+                    score = self.urps[key][1].resolve(self.urps[opponent][1])
+                    self.urps[key][2] += score
+                    self.urps[opponent][2] -= score
+            self.urps = dict(sorted(self.urps.items(), key=lambda e: e[1][2], reverse=True))
+            resp = '**Score** | Name | Choice\n'
+            for u in self.urps.values():
+                resp += f'**{u[2]}** {u[0].author}, {u[1].name}\n'
+            dest = []
+            for u in self.urps.values():
+                if u[0].channel not in dest:
+                    await u[0].reply(resp)
+                    dest.append(u[0].channel)
+            self.urps = {}
 
     def get_pp(self, ctx: Context, target_id: int):
-        if self.organs.get(target_id, None):
-            return self.organs[target_id]
+        us = self.bot.get_user_store(target_id)
+        if us.pp:
+            return us.pp
         raise PPNotFound(ctx.author.id == target_id)
 
     def get_pp_checked(self, ctx: Context, target_id: int):
-        pp = self.get_pp(ctx, target_id)
-        b = ctx.author.id == target_id
-        if pp.stun:
-            raise PPStunned(b)
-        pp.check_lock(b)
-        return pp
+        return self.get_pp(ctx, target_id).check_all(ctx.author.id == target_id)
 
-    @group(invoke_without_command=True, brief='Commands for interacting with your pp')
+    def get_random_pp_opponent(self):
+        return self.bot.get_user(random.choice(tuple(self.bot.user_store.keys())))
+
+    @commands.group(invoke_without_command=True, brief='Commands for interacting with your pp')
     async def pp(self, ctx: Context, user: discord.User = None):
         """
         If no valid subcommands are supplied, the command can be used in this way:
         `pp [user]`
         user: The target whose pp will be rerolled.
         """
-        if user:  # If target already has pp, allows modifying. Else throw PPNotFound as you can't initialise others
-            pp = self.get_pp(ctx, user.id)
-            pp.check_lock(ctx.author == user)
-        else:  # Check if sender has pp as no target is specified
-            user = ctx.author
-            pp = self.organs.get(ctx.author.id, None)
-        if pp and pp.stun:  # Checks whether the to-be-rolled PP is stunned
-            raise PPStunned(ctx.author.id == user.id)
+        user = user if user else ctx.author
+        pp = self.bot.get_user_store(user.id).pp
+        if pp:
+            pp.check_all(ctx.author == user)
         # Randomises user's pp properties
-        size = randint(0, max_pp_size)
-        viagra = (randint(0, 100) < 25) - 1
-        sesami = randint(0, 100) < 10
+        size = random.randint(0, max_pp_size)
+        viagra = (random.randint(0, 100) < 25) - 1
+        sesami = random.randint(0, 100) < 10
         if pp:  # Updates a PP if exist
             pp.size = size
             pp.viagra = viagra
             if sesami:
                 pp.sesami_oil = True
         else:  # Creates PP if not exist
-            pp = self.organs[user.id] = PP(size, viagra, sesami)
-        await ctx.reply(embed=self.pp_embed(user, pp))
+            pp = self.bot.user_store[user.id].pp = PP(size, viagra, sesami)
+        await ctx.reply(embed=pp_embed(user, pp))
 
     @pp.command(brief='Display pp info of a user')
     async def info(self, ctx: Context, user: discord.User = None):
@@ -149,36 +113,38 @@ class Diminator(Cog):
     async def max(self, ctx: Context, target: discord.User = None, viagra=True, sesami=True):
         target = target if target else ctx.author
         viagra -= 1
-        self.organs[target.id] = PP(max_pp_size, viagra, sesami)
-        await ctx.reply(embed=self.pp_embed(target, self.organs[target.id]))
+        self.bot.get_user_store(target.id).pp = PP(max_pp_size, viagra, sesami)
+        await ctx.reply(embed=pp_embed(target, self.bot.user_store[target.id].pp))
 
     @pp.command()
     async def min(self, ctx: Context):
         """Minimises your pp strength"""
         pp = self.get_pp(ctx, ctx.author.id)
-        pp = PP(0, -1, False, pp.stun)
-        await ctx.reply(embed=self.pp_embed(ctx.author, pp))
+        pp = self.bot.user_store[ctx.author.id].pp = PP(0, -1, False, pp.stun)
+        await ctx.reply(embed=pp_embed(ctx.author, pp))
 
     @pp.command()
     async def cut(self, ctx: Context):
         """Cuts your pp"""
-        # Internally this removes the user from self.organs
         pp = self.get_pp(ctx, ctx.author.id)
         if await self.bot.ask_reaction(ctx, '⚠Cutting your pp also resets your score! Are you sure?'):
-            self.organs.pop(ctx.author.id)
+            self.bot.user_store[ctx.author.id].pp = None
             await ctx.send(embed=discord.Embed(
                 title=ctx.author.display_name + "'s penis",
                 description=f"Ɛ\n{'Ξ' * pp.size}＞",
                 color=discord.Color.red()))
 
     @pp.command(aliases=('sf',), brief='Use your pp as a weapon and fight')
-    @cooldown(rate=1, per=10.0, type=BucketType.user)  # Each person can only call this once per 10s
+    @commands.cooldown(rate=1, per=10.0, type=BucketType.user)  # Each person can only call this once per 10s
     async def swordfight(self, ctx: Context, user: discord.User = None):
         """pp swordfight [user]
         user: Your opponent. If you didn't specify a user as your opponent,
         bot randomly picks a user that has a pp registered, **INCLUDING YOURSELF**"""
         if not user:
-            user = self.bot.get_user(random.choice(list(self.organs.keys())))
+            if not filter(lambda us: us.pp, self.bot.user_store.values()):
+                await ctx.reply('No one has pp yet.')
+                return
+            user = self.get_random_pp_opponent()
         my = self.get_pp(ctx, ctx.author.id).check_lock(True)
         his = self.get_pp(ctx, user.id).check_lock(ctx.author == user)
         content = ''
@@ -218,11 +184,12 @@ class Diminator(Cog):
     @pp.command(aliases=('lb',))
     async def leaderboard(self, ctx: Context):
         """Shows the pp leaderboard"""
-        self.organs = dict(
-            sorted(self.organs.items(), key=lambda item: item[1].score, reverse=True))  # Sort self.xp by score
+        self.bot.user_store = dict(
+            sorted(self.bot.user_store.items(), key=lambda item: item[1].pp.score, reverse=True)
+        )  # Sort self.xp by score
         base = 'pp score leaderboard:\n'
-        for key in self.organs.keys():
-            base += f"{self.bot.get_user(key).name}: **{self.organs[key].score}** "
+        for uid, us in self.bot.user_store.items():
+            base += f"{self.bot.get_user(uid).name}: **{us.pp.score}** "
         await ctx.reply(base)
 
     @pp.command(brief='In your pp, WE TRUST')
@@ -246,7 +213,7 @@ bot randomly picks a user that has a pp registered, **INCLUDING YOURSELF**"""
         my = self.get_pp_checked(ctx, ctx.author.id)
         if my.sesami_oil and my.viagra == 0:
             if not user:
-                user = self.bot.get_user(random.choice(list(self.organs.keys())))
+                user = self.get_random_pp_opponent()
             his = self.get_pp_checked(ctx, user.id)
             his.stun = 2
             my.sesami_oil = my.viagra_available = False
@@ -260,13 +227,13 @@ bot randomly picks a user that has a pp registered, **INCLUDING YOURSELF**"""
     async def changelog(self, ctx: Context):
         """Shows the latest changelog of the PP command"""
         await ctx.reply("""
-    **__May 8, 3:58AM GMT+1__** (Rocket Update 2)\n
-    Fixes a glitch where you can still attack others with lock on\n
-    Lock command now has a cool down of 30s
-    """)
+        **__May 8, 3:58AM GMT+1__** (Rocket Update 2)\n
+        Fixes a glitch where you can still attack others with lock on\n
+        Lock command now has a cool down of 30s
+        """)
 
     @pp.command()
-    @cooldown(rate=1, per=30.0, type=BucketType.user)  # Each person can only call this once per 30s
+    @commands.cooldown(rate=1, per=30.0, type=BucketType.user)  # Each person can only call this once per 30s
     async def lock(self, ctx: Context):
         """Toggles your pp lock."""
         pp = self.get_pp(ctx, ctx.author.id)

@@ -10,14 +10,14 @@ import psutil
 from discord.ext import commands
 from discord.ext.commands import errors
 
-import diminator
 import dimond
 import dimsecret
 import missile
 import tribe
 from bruckserver.vireg import Verstapen
 from echo import Bottas
-from games.cog import Games
+from diminator.cog import Diminator
+from diminator.obj import BasePPException
 from mod.aegis import Aegis
 from mod.ikaros import Ikaros
 from raceline import Ricciardo
@@ -27,7 +27,6 @@ from xp import XP
 intent = discord.Intents()
 intent.value = 0b1111110000011  # https://discord.com/developers/docs/topics/gateway#list-of-intents
 bot = missile.Bot(intents=intent)
-nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.10.5"
 logger = missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
@@ -63,33 +62,6 @@ except FileNotFoundError:
 
 
 @bot.event
-async def on_message(msg: discord.Message):
-    if msg.guild and msg.content == msg.guild.me.mention:
-        p = await bot.get_prefix(msg)
-        if p == bot.default_prefix:
-            await msg.channel.send(f'My prefix is **{bot.default_prefix}**')
-        else:
-            await msg.channel.send(f"My prefixes are **{'**, **'.join(p)}**")
-        return
-    await bot.process_commands(msg)
-
-
-@bot.event
-async def on_guild_join(guild: discord.Guild):
-    await bot.get_cog('Hamilton').bot_test.send(f'Joined server {guild.id} {guild.name} <@{bot.owner_id}>')
-    if await bot.sql.is_guild_banned(bot.db, id=guild.id):
-        await guild.leave()
-        return
-    await bot.sql.add_guild_cfg(bot.db, guildID=guild.id)
-    await guild.me.edit(nick=nickname)
-
-
-@bot.event
-async def on_guild_remove(guild: discord.Guild):
-    await bot.get_cog('Hamilton').bot_test.send(f'Left server {guild.id} {guild.name}')
-
-
-@bot.event
 async def on_message_delete(msg: discord.Message):
     """Event handler when a message has been deleted"""
     if not msg.guild or msg.author == msg.guild.me or msg.content.startswith(await missile.prefix_process(bot, msg)):
@@ -118,7 +90,7 @@ async def on_command_error(ctx: commands.Context, error: commands.errors.Command
                             errors.BadInviteArgument, errors.BadColourArgument)) \
             or isinstance(error, errors.BadUnionArgument) and not ctx.command.has_error_handler():
         await ctx.reply(str(error))
-    elif isinstance(error, diminator.BasePPException):  # Human error
+    elif isinstance(error, BasePPException):  # Human error
         await ctx.reply(str(error).format(ctx.bot.default_prefix))
     elif isinstance(error, errors.ChannelNotFound):  # Human error
         await ctx.reply("Invalid channel. Maybe you've tagged the wrong one?")
@@ -140,26 +112,6 @@ async def on_command_error(ctx: commands.Context, error: commands.errors.Command
         content += str(error.original) + '```'
         msg = await bot.get_cog('Hamilton').bot_test.send(content)
         await ctx.reply(f'Hmm... Report ID: **{msg.id}**')
-
-
-async def solo_vc(vs):
-    print('Counting')
-    await asyncio.sleep(vs.channel.guild.afk_timeout)
-    print('Done counting')
-    if len(vs.channel.members) == 1:
-        await vs.channel.members[0].move_to(None, reason='Solo AFKing in a VC')
-
-
-@bot.event
-async def on_voice_state_update(m: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
-    if before.channel and len(before.channel.members) == 1 and not after.channel \
-            and before.channel.guild.me.guild_permissions.move_members:
-        await solo_vc(before)
-    elif after.channel and after.channel.guild.me.guild_permissions.move_members:
-        if after.afk:
-            await m.move_to(None, reason='Joined AFK VC')
-        elif len(after.channel.members) == 1:
-            await solo_vc(after)
 
 
 @bot.command(aliases=('bot',))
@@ -475,55 +427,6 @@ async def hsv(ctx: commands.Context, h: int = 0, s: int = 0, v: int = 0):
         raise errors.BadColorArgument(color)
 
 
-@bot.group()
-@missile.guild_only()
-@commands.has_guild_permissions(manage_guild=True)
-async def guild(ctx: commands.Context):
-    """Settings for server"""
-    if not ctx.invoked_subcommand:
-        bot.help_command.context = ctx
-        await bot.help_command.send_group_help(ctx.command)
-
-
-@guild.command(brief='Changes the custom prefix of DimBot')
-async def prefix(ctx: commands.Context, *, p: str = None):
-    """`guild  prefix [p]`
-    `p` is a SENTENCE so you can send like `Super bad prefix` as `p` without quotation marks.
-    Note that d. will still work. Send the command without arguments to remove the custom prefix."""
-    if p and (p.lower().startswith('dimbot') or ctx.me.mention in p):
-        await ctx.reply('Only my little pog champ can use authoritative orders!')
-    else:
-        await bot.sql.update_guild_prefix(bot.db, guildID=ctx.guild.id, prefix=p)
-        await ctx.reply('Updated server prefix.')
-
-
-@guild.command(brief='Sets the moderation role of the server')
-async def modrole(ctx: commands.Context, role: discord.Role):
-    """guild modrole <role>"""
-    await bot.sql.set_mod_role(bot.db, role=role.id, guild=ctx.guild.id)
-    await ctx.reply('Updated moderation role to ' + role.name)
-
-
-@guild.command(name='snipe', brief='Sets snipe discovery for the server')
-async def guild_snipe(ctx: commands.Context, level: int = 2):
-    """This command sets whether snipes can work and whether they are visible in other servers.
-
-    0: Snipe/GSnipe will not detect deleted messages in this server at all.
-    1: Snipe will detect but the detected messages are only visible in this server (`gsnipe` won't display)
-    2 (default): Snipe will detect and they are visible in other servers (`gsnipe` can display this server's snipes)"""
-    if 0 <= level <= 2:
-        await bot.sql.set_snipe_cfg(bot.db, snipe=level, guild=ctx.guild.id)
-        await ctx.reply('Updated snipe discovery level')
-    else:
-        await ctx.reply(f'Invalid discovery level! Please send `{await bot.get_prefix(ctx.message)}help guild snipe`!')
-
-
-@guild.command(brief='Toggles auto kicking members from VC when they afk')
-async def antiafk(ctx: commands.Context, enable: bool = True):
-    await bot.sql.set_anti_afk(bot.db, antiafk=enable, guild=ctx.guild.id)
-    await ctx.reply('Updated!')
-
-
 @bot.command()
 async def changelog(ctx):
     """Shows the latest release notes of DimBot"""
@@ -569,12 +472,11 @@ async def ready_tasks():
     bot.add_cog(Ricciardo(bot))
     bot.add_cog(Verstapen(bot))
     bot.add_cog(Bottas(bot))
-    bot.add_cog(diminator.Diminator(bot))
     bot.add_cog(dimond.Dimond(bot))
     bot.add_cog(Ikaros(bot))
     bot.add_cog(Aegis(bot))
     bot.add_cog(XP(bot))
-    bot.add_cog(Games(bot))
+    bot.add_cog(Diminator(bot))
     await bot.wait_until_ready()
     bot.add_cog(tribe.Hamilton(bot))
     bot.after_invoke(ainvk)
@@ -585,8 +487,8 @@ async def ready_tasks():
         await bot.get_channel(reborn_channel).send("Arc-Cor𐑞: Pandora complete.")
     # Then updates the nickname for each server that DimBot is listening to
     for guild in bot.guilds:
-        if guild.me.nick != nickname and guild.me.guild_permissions.change_nickname:
-            bot.loop.create_task(guild.me.edit(nick=nickname))
+        if guild.me.nick != bot.nickname and guild.me.guild_permissions.change_nickname:
+            bot.loop.create_task(guild.me.edit(nick=bot.nickname))
     while True:
         activity = await bot.sql.get_activity(bot.db)
         await bot.change_presence(activity=discord.Activity(name=activity[0], type=discord.ActivityType(activity[1])),

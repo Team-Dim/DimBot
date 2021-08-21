@@ -15,6 +15,8 @@ import dimsecret
 
 __lvl__ = logging.DEBUG if dimsecret.debug else logging.INFO
 
+from diminator.obj import PP
+
 
 def get_logger(name: str) -> logging.Logger:
     """Returns a logger with the module name"""
@@ -153,6 +155,19 @@ def in_guilds(*guilds):
     return commands.check(check)
 
 
+class UserStore:
+    """Stores user specific objects used by DimBot"""
+
+    def __init__(self):
+        self.last_xp_time: dict = {None: datetime.now()}
+        self.pp: PP = None
+
+    def get_last_xp_time(self, guild_id: int):
+        if guild_id not in self.last_xp_time:
+            self.last_xp_time[guild_id] = datetime.now()
+        return self.last_xp_time[guild_id]
+
+
 class Bot(commands.Bot):
 
     def __init__(self, **options):
@@ -165,12 +180,13 @@ class Bot(commands.Bot):
         # Initialise database connection
         self.db = None
         self.sql = aiosql.from_path('sql', 'aiosqlite')
-        self._user_store = {}
+        self.user_store: dict[int: UserStore] = {}
         self.arccore_typing = None
         self.ip = ''
         self.maintenance: bool = False
         self.status: discord.Status = discord.Status.online
         self.help_command = _Help()
+        self.nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.10.6"
 
     async def async_init(self):
         self.db = await aiosqlite.connect('DimBot.db')
@@ -207,11 +223,11 @@ class Bot(commands.Bot):
             await append_msg(q, f'Timed out ({timeout})s')
             return False
 
-    def user_store(self, uid: int):
+    def get_user_store(self, uid: int) -> UserStore:
         """Asserts a UserStore instance for the user"""
-        if uid not in self._user_store.keys():
-            self._user_store[uid] = UserStore()
-        return self._user_store[uid]
+        if uid not in self.user_store.keys():
+            self.user_store[uid] = UserStore()
+        return self.user_store[uid]
 
     async def ensure_user(self, uid: int):
         """Ensures that a discord.User will be returned"""
@@ -251,18 +267,6 @@ class Cog(commands.Cog):
     def __init__(self, bot, name):
         self.bot: Bot = bot
         self.logger = get_logger(name)
-
-
-class UserStore:
-    """Stores user specific objects used by DimBot"""
-
-    def __init__(self):
-        self.last_xp_time: dict = {None: datetime.now()}
-
-    def get_last_xp_time(self, guild_id: int):
-        if guild_id not in self.last_xp_time:
-            self.last_xp_time[guild_id] = datetime.now()
-        return self.last_xp_time[guild_id]
 
 
 class _Help(commands.HelpCommand):

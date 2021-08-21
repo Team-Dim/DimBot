@@ -48,7 +48,7 @@ class XP(missile.Cog):
     @commands.Cog.listener()
     async def on_message(self, msg: discord.Message):
         if msg.guild and not msg.author.bot:
-            u_store = self.bot.user_store(msg.author.id)
+            u_store = self.bot.get_user_store(msg.author.id)
             last_guild_s = u_store.get_last_xp_time(msg.guild.id)  # Must be b4 stamp
             stamp = datetime.now()
             if await self.bot.sql.user_xp_exists(self.bot.db, uid=msg.author.id, guildID=msg.guild.id):
