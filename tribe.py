@@ -1,7 +1,7 @@
 import asyncio
 
 import discord
-from discord.ext.commands import Cog, Context, group, has_guild_permissions, command
+from discord.ext.commands import Cog, Context, group, has_guild_permissions
 
 import missile
 
@@ -83,7 +83,8 @@ class Hamilton(Cog):
     @Cog.listener()
     async def on_voice_state_update(self, m: discord.Member, before, after: discord.VoiceState):
         """Anti AFK & Invisible"""
-        if m.guild == self.guild and after.channel and m.status == discord.Status.offline:
+        if await self.bot.sql.get_anti_invisible(self.bot.db, guild=m.guild.id) and \
+                after.channel and m.status == discord.Status.offline:
             await m.send(f"Please don't set your status as invisible while online in {m.guild.name} :)")
         if before.channel and len(before.channel.members) == 1 and not after.channel \
                 and before.channel.guild.me.guild_permissions.move_members:
@@ -97,10 +98,10 @@ class Hamilton(Cog):
     @Cog.listener()
     async def on_typing(self, channel, user, when):
         """I hate people being invisible"""
-        if channel.type == discord.ChannelType.text:
-            if user.guild == self.guild and user.status == discord.Status.offline \
-                    and channel.type == discord.ChannelType.text:
-                await user.send(f"Please don't set your status as invisible while online in {user.guild.name} :)")
+        if channel.type == discord.ChannelType.text and \
+            await self.bot.sql.get_anti_invisible(self.bot.db, guild=user.guild.id) and \
+                user.status == discord.Status.offline:
+            await user.send(f"Please don't set your status as invisible while online in {user.guild.name} :)")
 
     @Cog.listener()
     async def on_guild_join(self, guild: discord.Guild):
@@ -158,5 +159,14 @@ class Hamilton(Cog):
 
     @guild.command(brief='Toggles auto kicking members from VC when they afk')
     async def antiafk(self, ctx: Context, enable: bool = True):
+        """guild antiafk [enable]
+        enable: Whether to enable the feature or not. Defaults to yes."""
         await self.bot.sql.set_anti_afk(self.bot.db, antiafk=enable, guild=ctx.guild.id)
+        await ctx.reply('Updated!')
+
+    @guild.command(aliases=('invis', 'invi'), brief='Toggles anti invisible feature')
+    async def invisible(self, ctx: Context, enable: bool = False):
+        """guild invisible [enable]
+        enable: Whether to enable the feature or not. Defaults to no."""
+        await self.bot.sql.set_anti_invisible(self.bot.db, invisible=enable, guild=ctx.guild.id)
         await ctx.reply('Updated!')

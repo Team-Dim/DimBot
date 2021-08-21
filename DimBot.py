@@ -431,15 +431,9 @@ async def hsv(ctx: commands.Context, h: int = 0, s: int = 0, v: int = 0):
 async def changelog(ctx):
     """Shows the latest release notes of DimBot"""
     await ctx.reply("""
-**__0.10.4 (Aug 5, 2021 1:35AM GMT+8)__**
-Introducing **Local Snipes**!
-
-Since `d.snipe` has debuted, the detected messages are visible across servers. There was pretty much no customisation for it,
-and some of you had given me feedbacks about it. With this update, you can now use `d.snipe` for **local** snipes that scans
-only in your server, as well as the OG `d.gsnipe` for **global** snipes.
-
-You can even customise whether other servers can view your snipes, or simply disable the entire snipe command in your server.
-More info can be found in `d.help guild snipe`. Happy sniping!
+**__0.10.6 (Aug 22, 2021 2:35AM GMT+8)__**
+**Anti Invisible** feature can now be enabled in all servers.
+PP also has a new ability, check out `d.pp changelog`!
 """)
 
 

@@ -30,3 +30,13 @@ WHERE guildID = :guild;
 --name: remove-guild-cfg!
 DELETE FROM GuildCfg
 WHERE guildID = :guildID;
+
+--name: get-anti-invisible$
+SELECT antiInvisible
+FROM GuildCfg
+WHERE guildID = :guild;
+
+--name: set-anti-invisible!
+UPDATE GuildCfg
+SET antiInvisible = :invisible
+WHERE guildID = :guild;

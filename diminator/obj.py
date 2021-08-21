@@ -64,6 +64,14 @@ class PPLocked(BasePPException):
             super().__init__('Target has enabled lock!')
 
 
+class PPTransAm(BasePPException):
+    def __init__(self, target_is_sender: bool):
+        if target_is_sender:
+            super().__init__('You activated TRANS-AM! Please wait until the effect wears off!')
+        else:
+            super().__init__('Your opponent is in TRANS-AM! He is too fast!')
+
+
 max_pp_size = 69
 
 
@@ -76,23 +84,32 @@ class PP:
         self.sesami_oil: bool = sesami
         self.stun: int = stun
         self.lock: bool = False
+        self.transam: bool = False
 
     def draw(self) -> str:
         """Returns the string for displaying pp"""
         description = f'Ɛ{"Ξ" * self.size}＞'
+        bold = False
+        extra = ''
         if self.lock:
-            description = f"🔒Locked\n{description}"
+            extra = "🔒Locked"
+        if self.transam:
+            bold = True
+            extra += '**TRANS-AM**\n'
         if self.viagra > 0:
-            description = f'**{description}**\nViagra rounds left: {self.viagra}'
+            bold = True
+            extra += f'Viagra rounds left: {self.viagra}\n'
         elif self.viagra == 0:
-            description += '\nViagra available!'
+            extra += 'Viagra available!\n'
         if self.sesami_oil:
-            description += '\nSesami oil'
+            extra += 'Sesami oil\n'
         if self.size == max_pp_size:
-            description += '\n**MAX POWER**'
+            extra += '**MAX POWER**\n'
         if self.stun:
-            description += f'\n**STUNNED:** {self.stun} rounds left'
-        return description
+            extra += f'**STUNNED:** {self.stun} rounds left'
+        if bold:
+            description = f'**{description}**'
+        return description + '\n' + extra
 
     def check_lock(self, b):
         if self.lock:
@@ -104,5 +121,10 @@ class PP:
             raise PPStunned(b)
         return self
 
+    def check_transam(self, b):
+        if self.transam:
+            raise PPTransAm(b)
+        return self
+
     def check_all(self, b):
-        return self.check_lock(b).check_stun(b)
+        return self.check_lock(b).check_stun(b).check_transam(b)

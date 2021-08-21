@@ -42,7 +42,7 @@ class Diminator(commands.Cog):
             await asyncio.sleep(10)
             keys = tuple(self.urps)
             for i, key in enumerate(keys):
-                for opponent in keys[i+1:]:
+                for opponent in keys[i + 1:]:
                     score = self.urps[key][1].resolve(self.urps[opponent][1])
                     self.urps[key][2] += score
                     self.urps[opponent][2] -= score
@@ -159,6 +159,9 @@ class Diminator(commands.Cog):
             his.sesami_oil = False
             await ctx.reply('Your opponent instantly deflects your attack.')
             return
+        if his.transam and random.randint(0, 100) < 80:
+            await ctx.reply('Your opponent has activated TRANS-AM! He is too fast!')
+            return
         xp = my.size - his.size
         my.score += xp
         if my.viagra > 1:
@@ -215,11 +218,14 @@ bot randomly picks a user that has a pp registered, **INCLUDING YOURSELF**"""
             if not user:
                 user = self.get_random_pp_opponent()
             his = self.get_pp_checked(ctx, user.id)
-            his.stun = 2
+            if his.transam and random.randint(0, 100) < 80:
+                await ctx.reply('Your opponent has activated TRANS-AM! He is too fast!')
+            else:
+                his.stun = 2
+                await ctx.reply(
+                    "https://i.pinimg.com/originals/0e/20/37/0e2037b27580b13d9141bc9cf0162b71.gif\n"
+                    f"Inhaling thunder, you stunned {user}!")
             my.sesami_oil = my.viagra_available = False
-            await ctx.reply(
-                "https://i.pinimg.com/originals/0e/20/37/0e2037b27580b13d9141bc9cf0162b71.gif\n"
-                f"Inhaling thunder, you stunned {user}!")
         else:
             await ctx.reply("You need to have viagra available and sesami oil!")
 
@@ -239,3 +245,16 @@ bot randomly picks a user that has a pp registered, **INCLUDING YOURSELF**"""
         pp = self.get_pp(ctx, ctx.author.id)
         pp.lock = not pp.lock
         await ctx.reply(f'Your pp is now {"" if pp.lock else "un"}locked.')
+
+    @pp.command()
+    @commands.cooldown(rate=1, per=300, type=BucketType.user)
+    async def transam(self, ctx: Context):
+        pp = self.get_pp(ctx, ctx.author.id)
+        pp.transam = True
+        pp.size *= 2
+        await ctx.reply('https://imgur.com/B6X6F6d\n**TRANS-AM!** Let the purified GN particles cover the world, '
+                        'bring peace to every corner of the Earth with a true innovator!')
+        await asyncio.sleep(15)
+        pp.transam = False
+        pp.size //= 2
+        await ctx.reply('TRANS-AM has worn off.')
