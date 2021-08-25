@@ -1,4 +1,5 @@
 from enum import IntEnum
+from random import random
 
 from discord.ext.commands import CommandError
 
@@ -65,11 +66,8 @@ class PPLocked(BasePPException):
 
 
 class PPTransAm(BasePPException):
-    def __init__(self, target_is_sender: bool):
-        if target_is_sender:
-            super().__init__('You activated TRANS-AM! Please wait until the effect wears off!')
-        else:
-            super().__init__('Your opponent is in TRANS-AM! He is too fast!')
+    def __init__(self):
+        super().__init__('https://i.imgur.com/3NQgZAC.gif\nYour opponent is in TRANS-AM! He is too fast!')
 
 
 max_pp_size = 69
@@ -84,16 +82,16 @@ class PP:
         self.sesami_oil: bool = sesami
         self.stun: int = stun
         self.lock: bool = False
-        self.transam: bool = False
+        self.transam: int = 0
 
     def draw(self) -> str:
         """Returns the string for displaying pp"""
         description = f'Ɛ{"Ξ" * self.size}＞'
         bold = False
-        extra = ''
-        if self.lock:
-            extra = "🔒Locked"
-        if self.transam:
+        extra = '🔒Locked' if self.lock else ''
+        if self.transam <= 100:
+            extra += f'TRANS-AM: Charging ({self.transam}%)\n'
+        else:
             bold = True
             extra += '**TRANS-AM**\n'
         if self.viagra > 0:
@@ -121,10 +119,10 @@ class PP:
             raise PPStunned(b)
         return self
 
-    def check_transam(self, b):
-        if self.transam:
-            raise PPTransAm(b)
+    def check_transam_deflect(self):
+        if self.transam == 101 and random() < 0.8:
+            raise PPTransAm
         return self
 
     def check_all(self, b):
-        return self.check_lock(b).check_stun(b).check_transam(b)
+        return self.check_lock(b).check_stun(b)

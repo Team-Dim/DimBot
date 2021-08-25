@@ -186,7 +186,7 @@ class Bot(commands.Bot):
         self.maintenance: bool = False
         self.status: discord.Status = discord.Status.online
         self.help_command = _Help()
-        self.nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.10.6"
+        self.nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.10.6.1"
 
     async def async_init(self):
         self.db = await aiosqlite.connect('DimBot.db')
@@ -278,6 +278,9 @@ class _Help(commands.HelpCommand):
         embed = Embed('Modules')
         for cog in tuple(mapping.keys())[:-1]:
             embed.description += f'**{cog.qualified_name}**: {cog.description.split("Version")[0]}'
+        embed.description += "\n__Commands that don't belong to any modules:__"
+        for cmd in filter(lambda c: not c.cog, self.context.bot.commands):
+            embed.description += f'\n`{cmd.name}`: {cmd.brief}'
         embed.set_author(name='Click me for Wiki',
                          url='https://github.com/TCLRainbow/DimBot-Wiki/blob/master/README.md')
         await self.context.reply(

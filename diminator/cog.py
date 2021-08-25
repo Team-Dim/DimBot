@@ -80,6 +80,11 @@ class Diminator(commands.Cog):
         pp = self.bot.get_user_store(user.id).pp
         if pp:
             pp.check_all(ctx.author == user)
+            if pp.transam == 101:
+                await ctx.reply("Target is in TRANS-AM so you can't modify it!")
+                return
+        elif user != ctx.author:
+            raise PPNotFound(False)
         # Randomises user's pp properties
         size = random.randint(0, max_pp_size)
         viagra = (random.randint(0, 100) < 25) - 1
@@ -113,8 +118,10 @@ class Diminator(commands.Cog):
     async def max(self, ctx: Context, target: discord.User = None, viagra=True, sesami=True):
         target = target if target else ctx.author
         viagra -= 1
-        self.bot.get_user_store(target.id).pp = PP(max_pp_size, viagra, sesami)
-        await ctx.reply(embed=pp_embed(target, self.bot.user_store[target.id].pp))
+        pp = PP(max_pp_size, viagra, sesami)
+        pp.transam = 100
+        self.bot.get_user_store(target.id).pp = pp
+        await ctx.reply(embed=pp_embed(target, pp))
 
     @pp.command()
     async def min(self, ctx: Context):
@@ -146,7 +153,9 @@ class Diminator(commands.Cog):
                 return
             user = self.get_random_pp_opponent()
         my = self.get_pp(ctx, ctx.author.id).check_lock(True)
-        his = self.get_pp(ctx, user.id).check_lock(ctx.author == user)
+        if my.transam:
+            ctx.command.reset_cooldown(ctx)
+        his = self.get_pp(ctx, user.id).check_lock(False).check_transam_deflect()
         content = ''
         if my.stun:
             stun_msg = 'Focusing energy on your muscle, your hand is slowly moving.'
@@ -157,10 +166,7 @@ class Diminator(commands.Cog):
             return
         if his.sesami_oil:
             his.sesami_oil = False
-            await ctx.reply('Your opponent instantly deflects your attack.')
-            return
-        if his.transam and random.randint(0, 100) < 80:
-            await ctx.reply('Your opponent has activated TRANS-AM! He is too fast!')
+            await ctx.reply('Your opponent instantly deflects your attack with sesami oil.')
             return
         xp = my.size - his.size
         my.score += xp
@@ -172,6 +178,8 @@ class Diminator(commands.Cog):
             content = f"{ctx.author} ran out of ammo!"
         if my.size > his.size:
             title = "VICTORY"
+            if my.transam <= 100:
+                my.transam += 1
             gain_msg = f"You gained **{xp}** score!"
         elif my.size == his.size:
             title = "TIE"
@@ -218,14 +226,12 @@ bot randomly picks a user that has a pp registered, **INCLUDING YOURSELF**"""
             if not user:
                 user = self.get_random_pp_opponent()
             his = self.get_pp_checked(ctx, user.id)
-            if his.transam and random.randint(0, 100) < 80:
-                await ctx.reply('Your opponent has activated TRANS-AM! He is too fast!')
-            else:
-                his.stun = 2
-                await ctx.reply(
-                    "https://i.pinimg.com/originals/0e/20/37/0e2037b27580b13d9141bc9cf0162b71.gif\n"
-                    f"Inhaling thunder, you stunned {user}!")
             my.sesami_oil = my.viagra_available = False
+            his.check_transam_deflect()
+            his.stun = 2
+            await ctx.reply(
+                "https://i.pinimg.com/originals/0e/20/37/0e2037b27580b13d9141bc9cf0162b71.gif\n"
+                f"Inhaling thunder, you stunned {user}!")
         else:
             await ctx.reply("You need to have viagra available and sesami oil!")
 
@@ -233,9 +239,16 @@ bot randomly picks a user that has a pp registered, **INCLUDING YOURSELF**"""
     async def changelog(self, ctx: Context):
         """Shows the latest changelog of the PP command"""
         await ctx.reply("""
-        **__May 8, 3:58AM GMT+1__** (Rocket Update 2)\n
-        Fixes a glitch where you can still attack others with lock on\n
-        Lock command now has a cool down of 30s
+        **__Aug 26, 1:10AM GMT+8__** (Rocket Update 3)\n
+        New ability: `TRANS-AM`
+        There is a new TRANS-AM meter. If you win in a swordfight, the counter increases by 1.
+        When it reaches 100, you can activate it by `d.pp transam`, which grants you:
+        
+        - `d.pp sf` cooldown is removed.
+        - All attacks from all opponents have a 80% chance of being neglected.
+        - No one can modify your pp at all, even yourself.
+        
+        These effects will be cleared after 15s.
         """)
 
     @pp.command()
@@ -247,14 +260,16 @@ bot randomly picks a user that has a pp registered, **INCLUDING YOURSELF**"""
         await ctx.reply(f'Your pp is now {"" if pp.lock else "un"}locked.')
 
     @pp.command()
-    @commands.cooldown(rate=1, per=300, type=BucketType.user)
     async def transam(self, ctx: Context):
         pp = self.get_pp(ctx, ctx.author.id)
-        pp.transam = True
-        pp.size *= 2
-        await ctx.reply('https://imgur.com/B6X6F6d\n**TRANS-AM!** Let the purified GN particles cover the world, '
-                        'bring peace to every corner of the Earth with a true innovator!')
-        await asyncio.sleep(15)
-        pp.transam = False
-        pp.size //= 2
-        await ctx.reply('TRANS-AM has worn off.')
+        if pp.transam == 100:
+            pp.transam = 101
+            pp.size *= 2
+            await ctx.reply('https://imgur.com/B6X6F6d\n**TRANS-AM!** Let the purified GN particles cover the world, '
+                            'bring peace to every corner of the Earth with a true innovator!')
+            await asyncio.sleep(15)
+            pp.transam = 0
+            pp.size //= 2
+            await ctx.reply('TRANS-AM has worn off.')
+        else:
+            await ctx.reply(f'TRANS-AM still charging! ({pp.transam})%')
