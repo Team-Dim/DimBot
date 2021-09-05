@@ -195,12 +195,17 @@ class Diminator(commands.Cog):
     @pp.command(aliases=('lb',))
     async def leaderboard(self, ctx: Context):
         """Shows the pp leaderboard"""
-        self.bot.user_store = dict(
-            sorted(self.bot.user_store.items(), key=lambda item: item[1].pp.score, reverse=True)
-        )  # Sort self.xp by score
-        base = 'pp score leaderboard:\n'
+        has_pps, no_pps = [], []
         for uid, us in self.bot.user_store.items():
+            has_pps.append((uid, us)) if us.pp else no_pps.append((uid, us))
+        new_us = {}
+        base = 'pp score leaderboard:\n'
+        for uid, us in sorted(has_pps, key=lambda u: u[1].pp.score, reverse=True):
+            new_us[uid] = us  # Sort user store by score
             base += f"{self.bot.get_user(uid).name}: **{us.pp.score}** "
+        for uid, us in no_pps:
+            new_us[uid] = us
+        self.bot.user_store = new_us
         await ctx.reply(base)
 
     @pp.command(brief='In your pp, WE TRUST')
