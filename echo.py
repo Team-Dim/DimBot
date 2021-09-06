@@ -47,8 +47,9 @@ class Bottas(commands.Cog):
 
     @quote.command(aliases=('q',), brief='Search quote by quoter')
     async def quoter(self, ctx, *, quoter_msg):
-        """`quote q [quoter], [quoter group]`
+        """`quote q [quoter][, ][quoter group]`
         Quoter, quoter group: A sentence. The name of the quoter/quoter group.
+        Please note that for `[quoter]` you can mention a User to achieve the same result as `quote d @user`.
         """
         quoter, quoter_group = split_quoter(quoter_msg)
         quotes = await self.bot.sql.get_quoter_quotes(self.bot.db, quoter=quoter, QuoterGroup=quoter_group)
@@ -57,6 +58,20 @@ class Bottas(commands.Cog):
             await menus.QuotesMenu(quotes).start(ctx)
         else:
             await ctx.reply(f'There are no quotes by **{quoter_msg}**!')
+
+    @quote.command(name='discord', aliases=('d',), brief='Search quote by a Discord user, similar to quoter')
+    async def discord_user(self, ctx, quoter: discord.User, quoter_group: str = None):
+        """`quote d <quoter> [quoter group]`
+        Quoter: A Discord user.
+        group: A string for filtering the results by quoter group.
+        Please note that you don't necessarily have to mention the User for quoter.
+        """
+        quotes = await self.bot.sql.get_quoter_quotes(self.bot.db, quoter=quoter.mention, QuoterGroup=quoter_group)
+        if quotes:
+            quotes = tuple(map(lambda q: Quote(*q), quotes))
+            await menus.QuotesMenu(quotes).start(ctx)
+        else:
+            await ctx.reply(f'There are no quotes by **{quoter}{", " + quoter_group if quoter_group else ""}**!')
 
     @quote.command(aliases=('u',), brief='List quotes uploaded by a Discord user')
     async def uploader(self, ctx, user: discord.User = None):
@@ -86,6 +101,8 @@ class Bottas(commands.Cog):
         if quoter:
             quoter, quoter_group = split_quoter(quoter)
             await verify_quoter(ctx, quoter, quoter_group)  # Quoter validation
+            if quoter.startswith('<@!') and quoter.endswith('>'):
+                quoter.replace('!', '')
             # Determines the ROWID to be used for inserting the quote
             rowid = await self.bot.sql.get_next_row_id(self.bot.db)
             if rowid:  # Use ROWID from QuoteRowID if available. These IDs exist when a quote was deleted
@@ -101,9 +118,9 @@ class Bottas(commands.Cog):
                 )
             await ctx.send(f"Added quote #{last_row_id}")
 
-    @quote.command(name='delete', aliases=('d',), brief='Deletes a quote')
+    @quote.command(name='delete', aliases=('del',), brief='Deletes a quote')
     async def quote_delete(self, ctx, index: int):
-        """quote d <index>
+        """quote del <index>
         index: The ID of the quote
         """
         quote = await self.bot.sql.get_quote(self.bot.db, id=index)

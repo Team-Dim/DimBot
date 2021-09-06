@@ -431,9 +431,10 @@ async def hsv(ctx: commands.Context, h: int = 0, s: int = 0, v: int = 0):
 async def changelog(ctx):
     """Shows the latest release notes of DimBot"""
     await ctx.reply("""
-**__0.10.6 (Aug 22, 2021 2:35AM GMT+8)__**
-**Anti Invisible** feature can now be enabled in all servers.
-PP also has a new ability, check out `d.pp changelog`!
+**__0.10.7 (Sep 7, 2021 4:15AM GMT+8)__**
+Added `info sf <snowflake>`
+`quote d` is now used to **filter quotes by quoter which is a Discord user**.
+The original `quote d` alias is now renamed as `quote del`
 """)
 
 
