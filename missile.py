@@ -88,6 +88,18 @@ def guild_only():
     return commands.check(check)
 
 
+def vc_only():
+    """When a command has been invoked, check whether the author is in a voice channel"""
+
+    async def check(ctx):
+        if ctx.guild and ctx.author.voice:
+            return True
+        await ctx.reply('You must join a server voice channel first!')
+        return False
+
+    return commands.check(check)
+
+
 def bot_has_perm(**kwargs):
     async def check(ctx):
         remote = ctx.guild.me.permissions_in(ctx.channel)
@@ -186,7 +198,7 @@ class Bot(commands.Bot):
         self.maintenance: bool = False
         self.status: discord.Status = discord.Status.online
         self.help_command = _Help()
-        self.nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.10.7"
+        self.nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.10.8"
 
     async def async_init(self):
         self.db = await aiosqlite.connect('DimBot.db')
@@ -204,6 +216,7 @@ class Bot(commands.Bot):
             reply = await self.wait_for(
                 'message', timeout=timeout,
                 # Checks whether the message is sent by the same author and in the same channel.
+                # TODO: Change this to message reference
                 check=lambda mess: mess.author.id == ctx.author.id and mess.channel == ctx.channel)
             return reply.content
         except asyncio.TimeoutError:

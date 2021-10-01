@@ -15,9 +15,9 @@ import dimsecret
 import missile
 import tribe
 from bruckserver.vireg import Verstapen
-from echo import Bottas
 from diminator.cog import Diminator
 from diminator.obj import BasePPException
+from echo import Bottas
 from mod.aegis import Aegis
 from mod.ikaros import Ikaros
 from raceline import Ricciardo
@@ -431,10 +431,10 @@ async def hsv(ctx: commands.Context, h: int = 0, s: int = 0, v: int = 0):
 async def changelog(ctx):
     """Shows the latest release notes of DimBot"""
     await ctx.reply("""
-**__0.10.7 (Sep 7, 2021 4:15AM GMT+8)__**
-Added `info sf <snowflake>`
-`quote d` is now used to **filter quotes by quoter which is a Discord user**.
-The original `quote d` alias is now renamed as `quote del`
+**__0.10.8 (Oct 1, 2021 7:47AM GMT+1)__**
+**Joinable roles**! You can now set a role to be joined by members.
+2 rules can also be set for joinable roles: Whether a member has a certain role first, and whether the joinable role is 
+at a lower position than the sender's highest role.
 """)
 
 
@@ -472,6 +472,7 @@ async def ready_tasks():
     bot.add_cog(Aegis(bot))
     bot.add_cog(XP(bot))
     bot.add_cog(Diminator(bot))
+    # bot.add_cog(SkyBow(bot))
     await bot.wait_until_ready()
     bot.add_cog(tribe.Hamilton(bot))
     bot.after_invoke(ainvk)

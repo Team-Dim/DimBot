@@ -3,7 +3,7 @@ from typing import Union
 
 import discord
 from discord.ext.commands import Cog, command, Context, has_permissions, bot_has_permissions, has_guild_permissions, \
-    bot_has_guild_permissions
+    bot_has_guild_permissions, errors
 
 import missile
 import tribe
@@ -13,7 +13,7 @@ ext = missile.MsgExt('Ikaros')
 
 class Ikaros(Cog):
     """Active moderation system
-    Version 0.6"""
+    Version 0.6.1"""
 
     def __init__(self, bot):
         self.bot = bot
@@ -99,21 +99,45 @@ class Ikaros(Cog):
             await target.remove_roles(role, reason=reason)
             await ext.send(msg, 'Unmuted ' + target.mention)
 
-    @command(brief='Assign/Remove a role from a member.')
-    @has_guild_permissions(manage_roles=True)
+    @command(brief='Assign/Remove a role from a member/yourself.')
     @bot_has_guild_permissions(manage_roles=True)
     @missile.guild_only()
-    async def role(self, ctx: Context, role: discord.Role, target: discord.Member):
-        """`role <role> <target>`"""
+    async def role(self, ctx: Context, role: discord.Role, target: discord.Member = None):
+        """`role <role> [target]`"""
         if role >= ctx.guild.me.top_role:
             await ext.reply(ctx, 'The role specified >= my highest role.')
-            return
-        if ctx.author.id != self.bot.owner_id and role >= ctx.author.top_role:
-            await ext.reply(ctx, 'The role specified >= your highest role.')
             return
         if role.is_bot_managed():
             await ext.reply(ctx, "Cannot assign a bot role")
             return
+        role_larger_than_sender_highest = ctx.author.id != self.bot.owner_id and role >= ctx.author.top_role
+        if target:
+            if not ctx.author.guild_permissions.manage_roles:
+                raise errors.MissingPermissions('Manage roles')
+            if role_larger_than_sender_highest:
+                await ext.reply(ctx, 'The role specified >= your highest role.')
+                return
+        else:
+            target = ctx.author
+            joinable_role = await self.bot.sql.get_joinable_role(self.bot.db, role=role.id)
+            if joinable_role:
+                if joinable_role[0]:
+                    required_role = ctx.guild.get_role(joinable_role[0])
+                    if required_role:
+                        if required_role not in target.roles:
+                            await ext.reply(ctx, f'You need **{required_role}** to join this role!')
+                            return
+                    else:
+                        await ext.reply(ctx,
+                                        '⚠**ERROR:** There is a required role specified but it no longer exists '
+                                        'in the server. Please contact admins to update it!')
+                        return
+                if joinable_role[1] and role_larger_than_sender_highest:
+                    await ext.reply(ctx, 'The role specified >= your highest role.')
+                    return
+            else:
+                await ext.reply(ctx, f'**{role}** is not a joinable role!')
+                return
         if role in target.roles:
             await target.remove_roles(role, reason=f'Ikaros: Deleted by {ctx.author}')
             await ext.reply(ctx, f'Removed **{role.name}** from {target}')
@@ -235,7 +259,7 @@ class Ikaros(Cog):
                 mod = ctx.guild.get_role(await self.bot.sql.get_mod_role(self.bot.db, guild=ctx.guild.id))
                 roles = ctx.guild.roles
                 if mod:
-                    for i in range(len(roles)-1, -1, -1):
+                    for i in range(len(roles) - 1, -1, -1):
                         if roles[i] >= mod or roles[i] >= ctx.guild.me.top_role:
                             roles.pop(i)
                         else:
@@ -244,20 +268,20 @@ class Ikaros(Cog):
                     if can_view_channel:
                         if role.permissions.send_messages:
                             tasks.append(self.bot.sql.add_lockdown(
-                                    self.bot.db, guild=ctx.guild.id, role=role.id, perm=role.permissions.value
-                                ))
+                                self.bot.db, guild=ctx.guild.id, role=role.id, perm=role.permissions.value
+                            ))
                             tasks.append(role.edit(
-                                    permissions=discord.Permissions(role.permissions.value, send_messages=False),
-                                    reason='Manual lockdown'
-                                ))
+                                permissions=discord.Permissions(role.permissions.value, send_messages=False),
+                                reason='Manual lockdown'
+                            ))
                     else:
                         if role.permissions.view_channel:
                             tasks.append(self.bot.sql.add_lockdown(
-                                    self.bot.db, guild=ctx.guild.id, role=role.id, perm=role.permissions.value
-                                ))
+                                self.bot.db, guild=ctx.guild.id, role=role.id, perm=role.permissions.value
+                            ))
                             tasks.append(role.edit(
-                                    permissions=discord.Permissions(role.permissions.value, view_channel=False),
-                                    reason='Manual Lockdown'
-                                ))
+                                permissions=discord.Permissions(role.permissions.value, view_channel=False),
+                                reason='Manual Lockdown'
+                            ))
                 await asyncio.wait(tasks)
                 await ctx.reply('Lockdown.')

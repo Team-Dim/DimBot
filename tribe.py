@@ -1,4 +1,5 @@
 import asyncio
+from typing import Optional
 
 import discord
 from discord.ext.commands import Cog, Context, group, has_guild_permissions
@@ -9,11 +10,9 @@ guild_id = 285366651312930817
 
 
 async def solo_vc(vs):
-    print('Counting')
     await asyncio.sleep(vs.channel.guild.afk_timeout)
-    print('Done counting')
     if len(vs.channel.members) == 1:
-        await vs.channel.members[0].move_to(None, reason='Solo AFKing in a VC')
+        await vs.channel.members[0].move_to(None)
 
 
 class Hamilton(Cog):
@@ -99,7 +98,7 @@ class Hamilton(Cog):
     async def on_typing(self, channel, user, when):
         """I hate people being invisible"""
         if channel.type == discord.ChannelType.text and \
-            await self.bot.sql.get_anti_invisible(self.bot.db, guild=user.guild.id) and \
+                await self.bot.sql.get_anti_invisible(self.bot.db, guild=user.guild.id) and \
                 user.status == discord.Status.offline:
             await user.send(f"Please don't set your status as invisible while online in {user.guild.name} :)")
 
@@ -110,12 +109,16 @@ class Hamilton(Cog):
             await guild.leave()
             return
         await self.bot.sql.add_guild_cfg(self.bot.db, guildID=guild.id)
-        if guild.me.guild_permissions.change_nickname:
+        if guild.me.guild_permissions.manage_nickname:
             await guild.me.edit(nick=self.bot.nickname)
 
     @Cog.listener()
     async def on_guild_remove(self, guild: discord.Guild):
         await self.bot_test.send(f'Left server {guild.id} {guild.name}')
+
+    @Cog.listener()
+    async def on_guild_role_delete(self, role: discord.Role):
+        await self.bot.sql.remove_joinable_role(self.bot.db, role=role.id)
 
     @group()
     @missile.guild_only()
@@ -170,3 +173,29 @@ class Hamilton(Cog):
         enable: Whether to enable the feature or not. Defaults to no."""
         await self.bot.sql.set_anti_invisible(self.bot.db, invisible=enable, guild=ctx.guild.id)
         await ctx.reply('Updated!')
+
+    @guild.command(brief='Sets a joinable role')
+    async def setjr(self, ctx: Context, role: discord.Role, required_role: Optional[discord.Role],
+                    check_highest: bool = True):
+        """`guild setjr <role> [required role] [check highest]`
+        role: The joinable role that is to be modified/added
+        required role: The optional required role that is needed to join this role. You can literally skip this argument
+        check highest: Whether only allows to join role if the role is at a lower position then the sender's
+        highest role"""
+        required = required_role.id if required_role else None
+        if await self.bot.sql.get_joinable_role(self.bot.db, role.id):
+            await self.bot.sql.update_joinable_role(self.bot.db, role=role.id, required=required,
+                                                    checkHighest=check_highest)
+        else:
+            await self.bot.sql.add_joinable_role(self.bot.db, role=role.id, required=required,
+                                                 checkHighest=check_highest)
+        await ctx.reply(embed=missile.Embed(description=f"""Joinable role: {role.mention}
+                                            Required role: {required_role.mention if required_role else 'None'}
+                                            Check highest role: {check_highest}"""))
+
+    @guild.command(brief='Deletes a joinable role')
+    async def deljr(self, ctx: Context, role: discord.Role):
+        """`guild deljr <role>
+        role: The joinable role to be removed from the database"""
+        await self.bot.sql.remove_joinable_role(self.bot.db, role=role.id)
+        await ctx.reply('Deleted')

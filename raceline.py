@@ -321,7 +321,7 @@ class Ricciardo(missile.Cog):
         await ctx.send('Updated!')
 
     @commands.group(invoke_without_command=True)
-    async def yt(self, ctx):
+    async def ytsub(self, ctx):
         """Commands for YouTube video detector"""
         self.bot.help_command.context = ctx
         await self.bot.help_command.send_group_help(ctx.command)
@@ -335,7 +335,7 @@ class Ricciardo(missile.Cog):
                 return j['items'][0]['id']
             raise ValueError
 
-    @yt.command(name='subscribe', aliases=('s', 'sub'), brief="'Subscribes' to a YouTube channel")
+    @ytsub.command(name='subscribe', aliases=('s', 'sub'), brief="'Subscribes' to a YouTube channel")
     @missile.is_channel_owner()
     async def yt_subscribe(self, ctx: Context, ch: str):
         """`yt subscribe <ch>`
@@ -364,7 +364,7 @@ class Ricciardo(missile.Cog):
         except ValueError:
             await ctx.send('Invalid YouTube channel/user link.')
 
-    @yt.command(name='unsubscribe', aliases=('u', 'unsub'), brief="'Unsubscribes' from a YouTube channel")
+    @ytsub.command(name='unsubscribe', aliases=('u', 'unsub'), brief="'Unsubscribes' from a YouTube channel")
     @missile.is_channel_owner()
     async def yt_unsubscribe(self, ctx: Context, ch: str):
         """yt unsubscribe <ch>"""
