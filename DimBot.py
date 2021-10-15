@@ -431,10 +431,9 @@ async def hsv(ctx: commands.Context, h: int = 0, s: int = 0, v: int = 0):
 async def changelog(ctx):
     """Shows the latest release notes of DimBot"""
     await ctx.reply("""
-**__0.10.8 (Oct 1, 2021 7:47AM GMT+1)__**
-**Joinable roles**! You can now set a role to be joined by members.
-2 rules can also be set for joinable roles: Whether a member has a certain role first, and whether the joinable role is 
-at a lower position than the sender's highest role.
+**__0.10.8.1 (Oct 15, 2021 2:16AM GMT+1)__**
+Fixes member immediately got kicked from a stage channel
+Fixes not updating nickname on joining server
 """)
 
 

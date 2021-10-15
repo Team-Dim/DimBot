@@ -317,6 +317,7 @@ class Dimond(commands.Cog):
                     emb.add_field(name='Max uses', value=i.max_uses)
                     emb.add_field(name='Revoked', value=i.revoked)
                     emb.add_field(name='Only grants temporary membership', value=i.temporary)
+                    break
         await ctx.reply(embed=emb)
 
     @info.command(aliases=('sint',))

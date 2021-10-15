@@ -9,10 +9,10 @@ import missile
 guild_id = 285366651312930817
 
 
-async def solo_vc(vs):
-    await asyncio.sleep(vs.channel.guild.afk_timeout)
-    if len(vs.channel.members) == 1:
-        await vs.channel.members[0].move_to(None)
+async def solo_vc(vc):
+    await asyncio.sleep(vc.guild.afk_timeout)
+    if len(vc.members) == 1:
+        await vc.members[0].move_to(None)
 
 
 class Hamilton(Cog):
@@ -87,12 +87,12 @@ class Hamilton(Cog):
             await m.send(f"Please don't set your status as invisible while online in {m.guild.name} :)")
         if before.channel and len(before.channel.members) == 1 and not after.channel \
                 and before.channel.guild.me.guild_permissions.move_members:
-            await solo_vc(before)
-        elif after.channel and after.channel.guild.me.guild_permissions.move_members:
-            if after.afk:
-                await m.move_to(None, reason='Joined AFK VC')
+            await solo_vc(before.channel)
+        elif after.channel and after.channel.guild.me.guild_permissions.move_members:  # Joined a VC
+            if after.afk and after.channel.type == discord.ChannelType.voice:
+                await m.move_to(None)  # Joined AFK VC
             elif len(after.channel.members) == 1:
-                await solo_vc(after)
+                await solo_vc(after.channel)
 
     @Cog.listener()
     async def on_typing(self, channel, user, when):
@@ -109,7 +109,7 @@ class Hamilton(Cog):
             await guild.leave()
             return
         await self.bot.sql.add_guild_cfg(self.bot.db, guildID=guild.id)
-        if guild.me.guild_permissions.manage_nickname:
+        if guild.me.guild_permissions.change_nickname:
             await guild.me.edit(nick=self.bot.nickname)
 
     @Cog.listener()
