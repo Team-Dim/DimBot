@@ -91,10 +91,13 @@ class SkyBow(commands.Cog):
     @missile.vc_only()
     @commands.command(brief='Toggles looping for the voice client')
     async def loop(self, ctx: commands.Context):
-        loo = self.vcs[ctx.author.voice.channel.id].loop
-        loo = not loo
-        self.vcs[ctx.author.voice.channel.id].loop = loo
-        await ctx.reply(f"I will no{'w' if loo else ' longer'} loop the current sound track!")
+        if ctx.author.voice.channel.id in self.vcs:
+            loo = self.vcs[ctx.author.voice.channel.id].loop
+            loo = not loo
+            self.vcs[ctx.author.voice.channel.id].loop = loo
+            await ctx.reply(f"I will no{'w' if loo else ' longer'} loop the current sound track!")
+        else:
+            await ctx.reply('I am not playing anything!')
 
     @missile.vc_only()
     @commands.command(brief='Shows the queue of the voice client')
