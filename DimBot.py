@@ -21,6 +21,7 @@ from echo import Bottas
 from mod.aegis import Aegis
 from mod.ikaros import Ikaros
 from raceline import Ricciardo
+from skybow import SkyBow
 from xp import XP
 
 # Variables needed for initialising the bot
@@ -28,25 +29,8 @@ intent = discord.Intents()
 intent.value = 0b1111110000011  # https://discord.com/developers/docs/topics/gateway#list-of-intents
 bot = missile.Bot(intents=intent)
 logger = missile.get_logger('DimBot')
-sponsor_txt = '世界の未来はあなたの手の中にあります <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
+sponsor_txt = '世界の未来はあなたの手にある <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
-
-
-async def binvk(ctx: commands.Context):
-    if randint(1, 100) <= 5:
-        await ctx.send(sponsor_txt)
-
-
-bot.before_invoke(binvk)
-
-
-async def ainvk(ctx: commands.Context):
-    if ctx.command.qualified_name.startswith('arccore'):
-        return
-    emb = missile.Embed(description=ctx.message.content)
-    emb.add_field('By', ctx.author.mention)
-    emb.add_field('In', ctx.guild.id if ctx.guild else 'DM')
-    await bot.get_cog('Hamilton').bot_test.send(embed=emb)
 
 
 try:
@@ -59,6 +43,21 @@ try:
     os.remove('final')
 except FileNotFoundError:
     logger.info('No previous final file found')
+
+
+@bot.before_invoke
+async def b_invoke(ctx: commands.Context):
+    if randint(1, 100) <= 5:
+        await ctx.send(sponsor_txt)
+
+
+@bot.after_invoke
+async def a_invoke(ctx: commands.Context):
+    if ctx.author.id != bot.owner_id:
+        emb = missile.Embed(description=ctx.message.content)
+        emb.add_field('By', ctx.author.mention)
+        emb.add_field('In', ctx.guild.id if ctx.guild else 'DM')
+        await bot.get_cog('Hamilton').bot_test.send(embed=emb)
 
 
 @bot.event
@@ -110,8 +109,10 @@ async def on_command_error(ctx: commands.Context, error: commands.errors.Command
         for tb in traceback.format_tb(error.original.__traceback__):
             content += tb
         content += str(error.original) + '```'
-        msg = await bot.get_cog('Hamilton').bot_test.send(content)
+        msg = await bot.get_cog('Hamilton').bot_test.send(content[:2000])
         await ctx.reply(f'Hmm... Report ID: **{msg.id}**')
+        if len(content) > 2000:
+            raise error
 
 
 @bot.command(aliases=('bot',))
@@ -431,9 +432,21 @@ async def hsv(ctx: commands.Context, h: int = 0, s: int = 0, v: int = 0):
 async def changelog(ctx):
     """Shows the latest release notes of DimBot"""
     await ctx.reply("""
-**__0.10.8.1 (Oct 15, 2021 2:16AM GMT+1)__**
-Fixes member immediately got kicked from a stage channel
-Fixes not updating nickname on joining server
+**__0.10.9 (Oct 28, 2021 4:30AM GMT+1)__**
+Improved accuracy of the Japanese in the sponsor text.
+
+REVIVING **PROJECT SKYBOW**: Audio relaying
+`Skybow` debuted back in May 2020, but the original design could only play MP3s stored on my disk. The loop command didn't work well too.
+I ultimately scrapped the file from this project shortly after its initial release.
+
+Today I'm pleased to announce that, with some effort and time I've managed to redesign `Skybow`.
+`Skybow` is a leap towards DimBot's future, because it is so far the first module with multi-threaded workload.
+Please check out `d.help SkyBow` for a list of commands to control the sound player!
+
+Finally, as some of you might know, I will be rewriting DimBot once again, but this time it's more challenging than ever:
+I'm switching to C#. The full port will probably take months to complete, and I have no plans to add any feature to the current implementation
+(codenamed 'Barbados'). So please put on your earbuds and enjoy `SkyBow` while waiting for DimBot C#: 'Helenite'!
+https://cdn.discordapp.com/attachments/716724898265038858/903137131340374046/unknown.png
 """)
 
 
@@ -471,10 +484,9 @@ async def ready_tasks():
     bot.add_cog(Aegis(bot))
     bot.add_cog(XP(bot))
     bot.add_cog(Diminator(bot))
-    # bot.add_cog(SkyBow(bot))
+    bot.add_cog(SkyBow(bot))
     await bot.wait_until_ready()
     bot.add_cog(tribe.Hamilton(bot))
-    bot.after_invoke(ainvk)
     psutil.cpu_percent(percpu=True)
     await bot.is_owner(bot.user)  # Trick to set bot.owner_id
     logger.info('Ready')
