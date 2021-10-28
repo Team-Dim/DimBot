@@ -10,6 +10,8 @@ from pytube import Search
 import missile
 
 
+buffering_time = 0.5
+
 class VoiceMeta:
 
     def __init__(self, vc, s_t, buffer):
@@ -40,7 +42,7 @@ class SkyBow(commands.Cog):
                     vm.buffer = TemporaryFile()
                     td = Thread(target=vm.queue[0][0].stream_to_buffer, args=(vm.buffer,))
                     td.start()
-                    time.sleep(0.4)
+                    time.sleep(buffering_time)
                     vm.buffer.seek(0)
                     vm.vc.play(discord.FFmpegOpusAudio(vm.buffer, bitrate=kbps, pipe=True), after=play)
                 else:
@@ -87,7 +89,7 @@ class SkyBow(commands.Cog):
 
         thread = Thread(target=stream.stream_to_buffer, args=(buffer,))
         thread.start()
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(buffering_time)
         await self.init_play(vm, kbps)
 
     @missile.vc_only()
@@ -133,7 +135,7 @@ class SkyBow(commands.Cog):
                     vm.buffer = TemporaryFile()
                     thread = Thread(target=vm.queue[0][0].stream_to_buffer, args=(vm.buffer,))
                     thread.start()
-                    await asyncio.sleep(0.4)
+                    await asyncio.sleep(buffering_time)
                     await self.init_play(vm, vm.vc.channel.bitrate // 1000)
                 else:
                     self.vcs.pop(channel.id)
