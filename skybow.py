@@ -55,7 +55,9 @@ class SkyBow(commands.Cog):
     @commands.Cog.listener()
     async def on_voice_state_update(self, m, before, after: discord.VoiceState):
         channel = before.channel or after.channel
-        if len(channel.members) == 1 and channel.members[0] == channel.guild.me and channel.id in self.vcs:
+        if (len(channel.members) == 1 and channel.members[0] == channel.guild.me)\
+                or (m == channel.guild.me and not after.channel)\
+                and channel.id in self.vcs:
             self.bot.loop.create_task(self.vcs[channel.id].vc.disconnect())
             self.vcs.pop(channel.id)
 
@@ -85,7 +87,7 @@ class SkyBow(commands.Cog):
 
         thread = Thread(target=stream.stream_to_buffer, args=(buffer,))
         thread.start()
-        await asyncio.sleep(0.4)
+        await asyncio.sleep(0.5)
         await self.init_play(vm, kbps)
 
     @missile.vc_only()

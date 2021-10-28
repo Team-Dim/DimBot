@@ -432,6 +432,12 @@ async def hsv(ctx: commands.Context, h: int = 0, s: int = 0, v: int = 0):
 async def changelog(ctx):
     """Shows the latest release notes of DimBot"""
     await ctx.reply("""
+**__0.10.9.1 (Oct 28, 2021 6:30PM GMT+1)__**
+You can no longer call SkyBow commands when DimBot is already connected to another channel.
+Fixes module help displaying full command help instead of briefing
+SkyBow now clears queue of a voice channel whenever it disconnects
+Increases buffering time for SkyBow to 0.5s
+
 **__0.10.9 (Oct 28, 2021 4:30AM GMT+1)__**
 Improved accuracy of the Japanese in the sponsor text.
 

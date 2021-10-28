@@ -93,7 +93,10 @@ def vc_only():
 
     async def check(ctx):
         if ctx.guild and ctx.author.voice:
-            return True
+            if not ctx.guild.me.voice or ctx.author.voice.channel == ctx.guild.me.voice.channel:
+                return True
+            await ctx.reply("I'm already in another voice channel!")
+            return False
         await ctx.reply('You must join a server voice channel first!')
         return False
 
@@ -198,7 +201,7 @@ class Bot(commands.Bot):
         self.maintenance: bool = False
         self.status: discord.Status = discord.Status.online
         self.help_command = _Help()
-        self.nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.10.9"
+        self.nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.10.9.1"
 
     async def async_init(self):
         self.db = await aiosqlite.connect('DimBot.db')
@@ -304,7 +307,7 @@ class _Help(commands.HelpCommand):
     async def send_cog_help(self, cog: commands.Cog):
         embed = Embed('Commands in ' + cog.qualified_name)
         for cmd in cog.walk_commands():
-            embed.description += f'**{cmd.name}**: {cmd.help}\n'
+            embed.description += f'**{cmd.name}**: {cmd.brief}\n'
         embed.set_footer(text='Version ' + cog.description.split('Version')[1])
         await self.context.reply(
             f"Send `{await self.context.bot.get_prefix(self.context.message)}help <command>`!",
