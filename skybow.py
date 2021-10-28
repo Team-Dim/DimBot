@@ -14,7 +14,7 @@ class VoiceMeta:
 
     def __init__(self, vc, s_t, buffer):
         self.vc = vc
-        self.loop = True
+        self.loop = False
         self.buffer = buffer
         self.queue = [s_t]
 
