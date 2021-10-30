@@ -1,7 +1,4 @@
-import asyncio
-import time
 from tempfile import TemporaryFile
-from threading import Thread
 
 import discord
 from discord.ext import commands
@@ -10,15 +7,14 @@ from pytube import Search
 import missile
 
 
-buffering_time = 0.5
-
 class VoiceMeta:
 
-    def __init__(self, vc, s_t, buffer):
+    def __init__(self, vc, s_y, buffer):
         self.vc = vc
         self.loop = False
         self.buffer = buffer
-        self.queue = [s_t]
+        self.queue = [s_y]
+        self.progress = True
 
 
 class SkyBow(commands.Cog):
@@ -29,7 +25,7 @@ class SkyBow(commands.Cog):
         self.bot = bot
         self.vcs = {}
 
-    async def init_play(self, vm: VoiceMeta, kbps):
+    def init_play(self, vm: VoiceMeta, kbps):
         def play(e):
             if vm.vc.is_connected():
                 kbps = vm.vc.channel.bitrate // 1000
@@ -40,11 +36,17 @@ class SkyBow(commands.Cog):
                     del vm.queue[0]
                     vm.buffer.close()
                     vm.buffer = TemporaryFile()
-                    td = Thread(target=vm.queue[0][0].stream_to_buffer, args=(vm.buffer,))
-                    td.start()
-                    time.sleep(buffering_time)
-                    vm.buffer.seek(0)
-                    vm.vc.play(discord.FFmpegOpusAudio(vm.buffer, bitrate=kbps, pipe=True), after=play)
+                    vm.progress = True
+
+                    @vm.queue[0][1].register_on_progress_callback
+                    def on_progress(s, c, remain):
+                        if vm.progress:
+                            print('Start playing', vm.queue)
+                            vm.buffer.seek(0)
+                            vm.vc.play(discord.FFmpegOpusAudio(vm.buffer, bitrate=kbps, pipe=True), after=play)
+                            vm.progress = False
+
+                    vm.queue[0][0].stream_to_buffer(vm.buffer)
                 else:
                     del self.vcs[vm.vc.channel.id]
                     self.bot.loop.create_task(vm.vc.disconnect())
@@ -52,7 +54,7 @@ class SkyBow(commands.Cog):
             vm.buffer.seek(0)
             vm.vc.play(discord.FFmpegOpusAudio(vm.buffer, bitrate=kbps, pipe=True), after=play)
         elif vm.vc.is_connected():
-            await vm.vc.disconnect()
+            self.bot.loop.create_task(vm.vc.disconnect())
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, m, before, after: discord.VoiceState):
@@ -69,7 +71,12 @@ class SkyBow(commands.Cog):
         channel = ctx.author.voice.channel  # So that it can continue even if the user dc
         kbps = channel.bitrate // 1000
         buffer = TemporaryFile()
-        yt = Search(query).results[0]
+        yt = Search(query).results
+        if yt:
+            yt = Search(query).results[0]
+        else:
+            await ctx.reply('Wtf no results from YouTube <:what:885927400691605536>')
+            return
         audios = yt.streams.filter(only_audio=True, audio_codec='opus').order_by('abr')
         stream = audios[-1]
         for audio in audios:
@@ -77,20 +84,24 @@ class SkyBow(commands.Cog):
                 stream = audio
                 break
         if channel.id in self.vcs:
-            self.vcs[channel.id].queue.append((stream, yt.title))
+            self.vcs[channel.id].queue.append((stream, yt))
             await ctx.reply(f'Added `{yt.title}` to the queue!')
             return
         if not len(channel.members):
             return
         await ctx.reply(f'Playing `{yt.title}` src{stream.abr}')
         vc = await channel.connect()
-        self.vcs[channel.id] = VoiceMeta(vc, (stream, yt.title), buffer)
+        self.vcs[channel.id] = VoiceMeta(vc, (stream, yt), buffer)
         vm = self.vcs[channel.id]
 
-        thread = Thread(target=stream.stream_to_buffer, args=(buffer,))
-        thread.start()
-        await asyncio.sleep(buffering_time)
-        await self.init_play(vm, kbps)
+        @yt.register_on_progress_callback
+        def on_progress(s, c, remain):
+            if vm.progress:
+                print('Start playing', vm.queue)
+                self.init_play(vm, kbps)
+                vm.progress = False
+
+        stream.stream_to_buffer(buffer)
 
     @missile.vc_only()
     @commands.command(brief='Toggles looping for the voice client')
@@ -109,8 +120,8 @@ class SkyBow(commands.Cog):
         channel = ctx.author.voice.channel
         if channel.id in self.vcs:
             msg = ''
-            for i, s_t in enumerate(self.vcs[ctx.author.voice.channel.id].queue):
-                to_add = f'**{i}.** `{s_t[1]}`\n'
+            for i, s_y in enumerate(self.vcs[ctx.author.voice.channel.id].queue):
+                to_add = f'**{i}.** `{s_y[1].title}`\n'
                 if len(msg + to_add) > 2000:
                     break
                 msg += to_add
@@ -133,10 +144,17 @@ class SkyBow(commands.Cog):
                 if vm.queue:
                     vm.buffer.close()
                     vm.buffer = TemporaryFile()
-                    thread = Thread(target=vm.queue[0][0].stream_to_buffer, args=(vm.buffer,))
-                    thread.start()
-                    await asyncio.sleep(buffering_time)
-                    await self.init_play(vm, vm.vc.channel.bitrate // 1000)
+                    vm.progress = True
+                    kbps = channel.bitrate // 1000
+
+                    @vm.queue[0][1].register_on_progress_callback
+                    def on_progress(s, c, remain):
+                        if vm.progress:
+                            print('Start playing', vm.queue)
+                            self.init_play(vm, kbps)
+                            vm.progress = False
+
+                    vm.queue[0][0].stream_to_buffer(vm.buffer)
                 else:
                     self.vcs.pop(channel.id)
                     await vm.vc.disconnect()
