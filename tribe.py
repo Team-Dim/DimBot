@@ -30,7 +30,7 @@ class Hamilton(Cog):
         """Returns the invite used by a member.This is done by first caching self.invites in on_ready() then compare
         each invite count on on_member_join()"""
         invites = await self.get_invites_dict()
-        for code in invites.keys():
+        for code in invites:
             if code in self.invites:
                 if invites[code] != self.invites[code]:
                     self.invites = invites
@@ -71,7 +71,7 @@ class Hamilton(Cog):
                 await ch.send(
                     f'Welcome {member.mention}! You are automatically added to the role {role.name} '
                     f'for related announcements.'
-                    f' If you wish to unsubscribe, please send `?rank {role.name}` in {ch.mention}.'
+                    f' If you wish to unsubscribe, please send `d.role {role.name}` in {ch.mention}.'
                 )
 
     @Cog.listener()

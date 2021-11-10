@@ -1,6 +1,7 @@
 import asyncio
 import math
 from datetime import datetime
+from io import BytesIO
 
 import discord
 import matplotlib.pyplot as plt
@@ -40,7 +41,7 @@ def get_lvl_info(xp: int):
 
 class XP(missile.Cog):
     """Experience point system
-    Version 0.2.1"""
+    Version 0.2.2"""
 
     def __init__(self, bot):
         super(XP, self).__init__(bot, 'XP')
@@ -137,7 +138,8 @@ class XP(missile.Cog):
         plt.xlabel('Rank')
         plt.ylabel('XP')
         plt.title(title)
-        plt.savefig('xp graph.png')
-        plt.close()
-        await ctx.reply(file=discord.File('xp graph.png'))
-
+        with BytesIO() as buf:
+            plt.savefig(buf, format='png')
+            plt.close()
+            buf.seek(0)
+            await ctx.reply(file=discord.File(buf, filename='xp graph.png'))

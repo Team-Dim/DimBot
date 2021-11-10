@@ -361,7 +361,9 @@ async def bs(ctx: commands.Context, server: int):
 
 hug_gifs = ('https://tenor.com/view/milk-and-mocha-bear-couple-line-hug-cant-breathe-gif-12687187',
             'https://tenor.com/view/hugs-hug-ghost-hug-gif-4451998',
-            'https://tenor.com/view/true-love-hug-miss-you-everyday-always-love-you-running-hug-gif-5534958')
+            'https://tenor.com/view/true-love-hug-miss-you-everyday-always-love-you-running-hug-gif-5534958',
+            'https://imgur.com/AVngriy', 'https://imgur.com/0tsEaAZ', 'https://imgur.com/45eArLC',
+            'https://imgur.com/6kcXUGW', 'https://imgur.com/pmbwhF6')
 
 
 @bot.command(brief='Hug one another every day for streaks!')
@@ -432,10 +434,9 @@ async def hsv(ctx: commands.Context, h: int = 0, s: int = 0, v: int = 0):
 async def changelog(ctx):
     """Shows the latest release notes of DimBot"""
     await ctx.reply("""
-**__0.10.9.2 (Oct 30, 2021 8:20PM GMT+1)__**
-Hopefully fixes the buffer sync issues when skipping a track/playing another sound track
-Shows an error message if there are no results from YouTube
-https://cdn.discordapp.com/attachments/716724898265038858/903137131340374046/unknown.png
+**__0.10.10 (Nov 10, 2021 8:20PM GMT+1)__**
+XP graphs are now saved in memory instead of storage, reducing command latency by almost half a second.
+Added 5 new hug GIFs!
 """)
 
 
