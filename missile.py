@@ -201,7 +201,7 @@ class Bot(commands.Bot):
         self.maintenance: bool = False
         self.status: discord.Status = discord.Status.online
         self.help_command = _Help()
-        self.nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.10.10"
+        self.nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.10.11"
 
     async def async_init(self):
         self.db = await aiosqlite.connect('DimBot.db')
