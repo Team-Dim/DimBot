@@ -51,7 +51,7 @@ SELECT EXISTS(
 
 --name: delete-bbm-role!
 DELETE FROM BbmRole
-WHERE bbmChID = :id;
+WHERE bbmChID = :ch;
 
 --name: update-bbm-role!
 UPDATE BbmRole

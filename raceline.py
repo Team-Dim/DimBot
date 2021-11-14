@@ -134,6 +134,7 @@ class Ricciardo(missile.Cog):
         self.logger.debug(f"Reading addon titles for {addon_id}")
         titles = await self.bot.sql.get_bbm_addons(self.bot.db, id=addon_id)
         diff_size = False
+        diff_size_msg = ''
         if len(titles) != len(addon['latestFiles']):
             diff_size = True
             diff_size_msg = f'''

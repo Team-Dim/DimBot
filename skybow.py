@@ -151,7 +151,7 @@ class SkyBow(commands.Cog):
             await ctx.reply('I am not playing anything!')
 
     @missile.vc_only()
-    @commands.command(brief='Shows the queue of the voice client')
+    @commands.command(aliases=('que',), brief='Shows the queue of the voice client')
     async def queue(self, ctx: commands.Context):
         channel = ctx.author.voice.channel
         if channel.id in self.vcs:
@@ -176,7 +176,7 @@ class SkyBow(commands.Cog):
             vm = self.vcs[channel.id]
             del vm.queue[n]
             if not n:
-                vm.vc.pause()
+                vm.vc.stop()  # vm.vc.pause()
                 if vm.queue:
                     vm.buffer.seek(0)
                     kbps = channel.bitrate // 1000

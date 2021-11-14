@@ -434,9 +434,9 @@ async def hsv(ctx: commands.Context, h: int = 0, s: int = 0, v: int = 0):
 async def changelog(ctx):
     """Shows the latest release notes of DimBot"""
     await ctx.reply("""
-**__0.10.10.1 (Nov 13, 2021 4:50AM GMT)__**
-Alleviates memory leak in SkyBow. This will probably need a long time to confirm.
-Added `d.loopq` for looping the entire queue.
+**__0.10.11.1 (Nov 14, 2021 7:08AM GMT)__**
+Fixes `bbm role` command.
+Adds `que` alias for `queue` command.
 """)
 
 
