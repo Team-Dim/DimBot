@@ -16,6 +16,7 @@ class VoiceMeta:
         self.loopq = False
         self.buffer = buffer
         self.queue = [s_y]
+        self.progress = True
 
 
 class SkyBow(commands.Cog):
@@ -54,15 +55,18 @@ class SkyBow(commands.Cog):
                     if vm.loopq or len(vm.queue) > 1:
                         del vm.queue[0]
                         vm.buffer.seek(0)
+                        vm.progress = True
 
                         @vm.queue[0][1].register_on_progress_callback
                         def on_progress(s, c, remain):
-                            process = psutil.Process()
-                            with process.oneshot():
-                                print(f'on_progress: {process.memory_info()[0] / 1024 ** 2:.1f}')
-                            print('Start playing', vm.queue)
-                            vm.buffer.seek(0)
-                            vm.vc.play(discord.FFmpegOpusAudio(vm.buffer, bitrate=kbps, pipe=True), after=play)
+                            if vm.progress:
+                                process = psutil.Process()
+                                with process.oneshot():
+                                    print(f'on_progress: {process.memory_info()[0] / 1024 ** 2:.1f}')
+                                print('Start playing', vm.queue)
+                                vm.progress = False
+                                vm.buffer.seek(0)
+                                vm.vc.play(discord.FFmpegOpusAudio(vm.buffer, bitrate=kbps, pipe=True), after=play)
 
                         vm.queue[0][0].stream_to_buffer(vm.buffer)
                     else:
@@ -121,10 +125,12 @@ class SkyBow(commands.Cog):
 
         @yt.register_on_progress_callback
         def on_progress(s, c, remain):
-            with process.oneshot():
-                print(f'on_progress: {process.memory_info()[0] / 1024 ** 2:.1f}')
-            print('Start playing', vm.queue)
-            self.init_play(vm, kbps)
+            if vm.progress:
+                with process.oneshot():
+                    print(f'on_progress: {process.memory_info()[0] / 1024 ** 2:.1f}')
+                print('Start playing', vm.queue)
+                vm.progress = False
+                self.init_play(vm, kbps)
 
         stream.stream_to_buffer(buffer)
 
@@ -180,11 +186,14 @@ class SkyBow(commands.Cog):
                 if vm.queue:
                     vm.buffer.seek(0)
                     kbps = channel.bitrate // 1000
+                    vm.progress = True
 
                     @vm.queue[0][1].register_on_progress_callback
                     def on_progress(s, c, remain):
-                        print('Start playing', vm.queue)
-                        self.init_play(vm, kbps)
+                        if vm.progress:
+                            print('Start playing', vm.queue)
+                            vm.progress = False
+                            self.init_play(vm, kbps)
 
                     vm.queue[0][0].stream_to_buffer(vm.buffer)
                 else:
