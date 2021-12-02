@@ -115,9 +115,8 @@ async def on_command_error(ctx: commands.Context, error: commands.errors.Command
             raise error
 
 
-@bot.command(aliases=('bot',))
+@bot.command(aliases=('bot',), brief='Displays bot info')
 async def botinfo(ctx):
-    """Displays bot info"""
     from platform import python_version
     embed = missile.Embed(sponsor_txt)
     embed.add_field('Guild count', str(len(bot.guilds)))
@@ -144,15 +143,14 @@ async def botinfo(ctx):
     await ctx.send(embed=embed)
 
 
-@bot.command()
+@bot.command(brief='$.$')
 async def sponsor(ctx):
-    """$.$"""
     await ctx.send(sponsor_txt)
 
 
-@bot.command(aliases=('ping', 'heartbeat'))
+@bot.command(aliases=('ping', 'heartbeat'),
+             brief='Listens to my heartbeat (gateway latency & total message reaction latency)')
 async def noel(ctx):
-    """Listens to my heartbeat (gateway latency & total message reaction latency)"""
     msg = await ctx.reply(f'💓 {bot.latency * 1000:.3f}ms')
     tic = datetime.now()
     await msg.add_reaction('📡')
@@ -160,23 +158,20 @@ async def noel(ctx):
     await msg.edit(content=msg.content + f' 🛰️ {(toc - tic).total_seconds() * 1000:.3f}ms')
 
 
-@bot.group(invoke_without_command=True)
+@bot.group(invoke_without_command=True, brief='Commands for generating links')
 async def link(ctx):
-    """Commands for generating links"""
     bot.help_command.context = ctx
     await bot.help_command.send_group_help(ctx.command)
 
 
-@link.command()
+@link.command(brief='Generating MinecraftForge installer links')
 async def forge(ctx):
-    """Generating MinecraftForge installer links"""
     msg = await bot.ask_msg(ctx, 'Reply `Minecraft version`-`Forge version`')
     await ctx.send(f'https://files.minecraftforge.net/maven/net/minecraftforge/forge/{msg}/forge-{msg}-installer.jar')
 
 
-@link.command()
+@link.command(brief='Generating Galaticraft mod download links')
 async def galacticraft(ctx):
-    """Generating Galaticraft mod download links"""
     mc = await bot.ask_msg(ctx, 'Minecraft version?')
     ga = await bot.ask_msg(ctx, 'Galacticraft version?')
     mc_ver = mc.rsplit(',', 1)[0]
@@ -193,18 +188,18 @@ async def message(ctx, msg: discord.Message):
     await ctx.reply(msg.jump_url)
 
 
-@bot.command(aliases=('gsnipe',))
+@bot.command(aliases=('gsnipe',),
+             brief='Displays the last deleted message in this server.'
+                   ' `gsnipe` to display last deleted message across servers')
 @missile.guild_only()
 async def snipe(ctx):
-    """Displays the last deleted message in this server. `gsnipe` to display last deleted message across servers"""
     gid = 0 if ctx.invoked_with[0] == 'g' else ctx.guild.id
     await ctx.send(embed=bot.guild_store.get(gid, missile.Embed(description='No one has deleted anything yet...')))
 
 
-@bot.group()
+@bot.group(brief='Confidential')
 @missile.is_rainbow()
 async def arccore(ctx: commands.Context):
-    """Confidential"""
     if not ctx.invoked_subcommand:
         raise commands.errors.CommandNotFound
 
@@ -430,12 +425,12 @@ async def hsv(ctx: commands.Context, h: int = 0, s: int = 0, v: int = 0):
         raise errors.BadColorArgument(color)
 
 
-@bot.command()
+@bot.command(brief='Shows the latest release notes of DimBot')
 async def changelog(ctx):
-    """Shows the latest release notes of DimBot"""
     await ctx.reply("""
-**__0.10.11.2 (Nov 14, 2021 9:31PM GMT)__**
-Re-adds VoiceMeta progress check for SkyBow because it is weird.
+**__0.10.12 (Dec 2, 2021 11:03PM GMT)__**
+Module-less commands now have their brief descriptions properly displayed in help
+Fix `d.info sf` binary format duplicated 0b prefix.
 """)
 
 

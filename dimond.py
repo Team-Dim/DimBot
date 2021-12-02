@@ -341,7 +341,7 @@ class Dimond(commands.Cog):
     async def snowflake(self, ctx: commands.Context, sf: discord.Object):
         """`info sf <Snowflake>
         Snowflake: An integer (ID). If you aren't a Discord developer, you can still obtain one via `info` subcommands"""
-        emb = missile.Embed(f'❄ {sf.id}', f'0b{bin(sf.id)}', thumbnail='https://learning-csharp.might-be-super.fun/2b93ba.png')
+        emb = missile.Embed(f'❄ {sf.id}', bin(sf.id), thumbnail='https://learning-csharp.might-be-super.fun/2b93ba.png')
         emb.add_field('Time', sf.created_at)
         emb.add_field('Worker ID', (sf.id & 4063232) >> 17)
         emb.add_field('Process ID', (sf.id & 126976) >> 12)
