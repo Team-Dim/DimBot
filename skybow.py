@@ -2,6 +2,7 @@ from tempfile import TemporaryFile
 
 import discord
 import psutil
+import pytube.exceptions
 from discord.ext import commands
 from pytube import Search
 
@@ -104,7 +105,11 @@ class SkyBow(commands.Cog):
             return
         with process.oneshot():
             print(f'Result: {process.memory_info()[0] / 1024 ** 2:.1f}')
-        audios = yt.streams.filter(only_audio=True, audio_codec='opus').order_by('abr')
+        try:
+            audios = yt.streams.filter(only_audio=True, audio_codec='opus').order_by('abr')
+        except pytube.exceptions.LiveStreamError:
+            await ctx.reply('I cannot play live streams! <:chloedown:916051244135620709>')
+            return
         stream = audios[-1]
         with process.oneshot():
             print(f'Got stream: {process.memory_info()[0] / 1024 ** 2:.1f}')

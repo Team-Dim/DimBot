@@ -134,8 +134,12 @@ async def botinfo(ctx):
             'Process RAM usage / available (MiB)',
             f'{process.memory_info()[0] / 1024 ** 2:.1f} / {psutil.virtual_memory().available / 1024 ** 2:.1f}'
         )
-    emoji = choice(tuple(e for e in bot.get_cog('Hamilton').guild.emojis if e.name.startswith('sayu')))
-    embed.set_footer(text='Mood: ' + emoji.name[4:])
+    emoji = choice(tuple(e for e in bot.get_cog('Hamilton').guild.emojis
+                         if e.name.startswith('sayu') or e.name.startswith('chloe')))
+    n = 4 if emoji.name.startswith('sayu') else 5
+    embed.set_footer(text='Mood: ' + emoji.name[n:])
+    if n == 5:
+        embed.color = discord.Colour.red()
     embed.set_author(name='Click here to let me join your server! [Open Beta]',
                      url='https://discord.com/api/oauth2/authorize?client_id=574617418924687419&permissions=8&scope=bot'
                      )
@@ -428,9 +432,9 @@ async def hsv(ctx: commands.Context, h: int = 0, s: int = 0, v: int = 0):
 @bot.command(brief='Shows the latest release notes of DimBot')
 async def changelog(ctx):
     await ctx.reply("""
-**__0.10.12 (Dec 2, 2021 11:03PM GMT)__**
-Module-less commands now have their brief descriptions properly displayed in help
-Fix `d.info sf` binary format duplicated 0b prefix.
+**__0.10.13 (Dec 4, 2021 12:15PM GMT)__**
+`d.bot` now supports new `chloe` emotes.
+`d.yt` now explicitly rejects live streams.
 """)
 
 
