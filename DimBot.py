@@ -432,9 +432,8 @@ async def hsv(ctx: commands.Context, h: int = 0, s: int = 0, v: int = 0):
 @bot.command(brief='Shows the latest release notes of DimBot')
 async def changelog(ctx):
     await ctx.reply("""
-**__0.10.13 (Dec 4, 2021 12:15PM GMT)__**
-`d.bot` now supports new `chloe` emotes.
-`d.yt` now explicitly rejects live streams.
+**__0.10.13.1 (Dec 5, 2021 10:43PM GMT)__**
+Hopefully fixes `d.skip` error and adding 2 songs in a very short period.
 """)
 
 

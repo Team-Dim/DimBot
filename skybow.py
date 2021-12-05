@@ -22,7 +22,7 @@ class VoiceMeta:
 
 class SkyBow(commands.Cog):
     """Audio streaming
-    Version: 1.1"""
+    Version: 1.1.1"""
 
     def __init__(self, bot):
         self.bot = bot
@@ -123,10 +123,13 @@ class SkyBow(commands.Cog):
             return
         if not len(channel.members):
             return
+
+        # Add VM b4 first await to prevent a glitch where adding 2 songs at the same time will error
+        self.vcs[channel.id] = VoiceMeta(None, (stream, yt), buffer)
         await ctx.reply(f'Playing `{yt.title}` src{stream.abr}')
         vc = await channel.connect()
-        self.vcs[channel.id] = VoiceMeta(vc, (stream, yt), buffer)
         vm = self.vcs[channel.id]
+        vm.vc = vc
 
         @yt.register_on_progress_callback
         def on_progress(s, c, remain):
@@ -187,7 +190,7 @@ class SkyBow(commands.Cog):
             vm = self.vcs[channel.id]
             del vm.queue[n]
             if not n:
-                vm.vc.stop()  # vm.vc.pause()
+                vm.vc.pause()
                 if vm.queue:
                     vm.buffer.seek(0)
                     kbps = channel.bitrate // 1000
