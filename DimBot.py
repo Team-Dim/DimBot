@@ -432,8 +432,9 @@ async def hsv(ctx: commands.Context, h: int = 0, s: int = 0, v: int = 0):
 @bot.command(brief='Shows the latest release notes of DimBot')
 async def changelog(ctx):
     await ctx.reply("""
-**__0.10.13.1 (Dec 5, 2021 10:43PM GMT)__**
-Hopefully fixes `d.skip` error and adding 2 songs in a very short period.
+**__0.10.14 (Dec 17, 2021 6:19PM GMT)__**
+Updated Pytube
+BBM detector is temporarily disabled
 """)
 
 
