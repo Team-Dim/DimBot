@@ -432,9 +432,8 @@ async def hsv(ctx: commands.Context, h: int = 0, s: int = 0, v: int = 0):
 @bot.command(brief='Shows the latest release notes of DimBot')
 async def changelog(ctx):
     await ctx.reply("""
-**__0.10.14 (Dec 17, 2021 6:19PM GMT)__**
-Updated Pytube
-BBM detector is temporarily disabled
+**__0.10.15 (Dec 21, 2021 7:42PM GMT)__**
+Supports unlisted videos for Skybow
 """)
 
 

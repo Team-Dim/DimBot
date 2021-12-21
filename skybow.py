@@ -1,10 +1,11 @@
+import re
 from tempfile import TemporaryFile
 
 import discord
 import psutil
 import pytube.exceptions
 from discord.ext import commands
-from pytube import Search
+from pytube import Search, YouTube
 
 import missile
 
@@ -22,7 +23,7 @@ class VoiceMeta:
 
 class SkyBow(commands.Cog):
     """Audio streaming
-    Version: 1.1.1"""
+    Version: 1.2"""
 
     def __init__(self, bot):
         self.bot = bot
@@ -95,20 +96,31 @@ class SkyBow(commands.Cog):
         with process.oneshot():
             print(f'Before tempfile: {process.memory_info()[0] / 1024 ** 2:.1f}')
         buffer = TemporaryFile()
-        yt = Search(query).results
-        with process.oneshot():
-            print(f'A lot of result: {process.memory_info()[0] / 1024 ** 2:.1f}')
-        if yt:
-            yt = Search(query).results[0]
+
+        # Based on https://regexr.com/3dj5t
+        if re.search(
+                r"^((?:https?:)?//)?((?:www|m)\.)?(youtube\.com|youtu.be)(/(?:[\w\-]+\?v=|embed/|v/)?)([\w\-]+)(\S+)?$",
+                query, re.IGNORECASE):
+            yt = YouTube(query)
         else:
-            await ctx.reply('Wtf no results from YouTube <:what:885927400691605536>')
-            return
+            yt = Search(query).results
+            with process.oneshot():
+                print(f'A lot of result: {process.memory_info()[0] / 1024 ** 2:.1f}')
+            if yt:
+                yt = Search(query).results[0]
+            else:
+                await ctx.reply('Wtf no results from YouTube <:what:885927400691605536>')
+                return
+
         with process.oneshot():
             print(f'Result: {process.memory_info()[0] / 1024 ** 2:.1f}')
         try:
             audios = yt.streams.filter(only_audio=True, audio_codec='opus').order_by('abr')
         except pytube.exceptions.LiveStreamError:
             await ctx.reply('I cannot play live streams! <:chloedown:916051244135620709>')
+            return
+        except pytube.exceptions.VideoPrivate:
+            await ctx.reply('This video is private! <:luigi:826479031012163624>')
             return
         stream = audios[-1]
         with process.oneshot():

@@ -58,6 +58,7 @@ class Ricciardo(missile.Cog):
         async with self.bot.sql.get_yt_data_cursor(self.bot.db) as cursor:
             async for row in cursor:  # Dispatches YouTube tasks
                 resultless_futures.append(self.bot.loop.create_task(self.yt_process(row)))
+        await asyncio.wait(resultless_futures)  # TODO: Delete this line if fixed BBM
         return  # v0.10.14: Temporarily disabling BBM because CurseForge sucks
         # The tasks are running. Now prepares when all BBM tasks return.
         await asyncio.wait(bbm_futures.values())  # Wait for all BBM tasks to return
