@@ -401,6 +401,12 @@ async def hug(ctx, target: discord.Member = None):
                         'https://tenor.com/view/dance-moves-dancing-singer-groovy-gif-17029825')
 
 
+@bot.command(brief='Huh?')
+async def huh(ctx: commands.Context):
+    """Inspired by meraki's typo: hug->huh"""
+    await ctx.reply('<:what:885927400691605536>')
+
+
 @bot.group(aliases=('color',), invoke_without_command=True, brief='Shows color')
 async def colour(ctx: commands.Context, c: discord.Colour = None):
     """`colour [c]`
@@ -432,8 +438,10 @@ async def hsv(ctx: commands.Context, h: int = 0, s: int = 0, v: int = 0):
 @bot.command(brief='Shows the latest release notes of DimBot')
 async def changelog(ctx):
     await ctx.reply("""
-**__0.10.15 (Dec 21, 2021 7:42PM GMT)__**
-Supports unlisted videos for Skybow
+**__0.10.16 (Jan 12, 2022 7:42PM GMT)__**
+It is 2022! https://i.redd.it/76ftp24q3v881.jpg
+Added `d.huh`
+Updates d.start for new skygrid server
 """)
 
 
