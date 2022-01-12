@@ -35,7 +35,7 @@ class Verstapen(missile.Cog):
             token=self.albon.mgr.token,
             name='mcser',
             region=region,
-            image=99727650,
+            image=99729422,
             size_slug='s-1vcpu-2gb',
             ssh_keys=self.albon.mgr.get_all_sshkeys()
         )
