@@ -52,6 +52,7 @@ class Verstapen(missile.Cog):
             self.albon.mgr.get_firewall('3ebd8414-1f78-4222-bdc2-558027bc8c9c').add_droplets, (droplet.id,)
         )
         await ctx.bot.loop.run_in_executor(None, droplet.load)
+        self.albon.ip = droplet.ip_address
         await missile.append_msg(msg, f'IP: **{droplet.ip_address}** Please wait for Linux to boot!')
         self.starting = False
 

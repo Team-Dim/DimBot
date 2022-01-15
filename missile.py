@@ -201,15 +201,15 @@ class Bot(commands.Bot):
         self.maintenance: bool = False
         self.status: discord.Status = discord.Status.online
         self.help_command = _Help()
-        self.nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.10.16"
+        self.nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.10.17"
 
     async def async_init(self):
         self.db = await aiosqlite.connect('DimBot.db')
         if dimsecret.debug:
-            self.ip = 'http://localhost/'
+            self.ip = 'http://localhost:4010/'
         else:
             async with self.session.get('http://169.254.169.254/latest/meta-data/public-ipv4') as r:
-                self.ip = f"http://{await r.text()}/"
+                self.ip = f"http://{await r.text()}:4010/"
 
     async def ask_msg(self, ctx, msg: str, timeout: int = 10):
         """Asks a follow-up question"""

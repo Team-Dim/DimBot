@@ -438,10 +438,8 @@ async def hsv(ctx: commands.Context, h: int = 0, s: int = 0, v: int = 0):
 @bot.command(brief='Shows the latest release notes of DimBot')
 async def changelog(ctx):
     await ctx.reply("""
-**__0.10.16 (Jan 12, 2022 7:42PM GMT)__**
-It is 2022! https://i.redd.it/76ftp24q3v881.jpg
-Added `d.huh`
-Updates d.start for new skygrid server
+**__0.10.17 (Jan 15, 2022 4:04AM GMT)__**
+Project Pythania now runs on port 4010
 """)
 
 
