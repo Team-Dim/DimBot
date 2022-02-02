@@ -454,7 +454,7 @@ async def hsv(ctx: commands.Context, h: int = 0, s: int = 0, v: int = 0):
 
 @bot.command(brief='Shows the latest release notes of DimBot')
 async def changelog(ctx):
-    await ctx.reply(f"""**__{missile.ver} (Feb 2, 2022 1:20AM GMT)__**
+    await ctx.reply(f"""**__{missile.ver} (Feb 2, 2022 1:30AM GMT)__**
 **__Chinese New Year 2022 EVENT!!!__**
 Let's start with `d.gf`: A girlfriend simulation. You can see she has energy, food and ingredients.
 How do you obtain ingredients? By draw/losing in `d.pp`
@@ -466,6 +466,11 @@ So what can energy do?
 specify the amount of energy that you cast into a single charge.
 2. Extends the d.hug 48h timeframe: Let's say you hug someone at the 50th hour. If your gf has energy, your hug streak will remain,
 using 2 energy.
+
+For the list of ingredients, food and recipe: <https://github.com/TCLRainbow/DimBot/blob/master/diminator/obj.py#L132>
+First integer in `food_energy` represents the energy you gain from eating the first food aka Radish cake
+First () in `recipe` represents the ingredients required to cook the first food. Each number in () is the n-1th item in `ingredients_table`
+e.g. Radish cake needs Radish, Sausage, Mushroom and Rice flour.
 
 > Been chillin - John Xina
 Happy Lunar New Year!""")
