@@ -110,9 +110,11 @@ class Aegis(Cog):
                     self.bot.db,
                     victim=m.id, pinger=msg.author.id, content=msg.content, time=datetime.now(), guild=msg.guild.id
                 )
+
             # Reports in the incident channel that the culprit deleted a ping
-            if msg.channel.id not in self.suppress_ghost_ping_notification:
-                await ext.send(msg, msg.author.mention + ' has deleted a ping. Try out `d.whoping`!')
+            # if msg.channel.id not in self.suppress_ghost_ping_notification:
+            #     await ext.send(msg, msg.author.mention + ' has deleted a ping. Try out `d.whoping`!')
+
             # Removes the message from the cache as it has been deleted on Discord
             del self.ghost_pings[msg.id]
         elif (msg.mentions or msg.role_mentions) and not msg.edited_at:  # The message has pings and has not been edited
@@ -127,8 +129,8 @@ class Aegis(Cog):
                     )
                     has_pinged = True
             # Reports in the incident channel that the culprit deleted a ping
-            if has_pinged and msg.channel.id not in self.suppress_ghost_ping_notification:
-                await ext.send(msg, msg.author.mention + ' has deleted a ping. Try out `d.whoping`!')
+            # if has_pinged and msg.channel.id not in self.suppress_ghost_ping_notification:
+            #     await ext.send(msg, msg.author.mention + ' has deleted a ping. Try out `d.whoping`!')
 
     @contextlib.contextmanager
     def no_ghost_ping_notification(self, ch: int):

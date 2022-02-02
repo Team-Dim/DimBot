@@ -7,7 +7,7 @@ from discord.ext import commands
 from discord.ext.commands import Context, BucketType
 
 import missile
-from diminator.obj import UltraRockPaperScissor, PPNotFound, PP, max_pp_size
+from diminator.obj import UltraRockPaperScissor, PPNotFound, PP, max_pp_size, GF
 
 
 def pp_embed(user: discord.User, pp: PP):
@@ -68,6 +68,17 @@ class Diminator(commands.Cog):
 
     def get_random_pp_opponent(self):
         return self.bot.get_user(random.choice(tuple(self.bot.user_store.keys())))
+
+    @commands.command()
+    @missile.is_rainbow()
+    async def sampp(self, ctx: Context):
+        """For PP debugging"""
+        user = self.bot.get_user(543912098049163264)
+        size = random.randint(0, max_pp_size)
+        viagra = (random.randint(0, 100) < 25) - 1
+        sesami = random.randint(0, 100) < 10
+        pp = self.bot.get_user_store(543912098049163264).pp = PP(size, viagra, sesami)
+        await ctx.reply(embed=pp_embed(user, pp))
 
     @commands.group(invoke_without_command=True, brief='Commands for interacting with your pp')
     async def pp(self, ctx: Context, user: discord.User = None):
@@ -180,13 +191,19 @@ class Diminator(commands.Cog):
             title = "VICTORY"
             if my.transam <= 100:
                 my.transam += 1
-            gain_msg = f"You gained **{xp}** score!"
+            food_index = random.randrange(7, len(GF.food_names))
+            gain_msg = f"You gained **{xp}** score and 1x {GF.food_names[food_index]}!"
+            self.bot.get_user_store(ctx.author.id).gf.add_food(food_index)
         elif my.size == his.size:
             title = "TIE"
-            gain_msg = ''
+            ingri_index = random.randrange(1, len(GF.ingredients_table))
+            gain_msg = 'You gained 1x ' + GF.ingredients_table[ingri_index]
+            self.bot.get_user_store(ctx.author.id).gf.add_ingredient(ingri_index)
         else:
             title = "LOST"
-            gain_msg = f"You lost **{-xp}** score!"
+            ingri_index = random.randrange(1, len(GF.ingredients_table))
+            gain_msg = f"You lost **{-xp}** score but gained 1x {GF.ingredients_table[ingri_index]}!"
+            self.bot.get_user_store(ctx.author.id).gf.add_ingredient(ingri_index)
         await ctx.send(
             content=content,
             embed=missile.Embed(title, f"**{ctx.author.name}'s pp:**\n{my.draw()}\n"
@@ -220,6 +237,17 @@ class Diminator(commands.Cog):
             await ctx.send(f'{ctx.author.mention} has faith in his pp!!! New length: {pp.size}')
         else:
             await ctx.reply("You don't have viagra yet!")
+
+    @pp.command(brief='Your girlfriend assists your pp, hmmmmmmmmm')
+    async def gf(self, ctx: Context, energy: int):
+        pp = self.get_pp_checked(ctx, ctx.author.id)
+        gf = self.bot.get_user_store(ctx.author.id).gf
+        if energy < 0 or energy > gf.energy:
+            await ctx.reply('Insufficient energy. Feed her bruh.')
+            return
+        pp.size = int(pp.size * (1 + energy/50))
+        gf.energy -= energy
+        await ctx.reply(f"You used your girlfriend to enlarge your pp. New pp size: {pp.size}")
 
     @pp.command(aliases=('zen',), brief='Stuns your opponent')
     async def zenitsu(self, ctx: Context, user: discord.User = None):

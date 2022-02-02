@@ -1,4 +1,5 @@
 import asyncio
+import math
 import time
 from datetime import datetime, timedelta
 from random import choice, randint
@@ -16,6 +17,7 @@ import missile
 import tribe
 from bruckserver.vireg import Verstapen
 from diminator.cog import Diminator
+from diminator.gf import GirlfriendCog
 from diminator.obj import BasePPException
 from echo import Bottas
 from mod.aegis import Aegis
@@ -379,6 +381,7 @@ async def hug(ctx, target: discord.Member = None):
             hug_record = await bot.sql.get_hug(bot.db, hugger=ctx.author.id, huggie=target.id)
             if hug_record:
                 delta = t - hug_record[1]
+                gf = bot.get_user_store(ctx.author.id).gf
                 if delta < 86400:
                     wait = time.gmtime(86400 - delta)
                     await ctx.reply(f"{gif}\nYou've already hugged {target} today! Streaks: **{hug_record[0]}**\n"
@@ -388,14 +391,28 @@ async def hug(ctx, target: discord.Member = None):
                     await bot.sql.update_hug(bot.db, hugger=ctx.author.id, huggie=target.id, streak=new_streak,
                                              hugged=t)
                     await ctx.reply(f'{gif}\nYou hugged {target}! Streaks: **{new_streak}**\n'
-                                    'Send the command again tomorrow to earn streaks!')
+                                    'Send the command again after 24h to earn streaks!\n\n'
+                                    '**CNY special: You gained 1x Cooking Oil!**')
+                    gf.add_ingredient(0)
+                elif delta < (172800 + gf.energy*3600):
+                    energy = int(math.ceil((delta - 172800) / 3600))
+                    new_streak = hug_record[0] + 1
+                    await bot.sql.update_hug(bot.db, hugger=ctx.author.id, huggie=target.id, streak=new_streak,
+                                             hugged=t)
+                    gf.energy -= energy
+                    await ctx.reply(f'*Your girlfriend has energy so it extended your hug time!*\n{gif}\n'
+                                    f'You hugged {target}! Streaks: **{new_streak}**\n'
+                                    'Send the command again after 24h to earn streaks!\n\n'
+                                    f'**CNY special: You gained 1x Cooking Oil!**\n-{energy} Girlfriend energy')
                 else:
                     await bot.sql.update_hug(bot.db, hugger=ctx.author.id, huggie=target.id, streak=1, hugged=t)
-                    await ctx.reply(f"{gif}\nYou haven't hugged {target} for 2 days so you've lost your streak!")
+                    await ctx.reply(f"{gif}\nYou haven't hugged {target} in 48h so you've lost your streak!")
             else:
                 await bot.sql.add_hug(bot.db, hugger=ctx.author.id, huggie=target.id, hugged=t)
                 await ctx.reply(f'{gif}\nYou hugged {target}! Streaks: **1**\n'
-                                'Send the command again tomorrow to earn streaks!')
+                                'Send the command again after 24h to earn streaks!\n\n'
+                                '**CNY special: You gained 1x Cooking Oil!**')
+                bot.get_user_store(ctx.author.id).gf.add_ingredient(0)
     else:
         await ctx.reply('Fine, I guess I will give you a hug\n'
                         'https://tenor.com/view/dance-moves-dancing-singer-groovy-gif-17029825')
@@ -437,10 +454,21 @@ async def hsv(ctx: commands.Context, h: int = 0, s: int = 0, v: int = 0):
 
 @bot.command(brief='Shows the latest release notes of DimBot')
 async def changelog(ctx):
-    await ctx.reply("""
-**__0.10.17 (Jan 15, 2022 4:04AM GMT)__**
-Project Pythania now runs on port 4010
-""")
+    await ctx.reply(f"""**__{missile.ver} (Feb 2, 2022 1:20AM GMT)__**
+**__Chinese New Year 2022 EVENT!!!__**
+Let's start with `d.gf`: A girlfriend simulation. You can see she has energy, food and ingredients.
+How do you obtain ingredients? By draw/losing in `d.pp`
+How do you get food? By winning in `d.pp` OR you can cook them using `d.cook` e.g. `d.cook radish cake`!
+After cooking some food, you can feed your girlfriend by `d.feed <food name>`, which increases her energy
+
+So what can energy do?
+1. Enlarges your pp: `d.pp gf <energy>`. The formula is `new size = og size * (1 + energy/50)` Note that you can
+specify the amount of energy that you cast into a single charge.
+2. Extends the d.hug 48h timeframe: Let's say you hug someone at the 50th hour. If your gf has energy, your hug streak will remain,
+using 2 energy.
+
+> Been chillin - John Xina
+Happy Lunar New Year!""")
 
 
 @bot.command(aliases=('enc',), brief='Encodes a message to base64')
@@ -478,6 +506,7 @@ async def ready_tasks():
     bot.add_cog(XP(bot))
     bot.add_cog(Diminator(bot))
     bot.add_cog(SkyBow(bot))
+    bot.add_cog(GirlfriendCog(bot))
     await bot.wait_until_ready()
     bot.add_cog(tribe.Hamilton(bot))
     psutil.cpu_percent(percpu=True)
@@ -490,9 +519,11 @@ async def ready_tasks():
         if guild.me.nick != bot.nickname and guild.me.guild_permissions.change_nickname:
             bot.loop.create_task(guild.me.edit(nick=bot.nickname))
     while True:
-        activity = await bot.sql.get_activity(bot.db)
-        await bot.change_presence(activity=discord.Activity(name=activity[0], type=discord.ActivityType(activity[1])),
-                                  status=bot.status)
+        # activity = await bot.sql.get_activity(bot.db)
+        # await bot.change_presence(activity=discord.Activity(name=activity[0], type=discord.ActivityType(activity[1])),
+        #                           status=bot.status)
+        await bot.change_presence(activity=discord.Activity(name='恭喜發財呀屌你老母 Gong Hey Fat Choi F Your Mother',
+                                                            type=discord.ActivityType.competing))
         await asyncio.sleep(300)
         await bot.db.commit()
         logger.debug('DB auto saved')

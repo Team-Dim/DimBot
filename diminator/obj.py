@@ -126,3 +126,29 @@ class PP:
 
     def check_all(self, b):
         return self.check_lock(b).check_stun(b)
+
+
+class GF:
+    ingredients_table = ('Cooking oil', 'Radish', 'Sausage', 'Mushroom', 'Rice flour', 'Sugar', 'Lotus', 'Peanut',
+                         'Water chestnut', 'Egg', 'Flour')
+    food_names = ('radish cake', 'year cake', 'rice ball', 'sugar lotus', 'water chestnut cake', 'oily angle', 'fried rice ball'
+                  'sunflower seed', 'pumpkin seed', 'melon seed', 'candies', 'chocolate')
+    food_energy = (30, 10, 15, 5, 10, 80, 70, 1, 2, 2, 4, 5)
+    recipe = ((1, 2, 3, 4), (4, 5), (4, 5, 7), (5, 6), (4, 5, 8), (0, 7, 9, 10), (0, 4, 5, 7))
+
+    def __init__(self):
+        self.energy: int = 0
+        self.ingredients = {}
+        self.food = {}
+
+    def add_ingredient(self, index: int):
+        if index in self.ingredients:
+            self.ingredients[index] += 1
+        else:
+            self.ingredients[index] = 1
+
+    def add_food(self, index: int):
+        if index in self.food:
+            self.food[index] += 1
+        else:
+            self.food[index] = 1

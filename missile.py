@@ -14,8 +14,9 @@ from discord.ext import commands
 import dimsecret
 
 __lvl__ = logging.DEBUG if dimsecret.debug else logging.INFO
+ver = '0.10.18'
 
-from diminator.obj import PP
+from diminator.obj import PP, GF
 
 
 def get_logger(name: str) -> logging.Logger:
@@ -176,6 +177,7 @@ class UserStore:
     def __init__(self):
         self.last_xp_time: dict = {None: datetime.now()}
         self.pp: PP = None
+        self.gf: GF = GF()
 
     def get_last_xp_time(self, guild_id: int):
         if guild_id not in self.last_xp_time:
@@ -201,7 +203,7 @@ class Bot(commands.Bot):
         self.maintenance: bool = False
         self.status: discord.Status = discord.Status.online
         self.help_command = _Help()
-        self.nickname = f"DimBot {'S ' if dimsecret.debug else ''}| 0.10.17"
+        self.nickname = f"DimBot {'S ' if dimsecret.debug else ''}| {ver}"
 
     async def async_init(self):
         self.db = await aiosqlite.connect('DimBot.db')
