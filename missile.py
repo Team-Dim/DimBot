@@ -10,13 +10,12 @@ import aiosqlite
 import discord
 from aiohttp import ClientSession
 from discord.ext import commands
+from diminator.obj import PP
 
 import dimsecret
 
 __lvl__ = logging.DEBUG if dimsecret.debug else logging.INFO
-ver = '0.10.18'
-
-from diminator.obj import PP, GF
+ver = '❤'
 
 
 def get_logger(name: str) -> logging.Logger:
@@ -177,7 +176,6 @@ class UserStore:
     def __init__(self):
         self.last_xp_time: dict = {None: datetime.now()}
         self.pp: PP = None
-        self.gf: GF = GF()
 
     def get_last_xp_time(self, guild_id: int):
         if guild_id not in self.last_xp_time:
