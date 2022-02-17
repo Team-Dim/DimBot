@@ -8,4 +8,4 @@ matplotlib~=3.4.2
 psutil~=5.8.0
 git+https://github.com/Rapptz/discord-ext-menus
 python-digitalocean
-pytube>=11.0.2
+pytube>=12.0.0

@@ -364,7 +364,6 @@ hug_gifs = ('https://tenor.com/view/milk-and-mocha-bear-couple-line-hug-cant-bre
             'https://imgur.com/6kcXUGW', 'https://imgur.com/pmbwhF6')
 
 nene_gifs = ('https://imgur.com/sB7ZkbQ', 'https://imgur.com/XofnZ9B', 'https://imgur.com/XT7b1YX')
-husbands = []
 
 
 @bot.command(brief='Hug one another every day for streaks!')
@@ -374,46 +373,33 @@ async def hug(ctx: commands.Context, target: discord.Member = None):
     `hug <user>` to start hugging them and earn streaks. You can also just `hug` if you want to..."""
     if target:
         if target == ctx.guild.me:
-            if ctx.author.id in husbands:
-                i = husbands.index(ctx.author.id) + 1
-            else:
-                husbands.append(ctx.author.id)
-                i = len(husbands)
-            await ctx.reply(f"🌟You're Nene husband No. {i}!🌟\n{choice(nene_gifs)}")
-            return
-        if target.bot or target == ctx.author:
-            await ctx.reply("You can't hug a bot or yourself! Maybe you should hug my pog champ instead?")
+            gif = choice(nene_gifs)
         else:
             gif = choice(hug_gifs)
-            t = time.time()
-            hug_record = await bot.sql.get_hug(bot.db, hugger=ctx.author.id, huggie=target.id)
-            if hug_record:
-                delta = t - hug_record[1]
-                if delta < 86400:
-                    wait = time.gmtime(86400 - delta)
-                    await ctx.reply(f"{gif}\nYou've already hugged {target} today! Streaks: **{hug_record[0]}**\n"
-                                    f"Please wait for {wait.tm_hour}h {wait.tm_min}m {wait.tm_sec}s")
-                elif delta < 172800:
-                    new_streak = hug_record[0] + 1
-                    await bot.sql.update_hug(bot.db, hugger=ctx.author.id, huggie=target.id, streak=new_streak,
-                                             hugged=t)
-                    await ctx.reply(f'{gif}\nYou hugged {target}! Streaks: **{new_streak}**\n'
-                                    'Send the command again after 24h to earn streaks!')
-                else:
-                    await bot.sql.update_hug(bot.db, hugger=ctx.author.id, huggie=target.id, streak=1, hugged=t)
-                    await ctx.reply(f"{gif}\nYou haven't hugged {target} in 48h so you've lost your streak!")
-            else:
-                await bot.sql.add_hug(bot.db, hugger=ctx.author.id, huggie=target.id, hugged=t)
-                await ctx.reply(f'{gif}\nYou hugged {target}! Streaks: **1**\n'
+        t = time.time()
+        hug_record = await bot.sql.get_hug(bot.db, hugger=ctx.author.id, huggie=target.id)
+        if hug_record:
+            delta = t - hug_record[1]
+            if delta < 86400:
+                wait = time.gmtime(86400 - delta)
+                await ctx.reply(f"{gif}\nYou've already hugged {target} today! Streaks: **{hug_record[0]}**\n"
+                                f"Please wait for {wait.tm_hour}h {wait.tm_min}m {wait.tm_sec}s")
+            elif delta < 172800:
+                new_streak = hug_record[0] + 1
+                await bot.sql.update_hug(bot.db, hugger=ctx.author.id, huggie=target.id, streak=new_streak,
+                                         hugged=t)
+                await ctx.reply(f'{gif}\nYou hugged {target}! Streaks: **{new_streak}**\n'
                                 'Send the command again after 24h to earn streaks!')
+            else:
+                await bot.sql.update_hug(bot.db, hugger=ctx.author.id, huggie=target.id, streak=1, hugged=t)
+                await ctx.reply(f"{gif}\nYou haven't hugged {target} in 48h so you've lost your streak!")
+        else:
+            await bot.sql.add_hug(bot.db, hugger=ctx.author.id, huggie=target.id, hugged=t)
+            await ctx.reply(f'{gif}\nYou hugged {target}! Streaks: **1**\n'
+                            'Send the command again after 24h to earn streaks!')
     else:
         await ctx.reply('Fine, I guess I will give you a hug\n'
                         'https://tenor.com/view/dance-moves-dancing-singer-groovy-gif-17029825')
-
-
-@bot.command()
-async def gf(ctx):
-    await ctx.reply('👐')
 
 
 @bot.command(brief='Huh?')
@@ -453,8 +439,8 @@ async def hsv(ctx: commands.Context, h: int = 0, s: int = 0, v: int = 0):
 @bot.command(brief='Shows the latest release notes of DimBot')
 async def changelog(ctx):
     await ctx.reply(f"""**__{missile.ver} (Feb 14, 2022 3:30AM GMT)__**
-**__Valentine 2022 update__**
-`d.hug @DimBot`
+You can now use `d.hug` on a bot or yourself!
+Removed `d.gf`
 """)
 
 
@@ -505,11 +491,9 @@ async def ready_tasks():
         if guild.me.nick != bot.nickname and guild.me.guild_permissions.change_nickname:
             bot.loop.create_task(guild.me.edit(nick=bot.nickname))
     while True:
-        # activity = await bot.sql.get_activity(bot.db)
-        # await bot.change_presence(activity=discord.Activity(name=activity[0], type=discord.ActivityType(activity[1])),
-        #                           status=bot.status)
-        await bot.change_presence(activity=discord.Activity(name='d.hug @DimBot ❤',
-                                                            type=discord.ActivityType.playing))
+        activity = await bot.sql.get_activity(bot.db)
+        await bot.change_presence(activity=discord.Activity(name=activity[0], type=discord.ActivityType(activity[1])),
+                                  status=bot.status)
         await asyncio.sleep(300)
         await bot.db.commit()
         logger.debug('DB auto saved')
