@@ -438,9 +438,9 @@ async def hsv(ctx: commands.Context, h: int = 0, s: int = 0, v: int = 0):
 
 @bot.command(brief='Shows the latest release notes of DimBot')
 async def changelog(ctx):
-    await ctx.reply(f"""**__{missile.ver} (Feb 14, 2022 3:30AM GMT)__**
-You can now use `d.hug` on a bot or yourself!
-Removed `d.gf`
+    await ctx.reply(f"""**__{missile.ver} (Feb 22, 2022 5:00PM GMT)__**
+Ikaros: Added `d.purgechs`
+Aegis: Now scans for scam gift links
 """)
 
 

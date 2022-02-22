@@ -99,6 +99,16 @@ class Ikaros(Cog):
             await target.remove_roles(role, reason=reason)
             await ext.send(msg, 'Unmuted ' + target.mention)
 
+    @staticmethod
+    async def purge_all_ch(msg: discord.Message):
+        tasks = tuple(ch.purge(
+            check=lambda m: m.author == msg.author, after=msg, around=msg
+        ) for ch in msg.guild.text_channels)
+        done, _ = await asyncio.wait(tasks)
+        count = sum(len(task.result()) for task in done)
+        await msg.delete()
+        await ext.send(msg, f'Purged {count + 1} messages in all channels.')
+
     @command(brief='Assign/Remove a role from a member/yourself.')
     @bot_has_guild_permissions(manage_roles=True)
     @missile.guild_only()
@@ -285,3 +295,15 @@ class Ikaros(Cog):
                             ))
                 await asyncio.wait(tasks)
                 await ctx.reply('Lockdown.')
+
+    @command(brief='Purges messages in all channels')
+    @missile.bot_has_perm(manage_messages=True)
+    @missile.is_mod()
+    @missile.guild_only()
+    async def purgechs(self, ctx: Context):
+        if ctx.message.reference:
+            if ctx.message.reference.cached_message:
+                msg = ctx.message.reference.cached_message
+            else:
+                msg = await ctx.fetch_message(ctx.message.reference.message_id)
+            await self.purge_all_ch(msg)

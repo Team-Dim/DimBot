@@ -43,8 +43,17 @@ class Aegis(Cog):
         if re.search(r".*(gfycat.com/safeofficialharvestmouse|gfycat.com/grizzledwildinsect)", msg.content):
             await msg.delete()
             await ext.send(msg.channel, 'Detected crash GIF by ' + msg.author.mention)
+
         if msg.author.id not in self.count:  # Creates record for the message author
             self.count[msg.author.id] = [[], 0]  # [Tracked messages, warn count]
+
+        # Checks for scam gift links
+        if re.search(r"https?://disceord.gift", msg.content, re.IGNORECASE):
+            self.count[msg.author.id][1] += 2
+            self.bot.loop.create_task(ext.reply(msg,
+                                                f'Detected scam gift link. Warn: {self.count[msg.author.id][1]}'))
+            self.bot.loop.create_task(self.act(msg, 'Aegis: Scam gift links'))
+
         raw_mention_count = len(msg.raw_mentions)
         mass_ping_count = 20 if msg.author.bot else 5
         if raw_mention_count >= mass_ping_count:  # Mass ping
