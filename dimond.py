@@ -35,13 +35,15 @@ class Dimond(commands.Cog):
         emb.add_field(name='Public flags', value=u.public_flags.value)
         emb.add_field(name='Created at', value=u.created_at)
         member: Optional[discord.Member] = None
+
         # A hacky way to try getting data that can only be accessed as a Member
-        for g in u.mutual_guilds:
-            m = g.get_member(u.id)
-            if m:
-                member = m
-                if m.voice:  # Searches whether the 'member' is in a VC
-                    break  # A user can only be in 1 VC
+        if u != ctx.bot.user:  # Don't attempt to check Member info if target is DimBot because it's pointless
+            for g in u.mutual_guilds:
+                m = g.get_member(u.id)
+                if m:
+                    member = m
+                    if m.voice:  # Searches whether the 'member' is in a VC
+                        break  # A user can only be in 1 VC
         if member:  # Data that can only be accessed as a Member
             emb.add_field(name='Number of activities', value=str(len(member.activities)) if member.activities else '0')
             stat = str(member.status)

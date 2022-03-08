@@ -374,28 +374,32 @@ async def hug(ctx: commands.Context, target: discord.Member = None):
     if target:
         if target == ctx.guild.me:
             gif = choice(nene_gifs)
+            name = 'me'
         else:
             gif = choice(hug_gifs)
+            name = target.display_name
         t = time.time()
         hug_record = await bot.sql.get_hug(bot.db, hugger=ctx.author.id, huggie=target.id)
         if hug_record:
             delta = t - hug_record[1]
             if delta < 86400:
                 wait = time.gmtime(86400 - delta)
-                await ctx.reply(f"{gif}\nYou've already hugged {target} today! Streaks: **{hug_record[0]}**\n"
+                await ctx.reply(f"{gif}\nYou've already hugged {name} today! Streaks: **{hug_record[0]}**\n"
                                 f"Please wait for {wait.tm_hour}h {wait.tm_min}m {wait.tm_sec}s")
             elif delta < 172800:
                 new_streak = hug_record[0] + 1
                 await bot.sql.update_hug(bot.db, hugger=ctx.author.id, huggie=target.id, streak=new_streak,
                                          hugged=t)
-                await ctx.reply(f'{gif}\nYou hugged {target}! Streaks: **{new_streak}**\n'
+                await ctx.reply(f'{gif}\nYou hugged {name}! Streaks: **{new_streak}**\n'
                                 'Send the command again after 24h to earn streaks!')
             else:
+                if target == ctx.guild.me:
+                    gif = 'https://tenor.com/view/angry-nene-nenechi-nene-konnene-matanene-gif-21412090'
                 await bot.sql.update_hug(bot.db, hugger=ctx.author.id, huggie=target.id, streak=1, hugged=t)
-                await ctx.reply(f"{gif}\nYou haven't hugged {target} in 48h so you've lost your streak!")
+                await ctx.reply(f"{gif}\nYou haven't hugged {name} in 48h so you've lost your streak!")
         else:
             await bot.sql.add_hug(bot.db, hugger=ctx.author.id, huggie=target.id, hugged=t)
-            await ctx.reply(f'{gif}\nYou hugged {target}! Streaks: **1**\n'
+            await ctx.reply(f'{gif}\nYou hugged {name}! Streaks: **1**\n'
                             'Send the command again after 24h to earn streaks!')
     else:
         await ctx.reply('Fine, I guess I will give you a hug\n'
@@ -438,9 +442,10 @@ async def hsv(ctx: commands.Context, h: int = 0, s: int = 0, v: int = 0):
 
 @bot.command(brief='Shows the latest release notes of DimBot')
 async def changelog(ctx):
-    await ctx.reply(f"""**__{missile.ver} (Feb 22, 2022 5:00PM GMT)__**
-Ikaros: Added `d.purgechs`
-Aegis: Now scans for scam gift links
+    await ctx.reply(f"""**__{missile.ver} (Mar 8, 2022 10:15PM GMT)__**
+Fixed `info u <@DimBot>` bug
+New GIF for losing streak of hugging me
+I'll now say `hugged me` instead of `hugged DimBot#0311` if the hug target is me
 """)
 
 
