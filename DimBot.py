@@ -360,8 +360,7 @@ async def bs(ctx: commands.Context, server: int):
 hug_gifs = ('https://tenor.com/view/milk-and-mocha-bear-couple-line-hug-cant-breathe-gif-12687187',
             'https://tenor.com/view/hugs-hug-ghost-hug-gif-4451998',
             'https://tenor.com/view/true-love-hug-miss-you-everyday-always-love-you-running-hug-gif-5534958',
-            'https://imgur.com/AVngriy', 'https://imgur.com/0tsEaAZ', 'https://imgur.com/45eArLC',
-            'https://imgur.com/6kcXUGW', 'https://imgur.com/pmbwhF6')
+            'https://tenor.com/view/love-kirby-hug-gif-13854608')
 
 nene_gifs = ('https://imgur.com/sB7ZkbQ', 'https://imgur.com/XofnZ9B', 'https://imgur.com/XT7b1YX')
 
@@ -377,7 +376,7 @@ async def hug(ctx: commands.Context, target: discord.Member = None):
             name = 'me'
         else:
             gif = choice(hug_gifs)
-            name = target.display_name
+            name = target
         t = time.time()
         hug_record = await bot.sql.get_hug(bot.db, hugger=ctx.author.id, huggie=target.id)
         if hug_record:
@@ -442,10 +441,8 @@ async def hsv(ctx: commands.Context, h: int = 0, s: int = 0, v: int = 0):
 
 @bot.command(brief='Shows the latest release notes of DimBot')
 async def changelog(ctx):
-    await ctx.reply(f"""**__{missile.ver} (Mar 8, 2022 10:15PM GMT)__**
-Fixed `info u <@DimBot>` bug
-New GIF for losing streak of hugging me
-I'll now say `hugged me` instead of `hugged DimBot#0311` if the hug target is me
+    await ctx.reply(f"""**__{missile.ver} (May 5, 2022 6:56AM GMT+1)__**
+Random d.hug tweaks
 """)
 
 
