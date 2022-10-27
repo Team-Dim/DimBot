@@ -441,8 +441,9 @@ async def hsv(ctx: commands.Context, h: int = 0, s: int = 0, v: int = 0):
 
 @bot.command(brief='Shows the latest release notes of DimBot')
 async def changelog(ctx):
-    await ctx.reply(f"""**__{missile.ver} (May 5, 2022 6:56AM GMT+1)__**
-Random d.hug tweaks
+    await ctx.reply(f"""**__{missile.ver} (Oct 27, 2022 6:56AM GMT+1)__**
+Completely disabled BBM update checks (partially did it a year ago lol)
+Database autosave should still work even if updating activity fails
 """)
 
 
@@ -471,6 +472,17 @@ async def decode(ctx: commands.Context, content: str):
         await ctx.send('Malformed base64 string.')
 
 
+async def update_presence():
+    activity = await bot.sql.get_activity(bot.db)
+    await bot.change_presence(activity=discord.Activity(name=activity[0], type=discord.ActivityType(activity[1])),
+                              status=bot.status)
+
+
+async def commit_db():
+    await bot.db.commit()
+    logger.debug('DB auto saved')
+
+
 async def ready_tasks():
     bot.add_cog(Ricciardo(bot))
     bot.add_cog(Verstapen(bot))
@@ -493,12 +505,9 @@ async def ready_tasks():
         if guild.me.nick != bot.nickname and guild.me.guild_permissions.change_nickname:
             bot.loop.create_task(guild.me.edit(nick=bot.nickname))
     while True:
-        activity = await bot.sql.get_activity(bot.db)
-        await bot.change_presence(activity=discord.Activity(name=activity[0], type=discord.ActivityType(activity[1])),
-                                  status=bot.status)
+        bot.loop.create_task(update_presence())
         await asyncio.sleep(300)
-        await bot.db.commit()
-        logger.debug('DB auto saved')
+        bot.loop.create_task(commit_db())
 
 
 bot.loop.create_task(bot.async_init())

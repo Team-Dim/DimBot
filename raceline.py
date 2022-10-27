@@ -15,7 +15,7 @@ from dimsecret import youtube
 
 class Ricciardo(missile.Cog):
     """Relaying RSS, BBM and YouTube feeds to discord channels.
-    Version 5.2.1"""
+    Version 5.2.2"""
 
     def __init__(self, bot):
         super().__init__(bot, 'Ricciardo')
@@ -50,7 +50,8 @@ class Ricciardo(missile.Cog):
         """Dispatches RSS, BBM and YouTube update detectors"""
         bbm_futures = {}
         for addon_id in self.addon_ids:
-            bbm_futures[addon_id] = self.bot.loop.create_task(self.bbm_process(addon_id))  # Dispatch BBM tasks
+            pass  # TODO: 20221027 Remove this and uncomment below if fixed BBM
+            # bbm_futures[addon_id] = self.bot.loop.create_task(self.bbm_process(addon_id))  # Dispatch BBM tasks
         resultless_futures = []
         if self.run_rss:
             for row in await self.bot.sql.get_rss_data(self.bot.db):  # Dispatches RSS tasks
