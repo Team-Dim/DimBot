@@ -357,6 +357,16 @@ async def bs(ctx: commands.Context, server: int):
         await ctx.reply('Banned')
 
 
+@arccore.command()
+async def changelog(ctx):
+    await bot.get_channel(977778385247944754).send(f"""**__{missile.ver} (Nov 5, 2022 4:47AM GMT)__**
+You can now hug multiple people within a single hug command.
+__Please avoid exceeding the mention limit (5 in this server)__
+
+`changelog` is now a private command that will only send changelog to <#977778385247944754>
+""")
+
+
 hug_gifs = ('https://tenor.com/view/milk-and-mocha-bear-couple-line-hug-cant-breathe-gif-12687187',
             'https://tenor.com/view/hugs-hug-ghost-hug-gif-4451998',
             'https://tenor.com/view/true-love-hug-miss-you-everyday-always-love-you-running-hug-gif-5534958',
@@ -367,39 +377,43 @@ nene_gifs = ('https://imgur.com/sB7ZkbQ', 'https://imgur.com/XofnZ9B', 'https://
 
 @bot.command(brief='Hug one another every day for streaks!')
 @missile.guild_only()
-async def hug(ctx: commands.Context, target: discord.Member = None):
+async def hug(ctx: commands.Context, *target: discord.Member):
     """Original idea by <@226664644041768960>
     `hug <user>` to start hugging them and earn streaks. You can also just `hug` if you want to..."""
     if target:
-        if target == ctx.guild.me:
-            gif = choice(nene_gifs)
-            name = 'me'
-        else:
-            gif = choice(hug_gifs)
-            name = target
-        t = time.time()
-        hug_record = await bot.sql.get_hug(bot.db, hugger=ctx.author.id, huggie=target.id)
-        if hug_record:
-            delta = t - hug_record[1]
-            if delta < 86400:
-                wait = time.gmtime(86400 - delta)
-                await ctx.reply(f"{gif}\nYou've already hugged {name} today! Streaks: **{hug_record[0]}**\n"
-                                f"Please wait for {wait.tm_hour}h {wait.tm_min}m {wait.tm_sec}s")
-            elif delta < 172800:
-                new_streak = hug_record[0] + 1
-                await bot.sql.update_hug(bot.db, hugger=ctx.author.id, huggie=target.id, streak=new_streak,
-                                         hugged=t)
-                await ctx.reply(f'{gif}\nYou hugged {name}! Streaks: **{new_streak}**\n'
-                                'Send the command again after 24h to earn streaks!')
+        gif = choice(hug_gifs)
+        s = ''
+
+        for m in target:
+            s += '\n'
+            if m == ctx.guild.me:
+                gif = choice(nene_gifs)
+                name = 'me'
             else:
-                if target == ctx.guild.me:
-                    gif = 'https://tenor.com/view/angry-nene-nenechi-nene-konnene-matanene-gif-21412090'
-                await bot.sql.update_hug(bot.db, hugger=ctx.author.id, huggie=target.id, streak=1, hugged=t)
-                await ctx.reply(f"{gif}\nYou haven't hugged {name} in 48h so you've lost your streak!")
-        else:
-            await bot.sql.add_hug(bot.db, hugger=ctx.author.id, huggie=target.id, hugged=t)
-            await ctx.reply(f'{gif}\nYou hugged {name}! Streaks: **1**\n'
-                            'Send the command again after 24h to earn streaks!')
+                name = m
+            t = time.time()
+            hug_record = await bot.sql.get_hug(bot.db, hugger=ctx.author.id, huggie=m.id)
+            if hug_record:
+                delta = t - hug_record[1]
+                if delta < 86400:
+                    wait = time.gmtime(86400 - delta)
+                    s += f"You've already hugged {name} today! Streaks: **{hug_record[0]}**. "\
+                         f"Please wait for {wait.tm_hour}h {wait.tm_min}m {wait.tm_sec}s"
+                elif delta < 172800:
+                    new_streak = hug_record[0] + 1
+                    await bot.sql.update_hug(bot.db, hugger=ctx.author.id, huggie=m.id, streak=new_streak,
+                                             hugged=t)
+                    s += f'You hugged {name}! Streaks: **{new_streak}**'
+                else:
+                    if m == ctx.guild.me:
+                        gif = 'https://tenor.com/view/angry-nene-nenechi-nene-konnene-matanene-gif-21412090'
+                    await bot.sql.update_hug(bot.db, hugger=ctx.author.id, huggie=m.id, streak=1, hugged=t)
+                    s += f"You haven't hugged {name} in 48h so you've lost your streak!"
+            else:
+                await bot.sql.add_hug(bot.db, hugger=ctx.author.id, huggie=m.id, hugged=t)
+                s += f'You hugged {name}! Streaks: **1**'
+
+        await ctx.reply(gif + s)
     else:
         await ctx.reply('Fine, I guess I will give you a hug\n'
                         'https://tenor.com/view/dance-moves-dancing-singer-groovy-gif-17029825')
@@ -439,14 +453,6 @@ async def hsv(ctx: commands.Context, h: int = 0, s: int = 0, v: int = 0):
         raise errors.BadColorArgument(color)
 
 
-@bot.command(brief='Shows the latest release notes of DimBot')
-async def changelog(ctx):
-    await ctx.reply(f"""**__{missile.ver} (Oct 27, 2022 6:56AM GMT+1)__**
-Completely disabled BBM update checks (partially did it a year ago lol)
-Database autosave should still work even if updating activity fails
-""")
-
-
 @bot.command(aliases=('enc',), brief='Encodes a message to base64')
 async def encode(ctx: commands.Context, *, content: str):
     """encode <content>
@@ -472,17 +478,6 @@ async def decode(ctx: commands.Context, content: str):
         await ctx.send('Malformed base64 string.')
 
 
-async def update_presence():
-    activity = await bot.sql.get_activity(bot.db)
-    await bot.change_presence(activity=discord.Activity(name=activity[0], type=discord.ActivityType(activity[1])),
-                              status=bot.status)
-
-
-async def commit_db():
-    await bot.db.commit()
-    logger.debug('DB auto saved')
-
-
 async def ready_tasks():
     bot.add_cog(Ricciardo(bot))
     bot.add_cog(Verstapen(bot))
@@ -505,9 +500,19 @@ async def ready_tasks():
         if guild.me.nick != bot.nickname and guild.me.guild_permissions.change_nickname:
             bot.loop.create_task(guild.me.edit(nick=bot.nickname))
     while True:
-        bot.loop.create_task(update_presence())
+        try:
+            activity = await bot.sql.get_activity(bot.db)
+            await bot.change_presence(
+                activity=discord.Activity(name=activity[0], type=discord.ActivityType(activity[1])),
+                status=bot.status)
+        except:
+            logger.error('Update activity failed!')
         await asyncio.sleep(300)
-        bot.loop.create_task(commit_db())
+        try:
+            await bot.db.commit()
+            logger.debug('DB auto saved')
+        except:
+            logger.error('DB autosave failed!')
 
 
 bot.loop.create_task(bot.async_init())
