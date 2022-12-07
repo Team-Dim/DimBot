@@ -360,7 +360,10 @@ async def bs(ctx: commands.Context, server: int):
 @arccore.command()
 async def changelog(ctx):
     await bot.get_channel(977778385247944754).send(f"""**__{missile.ver} (Nov 5, 2022 4:47AM GMT)__**
-RIP 江澤民同志
+You can now hug multiple people within a single hug command.
+__Please avoid exceeding the mention limit (5 in this server)__
+
+`changelog` is now a private command that will only send changelog to <#977778385247944754>
 """)
 
 
@@ -496,16 +499,14 @@ async def ready_tasks():
     for guild in bot.guilds:
         if guild.me.nick != bot.nickname and guild.me.guild_permissions.change_nickname:
             bot.loop.create_task(guild.me.edit(nick=bot.nickname))
-    await bot.change_presence(activity=discord.Activity(name='江澤民 in the sky o7', type=discord.ActivityType.watching),
-                              status=discord.Status.dnd)
     while True:
-        # try:
-        #     activity = await bot.sql.get_activity(bot.db)
-        #     await bot.change_presence(
-        #         activity=discord.Activity(name=activity[0], type=discord.ActivityType(activity[1])),
-        #         status=bot.status)
-        # except:
-        #     logger.error('Update activity failed!')
+        try:
+            activity = await bot.sql.get_activity(bot.db)
+            await bot.change_presence(
+                activity=discord.Activity(name=activity[0], type=discord.ActivityType(activity[1])),
+                status=bot.status)
+        except:
+            logger.error('Update activity failed!')
         await asyncio.sleep(300)
         try:
             await bot.db.commit()

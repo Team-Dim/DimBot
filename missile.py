@@ -15,7 +15,7 @@ from diminator.obj import PP
 import dimsecret
 
 __lvl__ = logging.DEBUG if dimsecret.debug else logging.INFO
-ver = '0.10.21.1'
+ver = '0.10.21'
 
 
 def get_logger(name: str) -> logging.Logger:
@@ -201,8 +201,7 @@ class Bot(commands.Bot):
         self.maintenance: bool = False
         self.status: discord.Status = discord.Status.online
         self.help_command = _Help()
-        # self.nickname = f"DimBot {'S ' if dimsecret.debug else ''}| {ver}"
-        self.nickname = '江澤民同志,一路好走!'
+        self.nickname = f"DimBot {'S ' if dimsecret.debug else ''}| {ver}"
 
     async def async_init(self):
         self.db = await aiosqlite.connect('DimBot.db')
