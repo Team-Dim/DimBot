@@ -15,7 +15,7 @@ from diminator.obj import PP
 import dimsecret
 
 __lvl__ = logging.DEBUG if dimsecret.debug else logging.INFO
-ver = '0.10.21'
+ver = '0.10.21.1'
 
 
 def get_logger(name: str) -> logging.Logger:
@@ -205,6 +205,7 @@ class Bot(commands.Bot):
 
     async def async_init(self):
         self.db = await aiosqlite.connect('DimBot.db')
+        await self.db.execute('PRAGMA foreign_keys = ON')
         if dimsecret.debug:
             self.ip = 'http://localhost:4010/'
         else:
