@@ -6,6 +6,7 @@ from typing import Union
 
 import aiosql
 import discord
+import openai
 import psutil
 from discord.ext import commands
 from discord.ext.commands import errors
@@ -52,11 +53,49 @@ async def b_invoke(ctx: commands.Context):
 
 @bot.after_invoke
 async def a_invoke(ctx: commands.Context):
-    if ctx.author.id != bot.owner_id:
+    if ctx.author.id != bot.owner_id and ctx.guild != bot.get_cog('Hamilton').guild:
         emb = missile.Embed(description=ctx.message.content)
         emb.add_field('By', ctx.author.mention)
         emb.add_field('In', ctx.guild.id if ctx.guild else 'DM')
         await bot.get_cog('Hamilton').bot_test.send(embed=emb)
+
+
+@bot.event
+async def on_message(msg: discord.Message):
+    if msg.content.startswith(bot.user.mention) or\
+            (msg.reference and msg.reference.cached_message and msg.reference.cached_message.author == bot.user):
+        my_name = msg.guild.me.display_name if msg.guild else bot.user.name
+        # print(msg.clean_content[len(my_name)+1:])
+        ref = msg.reference
+        msgs = [msg]
+        while ref and ref.cached_message:
+            msgs.append(ref.cached_message)
+            ref = ref.cached_message.reference
+        participants, convo = [], []
+        for m in reversed(msgs):
+            if m.author != bot.user and m.author.display_name not in participants:
+                participants.append(m.author.display_name)
+            convo.append(f'{m.author.display_name}: {m.clean_content}')
+        lf = '\n'
+        prompt = f"{my_name} is a cute, smart, light-headed and kind girl. She also has a nickname 'Nene'.\n{lf.join(convo)}\n{my_name}:"
+        response = await openai.Completion.acreate(
+            model="text-curie-001",
+            prompt=prompt,
+            temperature=0.9, # 0.9
+            max_tokens=250, # 150
+            top_p=1,
+            frequency_penalty=0.0,
+            presence_penalty=0.6, # 0.6
+            stop=[f'{my_name}:', f'{participants[0]}:']
+        )
+        usage = response['usage']
+        reason = response['choices'][0]['finish_reason']
+        response = response['choices'][0]['text']
+        response = response.replace('@', '**@**')
+        await msg.reply(response)
+        await bot.get_cog('Hamilton').bot_test.send(embed=missile.Embed(str(usage['total_tokens']), reason))
+    else:
+        await bot.process_commands(msg)
 
 
 @bot.event
@@ -359,11 +398,15 @@ async def bs(ctx: commands.Context, server: int):
 
 @arccore.command()
 async def changelog(ctx):
-    await bot.get_channel(977778385247944754).send(f"""**__{missile.ver} (Nov 5, 2022 4:47AM GMT)__**
-You can now hug multiple people within a single hug command.
-__Please avoid exceeding the mention limit (5 in this server)__
+    await bot.get_channel(977778385247944754).send(f"""**__{missile.ver} (Feb 10, 2023 4:47AM GMT)__**
+**Basic OpenAI chat integration**
+You can chat with DimBot by mentioning it at the beginning of a message!
+Continue by replying the response! It'll learn from the message chain.
+You can also reply someone's message and mention DimBot at the beginning of your reply. DimBot will also reply based on the conversation.
 
-`changelog` is now a private command that will only send changelog to <#977778385247944754>
+Removed mentioning DimBot as prefix.
+Fixed prefix help detection
+Hamilton will no longer log commands sent in my discord.
 """)
 
 

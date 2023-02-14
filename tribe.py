@@ -52,7 +52,7 @@ class Hamilton(Cog):
 
     @Cog.listener()
     async def on_message(self, msg: discord.Message):
-        if msg.guild and msg.content == msg.guild.me.mention:
+        if msg.guild and msg.content == self.bot.user.mention:
             p = await self.bot.get_prefix(msg)
             if p == self.bot.default_prefix:
                 await msg.channel.send(f'My prefix is **{self.bot.default_prefix}**')
@@ -74,6 +74,7 @@ class Hamilton(Cog):
                     f' If you wish to unsubscribe, please send `d.role {role.name}` in {ch.mention}.'
                 )
 
+    # No longer works due to outdated discord.py
     @Cog.listener()
     async def on_member_left(self, member: discord.Member):
         if member.guild == self.guild:

@@ -9,3 +9,4 @@ psutil~=5.8.0
 git+https://github.com/Rapptz/discord-ext-menus
 python-digitalocean
 pytube>=12.0.0
+openai
