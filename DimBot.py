@@ -6,7 +6,6 @@ from typing import Union
 
 import aiosql
 import discord
-import openai
 import psutil
 from discord.ext import commands
 from discord.ext.commands import errors
@@ -15,12 +14,14 @@ import dimond
 import dimsecret
 import missile
 import tribe
+import os
 from bruckserver.vireg import Verstapen
 from diminator.cog import Diminator
 from diminator.obj import BasePPException
 from echo import Bottas
 from mod.aegis import Aegis
 from mod.ikaros import Ikaros
+from nene import Nene
 from raceline import Ricciardo
 from skybow import SkyBow
 from xp import XP
@@ -32,6 +33,7 @@ bot = missile.Bot(intents=intent)
 logger = missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手にある <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
+last_modified = datetime.fromtimestamp(os.path.getmtime('DimBot.py')).strftime('%b %d, %Y %I:%M%p')
 
 try:
     # If the bot is restarting, read the channel ID that invoked the restart command
@@ -53,49 +55,11 @@ async def b_invoke(ctx: commands.Context):
 
 @bot.after_invoke
 async def a_invoke(ctx: commands.Context):
-    if ctx.author.id != bot.owner_id and ctx.guild != bot.get_cog('Hamilton').guild:
+    if ctx.author.id != bot.owner_id and (not ctx.guild or ctx.guild != bot.get_cog('Hamilton').guild):
         emb = missile.Embed(description=ctx.message.content)
         emb.add_field('By', ctx.author.mention)
         emb.add_field('In', ctx.guild.id if ctx.guild else 'DM')
         await bot.get_cog('Hamilton').bot_test.send(embed=emb)
-
-
-@bot.event
-async def on_message(msg: discord.Message):
-    if msg.content.startswith(bot.user.mention) or\
-            (msg.reference and msg.reference.cached_message and msg.reference.cached_message.author == bot.user):
-        my_name = msg.guild.me.display_name if msg.guild else bot.user.name
-        # print(msg.clean_content[len(my_name)+1:])
-        ref = msg.reference
-        msgs = [msg]
-        while ref and ref.cached_message:
-            msgs.append(ref.cached_message)
-            ref = ref.cached_message.reference
-        participants, convo = [], []
-        for m in reversed(msgs):
-            if m.author != bot.user and m.author.display_name not in participants:
-                participants.append(m.author.display_name)
-            convo.append(f'{m.author.display_name}: {m.clean_content}')
-        lf = '\n'
-        prompt = f"{my_name} is a cute, smart, light-headed and kind girl. She also has a nickname 'Nene'.\n{lf.join(convo)}\n{my_name}:"
-        response = await openai.Completion.acreate(
-            model="text-curie-001",
-            prompt=prompt,
-            temperature=0.9, # 0.9
-            max_tokens=250, # 150
-            top_p=1,
-            frequency_penalty=0.0,
-            presence_penalty=0.6, # 0.6
-            stop=[f'{my_name}:', f'{participants[0]}:']
-        )
-        usage = response['usage']
-        reason = response['choices'][0]['finish_reason']
-        response = response['choices'][0]['text']
-        response = response.replace('@', '**@**')
-        await msg.reply(response)
-        await bot.get_cog('Hamilton').bot_test.send(embed=missile.Embed(str(usage['total_tokens']), reason))
-    else:
-        await bot.process_commands(msg)
 
 
 @bot.event
@@ -398,15 +362,13 @@ async def bs(ctx: commands.Context, server: int):
 
 @arccore.command()
 async def changelog(ctx):
-    await bot.get_channel(977778385247944754).send(f"""**__{missile.ver} (Feb 10, 2023 4:47AM GMT)__**
-**Basic OpenAI chat integration**
-You can chat with DimBot by mentioning it at the beginning of a message!
-Continue by replying the response! It'll learn from the message chain.
-You can also reply someone's message and mention DimBot at the beginning of your reply. DimBot will also reply based on the conversation.
+    await bot.get_channel(977778385247944754).send(f"""**__{missile.ver} ({last_modified})__**
+__Project Nene: The AI is now a standalone module of DimBot.__
+You can now set an introduction using `d.ai intro` to let DimBot learn about you!
 
-Removed mentioning DimBot as prefix.
-Fixed prefix help detection
-Hamilton will no longer log commands sent in my discord.
+Changelog time is now automatically updated. Timezone is removed.
+Starting with this update, you have to reply the message when DimBot is asking a question.
+Simply sending a response in the same text channel no longer works.
 """)
 
 
@@ -533,6 +495,7 @@ async def ready_tasks():
     bot.add_cog(SkyBow(bot))
     await bot.wait_until_ready()
     bot.add_cog(tribe.Hamilton(bot))
+    bot.add_cog(Nene(bot))
     psutil.cpu_percent(percpu=True)
     await bot.is_owner(bot.user)  # Trick to set bot.owner_id
     logger.info('Ready')

@@ -3,6 +3,7 @@ dimsecret.py
 *.db
 *.db-journal
 *.json
+ai_data
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

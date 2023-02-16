@@ -15,7 +15,7 @@ from diminator.obj import PP
 import dimsecret
 
 __lvl__ = logging.DEBUG if dimsecret.debug else logging.INFO
-ver = '0.10.22'
+ver = '0.10.22.1'
 
 
 def get_logger(name: str) -> logging.Logger:
@@ -207,17 +207,21 @@ class Bot(commands.Bot):
 
     async def ask_msg(self, ctx, msg: str, timeout: int = 10):
         """Asks a follow-up question"""
-        await ctx.send(msg)
+        nene = self.get_cog('Nene')
+        p = await ctx.reply(msg)
+        nene.no_ai.append(p.id)
+        r = None
         # Waits for the time specified
         try:
             reply = await self.wait_for(
                 'message', timeout=timeout,
-                # Checks whether the message is sent by the same author and in the same channel.
-                # TODO: Change this to message reference
-                check=lambda mess: mess.author.id == ctx.author.id and mess.channel == ctx.channel)
-            return reply.content
+                # Checks whether mess is replying to p
+                check=lambda mess: mess.reference and mess.reference.cached_message == p)
+            r = reply.content
         except asyncio.TimeoutError:
-            return None
+            pass
+        nene.no_ai.remove(p.id)
+        return r
 
     async def ask_reaction(self, ctx: commands.Context, ask: str, emoji: str = '✅', timeout: int = 10) -> bool:
         q = await ctx.send(ask)
