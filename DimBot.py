@@ -363,12 +363,11 @@ async def bs(ctx: commands.Context, server: int):
 @arccore.command()
 async def changelog(ctx):
     await bot.get_channel(977778385247944754).send(f"""**__{missile.ver} ({last_modified})__**
-__Project Nene: The AI is now a standalone module of DimBot.__
-You can now set an introduction using `d.ai intro` to let DimBot learn about you!
+Added `d.ai qa`: DimBot will keep asking your random questions and analyze your replies.
+You have 30s to answer each question.
 
-Changelog time is now automatically updated. Timezone is removed.
-Starting with this update, you have to reply the message when DimBot is asking a question.
-Simply sending a response in the same text channel no longer works.
+Hotfix:
+You can now input any characters in your introduction except the sequence ``###``
 """)
 
 

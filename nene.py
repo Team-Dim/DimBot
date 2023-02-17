@@ -1,3 +1,4 @@
+import json
 import re
 
 import discord
@@ -54,7 +55,8 @@ class Nene(missile.Cog):
                     participants.append(m.author.display_name)
                 convo.append(f'{m.author.display_name}: {m.clean_content}')
             lf = '\n'
-            prompt = f"{my_name} is a cute, smart, light-headed and kind girl. She also has a nickname 'Nene'.\n{lf.join(convo)}\n{my_name}:"
+            prompt = f"{my_name} is a cute, smart, light-headed and kind girl. She also has a nickname 'Nene'.\n" \
+                     f"The following is a conversation.\n\n{lf.join(convo)}\n{my_name}:"
             response = await ask(prompt, stop=[f'{my_name}:', f'{participants[0]}:'])
             usage = response['usage']
             reason = response['choices'][0]['finish_reason']
@@ -83,10 +85,44 @@ class Nene(missile.Cog):
             'Tell me about yourself using first-person narrative. Please reply this message in 10 minutes. '
             'You can only change this 3 times per hour.',
             600)
-        if not re.match(r'^[\w\-\s,.]+$', para):
-            await ctx.reply('Only alphabets, numbers and `,.-_` allowed.')
+        if not para:
             return
-        with open(f'ai_data/{ctx.author.id}.txt', 'w') as f:
-            f.write(para)
+        if fine_tune_stop in para:
+            await ctx.reply(f'The sequence ``###`` is not allowed.')
+            return
+        path = f'ai_data/{ctx.author.id}.json'
+        try:
+            with open(path, 'r') as f:
+                d = json.load(f)
+        except FileNotFoundError:
+            d = {}
+        d['intro'] = para
+        with open(path, 'w') as f:
+            json.dump(d, f)
         await ctx.reply('Thanks for telling me!')
+
+
+    @ai.command(brief='Answer random questions to train the AI')
+    async def qa(self, ctx):
+        """The bot will keep asking random questions about you. Your reply will be studied by the AI.
+        You have 30s to answer each question. When time is out, it will stop asking."""
+        path = f'ai_data/{ctx.author.id}.json'
+        try:
+            with open(path, 'r') as f:
+                d = json.load(f)
+        except FileNotFoundError:
+            d = {}
+        while True:
+            q = await ask('Ask a random question about me.', temperature=1, txt_only=True)
+            q = q.replace('\n', '')
+            a = await self.bot.ask_msg(ctx, q, 30)
+            if a:
+                d[q] = a
+            else:
+                with open(path, 'w') as f:
+                    json.dump(d, f)
+                await ctx.reply('Thanks for answering those questions!')
+                return
+
+
 
