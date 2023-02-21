@@ -363,11 +363,7 @@ async def bs(ctx: commands.Context, server: int):
 @arccore.command()
 async def changelog(ctx):
     await bot.get_channel(977778385247944754).send(f"""**__{missile.ver} ({last_modified})__**
-Added `d.ai qa`: DimBot will keep asking your random questions and analyze your replies.
-You have 30s to answer each question.
-
-Hotfix:
-You can now input any characters in your introduction except the sequence ``###``
+Increased randomness of `d.ai qa` questions
 """)
 
 
@@ -492,9 +488,9 @@ async def ready_tasks():
     bot.add_cog(XP(bot))
     bot.add_cog(Diminator(bot))
     bot.add_cog(SkyBow(bot))
+    bot.add_cog(Nene(bot))
     await bot.wait_until_ready()
     bot.add_cog(tribe.Hamilton(bot))
-    bot.add_cog(Nene(bot))
     psutil.cpu_percent(percpu=True)
     await bot.is_owner(bot.user)  # Trick to set bot.owner_id
     logger.info('Ready')
