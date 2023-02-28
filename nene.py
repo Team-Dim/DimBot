@@ -138,8 +138,13 @@ class Nene(missile.Cog):
         counter = 0
         while True:
             try:
+                if d:
+                    prompt = f"Ask a new question about the author.\n\nThe following are some questions that you asked:\n{lf.join(d.keys())}"
+                else:
+                    prompt = 'Ask a question about me'
+
                 q = await self.ask(
-                    f"Ask a new question about the author.\n\nThe following are some questions that you asked:\n{lf.join(d.keys())}"
+                    prompt
                     , model='text-curie-001', temperature=1, txt_only=True, stop=['?'])
                 q = (q + '?').replace('\n', '')
                 a = await self.bot.ask_msg(ctx, "__Please don't answer if I am not asking a question.__\n\n" + q, 30)

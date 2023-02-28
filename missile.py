@@ -15,7 +15,7 @@ from diminator.obj import PP
 import dimsecret
 
 __lvl__ = logging.DEBUG if dimsecret.debug else logging.INFO
-ver = '0.10.22.3'
+ver = '0.10.22.4'
 
 
 def get_logger(name: str) -> logging.Logger:

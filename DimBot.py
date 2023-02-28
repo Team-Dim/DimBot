@@ -363,7 +363,7 @@ async def bs(ctx: commands.Context, server: int):
 @arccore.command()
 async def changelog(ctx):
     await bot.get_channel(977778385247944754).send(f"""**__{missile.ver} ({last_modified})__**
-Increased randomness of `d.ai qa` questions
+`d.ai qa` will now properly generate a question if the user has never executed the command before.
 """)
 
 
