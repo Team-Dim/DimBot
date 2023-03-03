@@ -11,12 +11,13 @@ They should be stored inside `dimsecret.py` in the project root directory.
 
 The following are the variables that should be in the file:
 
-| Name              | Type | Description                                                               |
-|-------------------|------|---------------------------------------------------------------------------|
-| discord           | str  | Discord bot token. Obtained from Discord Developer Portal<br>ALWAYS REQUIRED |
-| youtube           | str  | YouTube API token<br>Required for YouTube subscription processing            |
-| debug             | bool | Whether the bot is in debug mode.<br>ALWAYS REQUIRED                         |
-| digital_ocean     | str  | Token from DigitalOcean<br>Required for Vireg  |
+| Name           | Type | Description                                                                  |
+|----------------|------|------------------------------------------------------------------------------|
+| discord        | str  | Discord bot token. Obtained from Discord Developer Portal<br>ALWAYS REQUIRED |
+| youtube        | str  | YouTube API token<br>Required for YouTube subscription processing            |
+| debug          | bool | Whether the bot is in debug mode.<br>ALWAYS REQUIRED                         |
+| digital_ocean  | str  | Token from DigitalOcean<br>Required for Vireg                                |
+| openai.api_key | str  | Token for OpenAI service.<br>Required for Nene                               |
 
 # Codenames
 `Barbados` is the codename given to the discord.py implementation of DimBot.

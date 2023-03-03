@@ -363,7 +363,9 @@ async def bs(ctx: commands.Context, server: int):
 @arccore.command()
 async def changelog(ctx):
     await bot.get_channel(977778385247944754).send(f"""**__{missile.ver} ({last_modified})__**
-`d.ai qa` will now properly generate a question if the user has never executed the command before.
+Added `d.gpt`: The AI will respond using the ChatGPT model.
+You can still use the previous model by pinging the bot.
+I'll decide whether GPT will replace it in the future, but for now feel free to try both of them
 """)
 
 

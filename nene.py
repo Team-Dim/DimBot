@@ -43,8 +43,8 @@ class Nene(missile.Cog):
             presence_penalty=0.6, # 0.6
             stop=stop
         )
-        if re.match(r'[\n ]*$', r['choices'][0]['text']):
-            r['choices'][0]['text'] = "⚠️I don't know..."
+        # if re.match(r'[\n ]*$', r['choices'][0]['text']):
+        #     r['choices'][0]['text'] = "⚠️I don't know..."
         if clean:
                 r['choices'][0]['text'] = r['choices'][0]['text'].replace('@', '**@**')
         if txt_only:
@@ -61,7 +61,7 @@ class Nene(missile.Cog):
     async def on_message(self, msg: discord.Message):
         if msg.content.startswith(self.bot.user.mention) or \
                 (msg.reference and msg.reference.cached_message and msg.reference.cached_message.author == self.bot.user
-                and msg.reference.cached_message.id not in self.no_ai):
+                and msg.reference.cached_message.id not in self.no_ai and not msg.content.startswith(await self.bot.get_prefix(msg))):
             my_name = msg.guild.me.display_name if msg.guild else self.bot.user.name
             ref = msg.reference
             msgs = [msg]
@@ -136,10 +136,10 @@ class Nene(missile.Cog):
             d = {}
         lf = '\n'
         counter = 0
-        while True:
+        while counter < 3:
             try:
                 if d:
-                    prompt = f"Ask a new question about the author.\n\nThe following are some questions that you asked:\n{lf.join(d.keys())}"
+                    prompt = f"Ask a new question about me. The following are some questions that you asked:\n\n{lf.join(d.keys())}"
                 else:
                     prompt = 'Ask a question about me'
 
@@ -152,19 +152,17 @@ class Nene(missile.Cog):
                     d[q] = a
                     counter = 0
                 else:
-                    with open(path, 'w') as f:
-                        json.dump(d, f)
-                    await ctx.reply('Thanks for answering those questions!')
-                    return
+                    counter = 99
             except ValueError:
-                if counter < 3:
-                    counter += 1
-                else:
-                    with open(path, 'w') as f:
-                        json.dump(d, f)
-                    await ctx.reply("Looks like something is wrong, but I've managed to save your answers. "
-                                    "Thanks for answering those questions!")
-                    return
+                counter += 1
+        with open(path, 'w') as f:
+            json.dump(d, f)
+        if counter == 99:
+            await ctx.reply('Thanks for answering those questions!')
+        else:
+            await ctx.reply("Looks like something is wrong, but I've managed to save your answers. "
+                            "Thanks for answering those questions!")
+
 
     @ai.group(invoke_without_command=True, brief='Controlling models')
     @missile.is_rainbow()
@@ -254,3 +252,28 @@ class Nene(missile.Cog):
         tasks = map(lambda f: openai.File.adelete(f.id), resp.data)
         await asyncio.wait(tasks)
         await ctx.reply(f'Deleted {len(resp.data)} files.')
+
+    @commands.command(brief='Chat using the ChatGPT model')
+    async def gpt(self, ctx, *, msg):
+
+        def role_prefix(m):
+            if m.author == self.bot.user:
+                return 'assistant', ''
+            return 'user', m.author.name + ': '
+
+        ref = ctx.message.reference
+        msgs = [
+            {"role": 'user', "content": f'{ctx.author.name}: {msg}'}
+        ]
+        while ref and ref.cached_message:
+            role, prefix = role_prefix(ref.cached_message)
+            msgs.append({"role": role, "content": prefix + ref.cached_message.content})
+            ref = ref.cached_message.reference
+        msgs = ({"role": 'system',
+                 "content": "You are DimBot, a cute, smart, light-headed and kind girl. You have a nickname 'Nene'"},) \
+               + tuple(reversed(msgs))
+
+        resp = await openai.ChatCompletion.acreate(
+            model='gpt-3.5-turbo', messages=msgs
+        )
+        await ctx.reply(resp['choices'][0]['message']['content'])
