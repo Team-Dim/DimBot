@@ -263,17 +263,35 @@ class Nene(missile.Cog):
 
         ref = ctx.message.reference
         msgs = [
-            {"role": 'user', "content": f'{ctx.author.name}: {msg}'}
+            {"role": 'user', "content": f'{ctx.author.name}: {msg}\n\nReply in less than 2000 characters'}
         ]
-        while ref and ref.cached_message:
-            role, prefix = role_prefix(ref.cached_message)
-            msgs.append({"role": role, "content": prefix + ref.cached_message.content})
-            ref = ref.cached_message.reference
-        msgs = ({"role": 'system',
-                 "content": "You are DimBot, a cute, smart, light-headed and kind girl. You have a nickname 'Nene'"},) \
-               + tuple(reversed(msgs))
 
+        nicknames = {ctx.author.name: ctx.author.nick if ctx.guild and ctx.author.nick else None}
+        while ref and ref.cached_message:
+            ref_msg = ref.cached_message
+            ref_author = ref_msg.author
+            if ref_author.name not in nicknames and ref_author != self.bot.user:
+                nicknames[ref_author.name] = ref_author.nick if ctx.guild and ref_author.nick else None
+            role, prefix = role_prefix(ref_msg)
+            msgs.append({"role": role, "content": prefix + ref_msg.content})
+            ref = ref_msg.reference
+
+        sys_msgs = [{
+            "role": 'system',
+            "content": "You are DimBot, a cute, smart, light-headed and kind girl. You have a nickname 'Nene'."
+        }]
+
+        nickname_msg = ''
+        for name, nick in nicknames.items():
+            if nick:
+                nickname_msg += f"{name}'s Nickname: {nick}\n"
+        sys_msgs.append({'role': 'system', 'content': nickname_msg})
+
+
+        msgs = sys_msgs + list(reversed(msgs))
         resp = await openai.ChatCompletion.acreate(
             model='gpt-3.5-turbo', messages=msgs
         )
-        await ctx.reply(resp['choices'][0]['message']['content'])
+        resp = resp['choices'][0]['message']['content'].replace('@', '**@**')
+
+        await ctx.reply(resp)
