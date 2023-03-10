@@ -276,17 +276,11 @@ class Nene(missile.Cog):
             msgs.append({"role": role, "content": prefix + ref_msg.content})
             ref = ref_msg.reference
 
-        sys_msgs = [{
-            "role": 'system',
-            "content": "You are DimBot, a cute, smart, light-headed and kind girl. You have a nickname 'Nene'."
-        }]
-
-        nickname_msg = ''
+        sys_msg = "You are DimBot, a cute, smart, light-headed and kind girl. You have a nickname 'Nene'.\n\n"
         for name, nick in nicknames.items():
             if nick:
-                nickname_msg += f"{name}'s Nickname: {nick}\n"
-        sys_msgs.append({'role': 'system', 'content': nickname_msg})
-
+                sys_msg += f"{name}'s nickname: {nick}\n"
+        sys_msgs = [{'role': 'system', 'content': sys_msg}]
 
         msgs = sys_msgs + list(reversed(msgs))
         resp = await openai.ChatCompletion.acreate(
