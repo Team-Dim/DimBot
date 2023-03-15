@@ -363,8 +363,7 @@ async def bs(ctx: commands.Context, server: int):
 @arccore.command()
 async def changelog(ctx):
     await bot.get_channel(977778385247944754).send(f"""**__{missile.ver} ({last_modified})__**
-Added a character limit for `d.gpt` as well as replacing @ sign (so it won't ping anyone)
-`d.gpt` can now recognise member nicknames in a server
+Prepare for GPT-4 API rollout.
 """)
 
 

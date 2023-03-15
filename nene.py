@@ -1,11 +1,11 @@
 import asyncio
 import json
 import os
-import re
 
 import discord
-import openai
 from discord.ext import commands
+from openai import InvalidRequestError
+import openai
 
 import missile
 
@@ -253,9 +253,33 @@ class Nene(missile.Cog):
         await asyncio.wait(tasks)
         await ctx.reply(f'Deleted {len(resp.data)} files.')
 
-    @commands.command(brief='Chat using the ChatGPT model')
-    async def gpt(self, ctx, *, msg):
+    @commands.command()
+    async def gpt(self, ctx):
+        await ctx.reply('''
+OpenAI recently released the GPT-4 model, a successor to the GPT-3.5 model used by ChatGPT.
+According to their claims, GPT-4 is a lot smarter in *certain tasks*
+but they charge way more (**~20x!!!**).
 
+I've decided to still let you guys test it. I'm such a kind person. Plz d.sponsor
+Use d.gpt3 and d.gpt4 instead.
+        ''')
+
+    @commands.command(brief='Chat using the ChatGPT (GPT-3.5) model')
+    async def gpt3(self, ctx, *, msg):
+        await self.gpt_common('gpt-3.5-turbo', ctx, msg)
+
+    @commands.command(brief='Chat using the GPT-4 model')
+    async def gpt4(self, ctx, *, msg):
+        try:
+            await self.gpt_common('gpt-4', ctx, msg)
+        except InvalidRequestError as e:
+            if e.user_message == 'That model does not exist':
+                await ctx.reply("If you see this message, they haven't made GPT-4 public yet.")
+            else:
+                await ctx.reply(e.user_message)
+
+
+    async def gpt_common(self, model, ctx, msg):
         def role_prefix(m):
             if m.author == self.bot.user:
                 return 'assistant', ''
@@ -284,8 +308,9 @@ class Nene(missile.Cog):
 
         msgs = sys_msgs + list(reversed(msgs))
         resp = await openai.ChatCompletion.acreate(
-            model='gpt-3.5-turbo', messages=msgs
+            model=model, messages=msgs
         )
+        print(resp)
         resp = resp['choices'][0]['message']['content'].replace('@', '**@**')
 
         await ctx.reply(resp)
