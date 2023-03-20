@@ -3,12 +3,11 @@ import json
 import os
 
 import discord
-from discord.ext import commands
-from openai import InvalidRequestError
 import openai
+from discord.ext import commands
+from openai import OpenAIError
 
 import missile
-
 
 fine_tune_stop = '\n\n###\n\n'
 
@@ -268,14 +267,14 @@ Use d.gpt3 and d.gpt4 instead.
     async def gpt3(self, ctx, *, msg):
         try:
             await self.gpt_common('gpt-3.5-turbo', ctx, msg)
-        except InvalidRequestError as e:
+        except OpenAIError as e:
             await ctx.reply('Hmm... Who am I? What is DimBot? Sus\n' + e.user_message)
 
     @commands.command(brief='Chat using the GPT-4 model')
     async def gpt4(self, ctx, *, msg):
         try:
             await self.gpt_common('gpt-4', ctx, msg)
-        except InvalidRequestError as e:
+        except OpenAIError as e:
             await ctx.reply("If you see this message, it's most likely because GPT-4 still isn't public yet.\n"
                             + e.user_message)
 
