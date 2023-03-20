@@ -266,17 +266,18 @@ Use d.gpt3 and d.gpt4 instead.
 
     @commands.command(brief='Chat using the ChatGPT (GPT-3.5) model')
     async def gpt3(self, ctx, *, msg):
-        await self.gpt_common('gpt-3.5-turbo', ctx, msg)
+        try:
+            await self.gpt_common('gpt-3.5-turbo', ctx, msg)
+        except InvalidRequestError as e:
+            await ctx.reply('Hmm... Who am I? What is DimBot? Sus\n' + e.user_message)
 
     @commands.command(brief='Chat using the GPT-4 model')
     async def gpt4(self, ctx, *, msg):
         try:
             await self.gpt_common('gpt-4', ctx, msg)
         except InvalidRequestError as e:
-            if e.user_message == 'That model does not exist':
-                await ctx.reply("If you see this message, they haven't made GPT-4 public yet.")
-            else:
-                await ctx.reply(e.user_message)
+            await ctx.reply("If you see this message, it's most likely because GPT-4 still isn't public yet.\n"
+                            + e.user_message)
 
 
     async def gpt_common(self, model, ctx, msg):

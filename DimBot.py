@@ -363,7 +363,7 @@ async def bs(ctx: commands.Context, server: int):
 @arccore.command()
 async def changelog(ctx):
     await bot.get_channel(977778385247944754).send(f"""**__{missile.ver} ({last_modified})__**
-Prepare for GPT-4 API rollout.
+Improve error messages for GPT 3/4
 """)
 
 
