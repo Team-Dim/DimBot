@@ -364,7 +364,7 @@ async def bs(ctx: commands.Context, server: int):
 @arccore.command()
 async def changelog(ctx):
     await bot.get_channel(977778385247944754).send(f"""**__{missile.ver} ({last_modified})__**
-Support multiple donation events within 1 refresh interval in Hyperstellar
+Hyperstellar: WarAttack now displays defender map position and order of attacks correctly.
 """)
 
 

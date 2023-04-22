@@ -66,25 +66,24 @@ class Hyperstellar(missile.Cog):
         @self.coc.event
         @coc.WarEvents.war_attack()
         async def on_war_atk(atk: coc.WarAttack, war: coc.ClanWar):
-            attacker = atk.attacker
+            attacker, defender = atk.attacker, atk.defender
             if not attacker.is_opponent and not war.is_cwl:
-                name, pos = attacker.name, str(attacker.map_position)
-                if attacker.map_position != atk.defender.map_position:
+                name, pos = attacker.name, f'({attacker.map_position}) => ({defender.map_position})'
+                if attacker.map_position != defender.map_position:
                     pos = missile.underline(pos)
-                fresh_attack = '1' if atk.is_fresh_attack else '2'
                 atk_s = -war.start_time.seconds_until - atk.duration
                 atk_h, atk_s = divmod(atk_s, 3600)
                 atk_m, atk_s = divmod(atk_s, 60)
                 atk_time = f'{atk_h}h {atk_m}m {atk_s}s'
-                if not atk.is_fresh_attack and atk_h < 12:
+                attack_count = str(len(attacker.attacks))
+                if attack_count == '2' and atk_h < 12:
                     atk_time += ' ⚠Early'
-                elif atk.is_fresh_attack and atk_h >= 12:
+                elif attack_count == '1' and atk_h >= 12:
                     atk_time += ' ⚠Late'
-                await self.clan_log.send(f'[ATK] {name} ({pos}) {fresh_attack}⚔️ @{atk_time}')
+                await self.clan_log.send(f'[ATK] {name} {pos} {attack_count}⚔️ @{atk_time}')
 
 
     @missile.Cog.listener()
     async def on_ready(self):
         self.clan_log = self.bot.get_cog('Hamilton').bot_test if dimsecret.debug else self.bot.get_channel(1099026457268863017)
         await self.coc.login_with_tokens(dimsecret.coc)
-
