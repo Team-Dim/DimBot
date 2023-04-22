@@ -18,12 +18,20 @@ class Hyperstellar(missile.Cog):
         @self.coc.event
         @coc.ClanEvents.member_donations()
         async def on_member_donation(old: coc.ClanMember, new: coc.ClanMember):
-            self.donated[new.name] = new.donations - old.donations
+            delta = new.donations - old.donations
+            if new.name in self.donated:
+                self.donated[new.name] += delta
+            else:
+                self.donated[new.name] = delta
 
         @self.coc.event
         @coc.ClanEvents.member_received()
         async def on_member_received(old: coc.ClanMember, new: coc.ClanMember):
-            self.received[new.name] = new.received - old.received
+            delta = new.received - old.received
+            if new.name in self.received:
+                self.received[new.name] += delta
+            else:
+                self.received[new.name] = delta
 
         @self.coc.event
         @coc.ClientEvents.clan_loop_finish()
