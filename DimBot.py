@@ -19,6 +19,7 @@ from bruckserver.vireg import Verstapen
 from diminator.cog import Diminator
 from diminator.obj import BasePPException
 from echo import Bottas
+from hyperstellar import Hyperstellar
 from mod.aegis import Aegis
 from mod.ikaros import Ikaros
 from nene import Nene
@@ -363,7 +364,9 @@ async def bs(ctx: commands.Context, server: int):
 @arccore.command()
 async def changelog(ctx):
     await bot.get_channel(977778385247944754).send(f"""**__{missile.ver} ({last_modified})__**
-Improve error messages for GPT 3/4
+Handles RSS endpoint responses sometimes being not RSS at all.
+Disabled `Verstapen` as it is no longer in use.
+__Project Hyperstellar: Report Clash of Clans clan events__
 """)
 
 
@@ -480,7 +483,7 @@ async def decode(ctx: commands.Context, content: str):
 
 async def ready_tasks():
     bot.add_cog(Ricciardo(bot))
-    bot.add_cog(Verstapen(bot))
+    # bot.add_cog(Verstapen(bot))
     bot.add_cog(Bottas(bot))
     bot.add_cog(dimond.Dimond(bot))
     bot.add_cog(Ikaros(bot))
@@ -489,6 +492,7 @@ async def ready_tasks():
     bot.add_cog(Diminator(bot))
     bot.add_cog(SkyBow(bot))
     bot.add_cog(Nene(bot))
+    bot.add_cog(Hyperstellar(bot))
     await bot.wait_until_ready()
     bot.add_cog(tribe.Hamilton(bot))
     psutil.cpu_percent(percpu=True)

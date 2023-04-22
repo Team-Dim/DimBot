@@ -18,6 +18,7 @@ The following are the variables that should be in the file:
 | debug          | bool | Whether the bot is in debug mode.<br>ALWAYS REQUIRED                         |
 | digital_ocean  | str  | Token from DigitalOcean<br>Required for Vireg                                |
 | openai.api_key | str  | Token for OpenAI service.<br>Required for Nene                               |
+| coc            | str  | Token for Clash of Clans.<br>Required for Hyperstellar                       |
 
 # Codenames
 `Barbados` is the codename given to the discord.py implementation of DimBot.

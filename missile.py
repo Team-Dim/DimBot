@@ -15,7 +15,7 @@ from diminator.obj import PP
 import dimsecret
 
 __lvl__ = logging.DEBUG if dimsecret.debug else logging.INFO
-ver = '0.10.23.4'
+ver = '0.10.24'
 
 
 def get_logger(name: str) -> logging.Logger:
@@ -44,6 +44,10 @@ def decode(text: str) -> str:
     decoded: bytes = base64.b64decode(b)
     return decoded.decode()
 
+def underline(text: str, mag: int = 1) -> str:
+    u_line = '_'*mag
+    text = text.replace(u_line, '\\_'*mag)
+    return u_line + text + u_line
 
 async def append_msg(msg: discord.Message, content: str, delimiter: str = '\n'):
     await msg.edit(content=f'{msg.content}{delimiter}{content}')

@@ -15,7 +15,7 @@ from dimsecret import youtube
 
 class Ricciardo(missile.Cog):
     """Relaying RSS, BBM and YouTube feeds to discord channels.
-    Version 5.2.2"""
+    Version 5.2.3"""
 
     def __init__(self, bot):
         super().__init__(bot, 'Ricciardo')
@@ -89,7 +89,11 @@ class Ricciardo(missile.Cog):
             self.logger.debug(f"RSS {rowid}: Fetching response...")
             text = await response.text()
         self.logger.debug(f"RSS {rowid}: Parsing response...")
-        feed = feedparser.parse(text).entries[0]  # Converts RSS response to library objects and read the first entry
+        feeds = feedparser.parse(text).entries  # Converts RSS response to library objects
+        if not feeds:  # Endpoint response isn't RSS
+            self.logger.warn(f"RSS {rowid}: Response isn't RSS")
+            return
+        feed = feeds[0]  # read the first entry
         if feed.published_parsed:
             pubtime = mktime(feed.published_parsed)  # Converts the feed's publish timestamp to an integer
         else:

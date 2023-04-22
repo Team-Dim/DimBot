@@ -10,3 +10,4 @@ git+https://github.com/Rapptz/discord-ext-menus
 python-digitalocean
 pytube>=12.0.0
 openai>=0.27.2
+coc.py>=2.3.1
