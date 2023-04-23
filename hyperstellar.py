@@ -56,12 +56,10 @@ class Hyperstellar(missile.Cog):
         @self.coc.event
         @coc.WarEvents.state()
         async def on_war_state(old, new: coc.ClanWar):
-            if not new.is_cwl:
-                msg = f'<@{self.bot.owner_id}>'+new.state + '\n'
-                for member in new.members:
-                    if not member.is_opponent and not member.attacks:
-                        msg += member.name + ' '
-                await self.bot.get_cog('Hamilton').bot_test.send(msg)
+            if not new.is_cwl and new.state == 'warEnded':
+                msg = f"War has ended. The following members did't attack:\n \
+                {', '.join(member.name for member in new.members if not member.is_opponent and not member.attacks)}"
+                await self.clan_log.bot_test.send(msg)
 
         @self.coc.event
         @coc.WarEvents.war_attack()
@@ -69,17 +67,17 @@ class Hyperstellar(missile.Cog):
             attacker, defender = atk.attacker, atk.defender
             if not attacker.is_opponent and not war.is_cwl:
                 name, pos = attacker.name, f'({attacker.map_position}) => ({defender.map_position})'
-                if attacker.map_position != defender.map_position:
-                    pos = missile.underline(pos)
                 atk_s = -war.start_time.seconds_until - atk.duration
                 atk_h, atk_s = divmod(atk_s, 3600)
                 atk_m, atk_s = divmod(atk_s, 60)
                 atk_time = f'{atk_h}h {atk_m}m {atk_s}s'
                 attack_count = str(len(attacker.attacks))
                 if attack_count == '2' and atk_h < 12:
-                    atk_time += ' ⚠Early'
+                    atk_time += ' ⚠️ Early'
                 elif attack_count == '1' and atk_h >= 12:
-                    atk_time += ' ⚠Late'
+                    atk_time += ' ⚠️ Late'
+                if attacker.map_position != defender.map_position and atk_h < 12:
+                    pos = missile.underline(pos, 2)
                 await self.clan_log.send(f'[ATK] {name} {pos} {attack_count}⚔️ @{atk_time}')
 
 
