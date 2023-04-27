@@ -18,20 +18,22 @@ class Hyperstellar(missile.Cog):
         @self.coc.event
         @coc.ClanEvents.member_donations()
         async def on_member_donation(old: coc.ClanMember, new: coc.ClanMember):
-            delta = new.donations - old.donations
-            if new.name in self.donated:
-                self.donated[new.name] += delta
-            else:
-                self.donated[new.name] = delta
+            if new.donations > old.donations:
+                delta = new.donations - old.donations
+                if new.name in self.donated:
+                    self.donated[new.name] += delta
+                else:
+                    self.donated[new.name] = delta
 
         @self.coc.event
         @coc.ClanEvents.member_received()
         async def on_member_received(old: coc.ClanMember, new: coc.ClanMember):
-            delta = new.received - old.received
-            if new.name in self.received:
-                self.received[new.name] += delta
-            else:
-                self.received[new.name] = delta
+            if new.donations > old.donations:
+                delta = new.received - old.received
+                if new.name in self.received:
+                    self.received[new.name] += delta
+                else:
+                    self.received[new.name] = delta
 
         @self.coc.event
         @coc.ClientEvents.clan_loop_finish()
@@ -48,18 +50,15 @@ class Hyperstellar(missile.Cog):
                 await self.clan_log.send(msg)
 
         @self.coc.event
-        @coc.WarEvents.new_war()
-        async def on_new_war(war: coc.ClanWar):
-            if not war.is_cwl:
-                await self.clan_log.send('New War: ' + war.opponent.name)
-
-        @self.coc.event
         @coc.WarEvents.state()
         async def on_war_state(old, new: coc.ClanWar):
-            if not new.is_cwl and new.state == 'warEnded':
-                msg = f"War has ended. The following members did't attack:\n \
-                {', '.join(member.name for member in new.members if not member.is_opponent and not member.attacks)}"
-                await self.clan_log.bot_test.send(msg)
+            if not new.is_cwl:
+                if new.state == 'inWar':
+                    await self.clan_log.send('War has started: ' + new.opponent.name)
+                elif new.state == 'warEnded':
+                    msg = f"War has ended. The following members didn't attack:\n \
+                    {', '.join(member.name for member in new.members if not member.is_opponent and not member.attacks)}"
+                    await self.clan_log.send(msg)
 
         @self.coc.event
         @coc.WarEvents.war_attack()
