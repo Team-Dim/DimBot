@@ -364,9 +364,7 @@ async def bs(ctx: commands.Context, server: int):
 @arccore.command()
 async def changelog(ctx):
     await bot.get_channel(977778385247944754).send(f"""**__{missile.ver} ({last_modified})__**
-Skip donation log when coc resets the record monthly.
-Fix end of war invalid channel.
-Start of war message is now sent on battle day instead of prep day
+Fix received donation being empty
 """)
 
 

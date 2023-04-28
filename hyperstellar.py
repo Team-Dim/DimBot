@@ -28,7 +28,7 @@ class Hyperstellar(missile.Cog):
         @self.coc.event
         @coc.ClanEvents.member_received()
         async def on_member_received(old: coc.ClanMember, new: coc.ClanMember):
-            if new.donations > old.donations:
+            if new.received > old.received:
                 delta = new.received - old.received
                 if new.name in self.received:
                     self.received[new.name] += delta
@@ -56,8 +56,8 @@ class Hyperstellar(missile.Cog):
                 if new.state == 'inWar':
                     await self.clan_log.send('War has started: ' + new.opponent.name)
                 elif new.state == 'warEnded':
-                    msg = f"War has ended. The following members didn't attack:\n \
-                    {', '.join(member.name for member in new.members if not member.is_opponent and not member.attacks)}"
+                    msg = "War has ended. The following members didn't attack:\n" + \
+                    f"{', '.join(member.name for member in new.members if not member.is_opponent and not member.attacks)}"
                     await self.clan_log.send(msg)
 
         @self.coc.event
