@@ -1,4 +1,5 @@
 .idea
+venv
 dimsecret.py
 *.db
 *.db-journal

@@ -1,8 +1,7 @@
 # DimBot
 Minimum Python version: `3.6` (f-strings are used, but I haven't tested whether 3.6-3.7 still works.)
 
-Recommended Python version: `3.9.2+` (.2 matters)  
-Do **NOT** use `3.9.3` for any applications; The Python foundation itself has pulled 3.9.3 due to a severe security flaw.
+Recommended Python version: `3.11.x`
 
 For `Albon` to work, you need root/sudo in Linux as it uses port 80 for HTTP server port
 ### dimsecret.py

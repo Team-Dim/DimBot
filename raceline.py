@@ -55,7 +55,7 @@ class Ricciardo(missile.Cog):
         resultless_futures = []
         if self.run_rss:
             for row in await self.bot.sql.get_rss_data(self.bot.db):  # Dispatches RSS tasks
-                resultless_futures.append(self.rss_process(row[0], row[1:]))
+                resultless_futures.append(self.bot.loop.create_task(self.rss_process(row[0], row[1:])))
         async with self.bot.sql.get_yt_data_cursor(self.bot.db) as cursor:
             async for row in cursor:  # Dispatches YouTube tasks
                 resultless_futures.append(self.bot.loop.create_task(self.yt_process(row)))
