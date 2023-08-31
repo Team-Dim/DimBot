@@ -4,6 +4,7 @@ import os
 
 import discord
 import openai
+from collections import deque
 from discord.ext import commands
 from openai import OpenAIError
 
@@ -23,8 +24,7 @@ class Nene(missile.Cog):
 
     def __init__(self, bot):
         super().__init__(bot, 'Nene')
-        self.no_ai = []
-        self.model = 'text-curie-001'
+        self.model = 'babbage-002'
 
     async def ask(self, prompt:str, model=None, temperature=0.7, max_tokens=250,
                   stop=None, txt_only=False, clean=True):
@@ -60,7 +60,7 @@ class Nene(missile.Cog):
     async def on_message(self, msg: discord.Message):
         if msg.content.startswith(self.bot.user.mention) or \
                 (msg.reference and msg.reference.cached_message and msg.reference.cached_message.author == self.bot.user
-                and msg.reference.cached_message.id not in self.no_ai and not msg.content.startswith(await self.bot.get_prefix(msg))):
+                and not msg.content.startswith(await self.bot.get_prefix(msg)) and self.bot.user in msg.mentions):
             my_name = msg.guild.me.display_name if msg.guild else self.bot.user.name
             ref = msg.reference
             msgs = [msg]
@@ -252,32 +252,14 @@ class Nene(missile.Cog):
         await asyncio.wait(tasks)
         await ctx.reply(f'Deleted {len(resp.data)} files.')
 
-    @commands.command()
-    async def gpt(self, ctx):
-        await ctx.reply('''
-OpenAI recently released the GPT-4 model, a successor to the GPT-3.5 model used by ChatGPT.
-According to their claims, GPT-4 is a lot smarter in *certain tasks*
-but they charge way more (**~20x!!!**).
-
-I've decided to still let you guys test it. I'm such a kind person. Plz d.sponsor
-Use d.gpt3 and d.gpt4 instead.
-        ''')
-
     @commands.command(brief='Chat using the ChatGPT (GPT-3.5) model')
     async def gpt3(self, ctx, *, msg):
-        try:
-            await self.gpt_common('gpt-3.5-turbo', ctx, msg)
-        except OpenAIError as e:
-            await ctx.reply('Hmm... Who am I? What is DimBot? Sus\n' + e.user_message)
+        await self.gpt_common('gpt-3.5-turbo', ctx, msg)
 
     @commands.command(brief='Chat using the GPT-4 model')
     async def gpt4(self, ctx, *, msg):
-        try:
-            await self.gpt_common('gpt-4', ctx, msg)
-        except OpenAIError as e:
-            await ctx.reply("If you see this message, it's most likely because GPT-4 still isn't public yet.\n"
-                            + e.user_message)
-
+            # Add async with typing
+        await self.gpt_common('gpt-4', ctx, msg)
 
     async def gpt_common(self, model, ctx, msg):
         def role_prefix(m):
@@ -286,31 +268,46 @@ Use d.gpt3 and d.gpt4 instead.
             return 'user', m.author.name + ': '
 
         ref = ctx.message.reference
-        msgs = [
-            {"role": 'user', "content": f'{ctx.author.name}: {msg}\n\nReply in less than 2000 characters'}
-        ]
+        msgs = deque([{"role": 'user', "content": f'{ctx.author.name}: {msg}'}])
+        authors = [ctx.author.name]
 
-        nicknames = {ctx.author.name: ctx.author.nick if ctx.guild and ctx.author.nick else None}
+        # nicknames = {ctx.author.name: ctx.author.nick if ctx.guild and ctx.author.nick else None}
         while ref and ref.cached_message:
             ref_msg = ref.cached_message
             ref_author = ref_msg.author
-            if ref_author.name not in nicknames and ref_author != self.bot.user:
-                nicknames[ref_author.name] = ref_author.nick if ctx.guild and ref_author.nick else None
+            content = ref_msg.content
+
+            if not content and ref_msg.embeds:  # Use embed description as content
+                emb = ref_msg.embeds[0]
+                if emb.description:
+                    content = emb.description
+            # if ref_author.name not in nicknames and ref_author != self.bot.user:
+            #     nicknames[ref_author.name] = ref_author.nick if ctx.guild and ref_author.nick else None
+            if ref_author != self.bot.user and ref_author.name not in authors:
+                authors.append(ref_author.name)
             role, prefix = role_prefix(ref_msg)
-            msgs.append({"role": role, "content": prefix + ref_msg.content})
+            msgs.appendleft({"role": role, "content": prefix + content})
             ref = ref_msg.reference
 
-        sys_msg = "You are DimBot, a cute, smart, light-headed and kind girl. You have a nickname 'Nene'.\n\n"
-        for name, nick in nicknames.items():
-            if nick:
-                sys_msg += f"{name}'s nickname: {nick}\n"
-        sys_msgs = [{'role': 'system', 'content': sys_msg}]
+        # for name, nick in nicknames.items():
+        #     if nick:
+        #         sys_msg += f"{name}'s nickname: {nick}\n"
 
-        msgs = sys_msgs + list(reversed(msgs))
-        resp = await openai.ChatCompletion.acreate(
-            model=model, messages=msgs
-        )
-        print(resp)
+        msgs.appendleft({'role': 'system', 'content': f"Your name is DimBot. You are trained with the {model} model. Users: {','.join(authors)}. You must reply in under 4096 characters."})
+        try:
+            async with ctx.typing():
+                resp = await openai.ChatCompletion.acreate(
+                    model=model, messages=list(msgs)
+                )
+        except OpenAIError as e:
+            await ctx.reply('Hmm... Who am I? What is DimBot? Sus\n' + e.user_message)
+            return
+        self.logger.debug(msgs)
         resp = resp['choices'][0]['message']['content'].replace('@', '**@**')
-
-        await ctx.reply(resp)
+        resp_len = len(resp)
+        if resp_len <= 2000:
+            await ctx.reply(resp)
+        elif resp_len <= 4096:
+            await ctx.reply(embed=missile.Embed(description=resp))
+        else:
+            await ctx.reply(embed=missile.Embed(description=resp[:4093] + '...', footer='Note: This response is too long'))

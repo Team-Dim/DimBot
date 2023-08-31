@@ -363,8 +363,14 @@ async def bs(ctx: commands.Context, server: int):
 
 @arccore.command()
 async def changelog(ctx):
-    await bot.get_channel(977778385247944754).send(f"""**__{missile.ver} ({last_modified})__**
-Fix received donation being empty
+    await bot.get_channel(977778385247944754).send(f"""# __{missile.ver} ({last_modified})__
+## Maximum character length of GPT response: 2000 => 4096 (Embed descriptions, also supported in a conversation).
+* Now gracefully handles GPT responses that are too long.
+* Added a typing indicator when using GPT 3/4
+* Updated prompt engineering for GPT 3/4
+* Removed `d.gpt`
+* Removed discriminator in `d.hug`
+* Replying to DimBot's message with mention OFF will no longer trigger the AI.
 """)
 
 
@@ -391,7 +397,7 @@ async def hug(ctx: commands.Context, *target: discord.Member):
                 gif = choice(nene_gifs)
                 name = 'me'
             else:
-                name = m
+                name = m.name
             t = time.time()
             hug_record = await bot.sql.get_hug(bot.db, hugger=ctx.author.id, huggie=m.id)
             if hug_record:
