@@ -40,3 +40,12 @@ WHERE guildID = :guild;
 UPDATE GuildCfg
 SET antiInvisible = :invisible
 WHERE guildID = :guild;
+
+/*
+ * User cfg
+ */
+
+--name: set-user-lang!
+INSERT INTO UserCfg (ID, LocalePref)
+VALUES (:user, :locale)
+ON CONFLICT (ID) DO UPDATE SET LocalePref = :locale;

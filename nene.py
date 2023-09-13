@@ -25,8 +25,10 @@ class Nene(missile.Cog):
     def __init__(self, bot):
         super().__init__(bot, 'Nene')
         self.model = 'babbage-002'
+        self.no_ai = []  # List of messages that AI should not reply to
+        self.trans = {}
 
-    async def ask(self, prompt:str, model=None, temperature=0.7, max_tokens=250,
+    async def ask(self, prompt: str, model=None, temperature=0.7, max_tokens=250,
                   stop=None, txt_only=False, clean=True):
         if stop is None:
             stop = ['DimBot: ']
@@ -35,22 +37,22 @@ class Nene(missile.Cog):
         r = await openai.Completion.acreate(
             model=model,
             prompt=prompt,
-            temperature=temperature, # 0.9
-            max_tokens=max_tokens, # 150
+            temperature=temperature,  # 0.9
+            max_tokens=max_tokens,  # 150
             top_p=1,
             frequency_penalty=0.0,
-            presence_penalty=0.6, # 0.6
+            presence_penalty=0.6,  # 0.6
             stop=stop
         )
         # if re.match(r'[\n ]*$', r['choices'][0]['text']):
         #     r['choices'][0]['text'] = "⚠️I don't know..."
         if clean:
-                r['choices'][0]['text'] = r['choices'][0]['text'].replace('@', '**@**')
+            r['choices'][0]['text'] = r['choices'][0]['text'].replace('@', '**@**')
         if txt_only:
             return r['choices'][0]['text']
         return r
 
-    #@missile.Cog.listener()
+    # @missile.Cog.listener()
     async def on_ready(self):
         resp = await openai.FineTune.alist()
         self.model = resp.data[-1].fine_tuned_model
@@ -58,32 +60,43 @@ class Nene(missile.Cog):
 
     @missile.Cog.listener()
     async def on_message(self, msg: discord.Message):
-        if msg.content.startswith(self.bot.user.mention) or \
-                (msg.reference and msg.reference.cached_message and msg.reference.cached_message.author == self.bot.user
-                and not msg.content.startswith(await self.bot.get_prefix(msg)) and self.bot.user in msg.mentions):
-            my_name = msg.guild.me.display_name if msg.guild else self.bot.user.name
-            ref = msg.reference
-            msgs = [msg]
-            while ref and ref.cached_message:
-                msgs.append(ref.cached_message)
-                ref = ref.cached_message.reference
-            participants, convo = [], []
-            for m in reversed(msgs):
-                if m.author != self.bot.user and m.author.display_name not in participants:
-                    participants.append(m.author.display_name)
-                convo_content = m.clean_content
-                if m.content.startswith(self.bot.user.mention):
-                    convo_content = m.clean_content[len(my_name)+1:]
-                convo.append(f'{m.author.name}: {convo_content}')
-            lf = '\n'
-            prompt = f"{lf.join(convo)}\nDimBot:"
-            # print(prompt)
-            response = await self.ask(prompt, stop=[f'DimBot:', f'{participants[0]}:'])
-            usage = response['usage']
-            reason = response['choices'][0]['finish_reason']
-            response = response['choices'][0]['text']
-            await msg.reply(response)
-            await self.bot.get_cog('Hamilton').bot_test.send(embed=missile.Embed(str(usage['total_tokens']), reason))
+        potential_ref = missile.msg_refers_to_author(msg, self.bot.user)
+        if potential_ref:
+            # The reply must be with mention ON
+            # The reference cannot be in no_ai
+            # The reply cannot begin with cmd prefix
+            potential_in_no_ai = self.no_ai.count(potential_ref.id)
+            if self.bot.user not in msg.mentions or potential_in_no_ai or await self.msg_is_cmd(msg):
+                if potential_in_no_ai > 1:
+                    self.no_ai = [i for i in self.no_ai if i != potential_ref.id]
+                return
+        # If no reference, only way to trigger is start with mentioning
+        elif not msg.content.startswith(self.bot.user.mention):
+            return
+
+        my_name = msg.guild.me.display_name if msg.guild else self.bot.user.name
+        ref = msg.reference
+        msgs = [msg]
+        while ref and ref.cached_message:
+            msgs.append(ref.cached_message)
+            ref = ref.cached_message.reference
+        participants, convo = [], []
+        for m in reversed(msgs):
+            if m.author != self.bot.user and m.author.display_name not in participants:
+                participants.append(m.author.display_name)
+            convo_content = m.clean_content
+            if m.content.startswith(self.bot.user.mention):
+                convo_content = m.clean_content[len(my_name) + 1:]
+            convo.append(f'{m.author.name}: {convo_content}')
+        lf = '\n'
+        prompt = f"{lf.join(convo)}\nDimBot:"
+        # print(prompt)
+        response = await self.ask(prompt, stop=[f'DimBot:', f'{participants[0]}:'])
+        # usage = response['usage']
+        # reason = response['choices'][0]['finish_reason']
+        response = response['choices'][0]['text']
+        await msg.reply(response)
+        # await self.bot.get_cog('Hamilton').bot_test.send(embed=missile.Embed(str(usage['total_tokens']), reason))
 
     @commands.group(invoke_without_command=True)
     async def ai(self, ctx, *, prompt):
@@ -121,7 +134,6 @@ class Nene(missile.Cog):
         with open(path, 'w') as f:
             json.dump(d, f)
         await ctx.reply('Thanks for telling me!')
-
 
     @ai.command(brief='Answer random questions to train the AI')
     async def qa(self, ctx):
@@ -162,7 +174,6 @@ class Nene(missile.Cog):
             await ctx.reply("Looks like something is wrong, but I've managed to save your answers. "
                             "Thanks for answering those questions!")
 
-
     @ai.group(invoke_without_command=True, brief='Controlling models')
     @missile.is_rainbow()
     async def model(self, ctx):
@@ -189,7 +200,7 @@ class Nene(missile.Cog):
                         model.write(qa_to_jsonl_str(user, k, v) + '\n')
                         lines += 1
         file = os.path.getsize('ai_data/model.jsonl')
-        await ctx.reply(f'Generated model.jsonl with {lines} lines ({file/1000} kB)')
+        await ctx.reply(f'Generated model.jsonl with {lines} lines ({file / 1000} kB)')
 
     @model.command(brief='Create an entirely new model')
     async def create(self, ctx):
@@ -240,7 +251,7 @@ class Nene(missile.Cog):
         print(resp.data)
         msg = ''
         for file in resp.data:
-            msg += f'{file.id} **{file.filename}** {file.purpose} {file.status} {file.bytes/1000}kB\n'
+            msg += f'{file.id} **{file.filename}** {file.purpose} {file.status} {file.bytes / 1000}kB\n'
         if not msg:
             msg = 'No files.'
         await ctx.reply(msg)
@@ -258,10 +269,14 @@ class Nene(missile.Cog):
 
     @commands.command(brief='Chat using the GPT-4 model')
     async def gpt4(self, ctx, *, msg):
-            # Add async with typing
+        # Add async with typing
         await self.gpt_common('gpt-4', ctx, msg)
 
     async def gpt_common(self, model, ctx, msg):
+        potential_ref = missile.msg_refers_to_author(msg, self.bot.user)
+        if potential_ref and potential_ref.id in self.no_ai:
+            return
+
         def role_prefix(m):
             if m.author == self.bot.user:
                 return 'assistant', ''
@@ -293,7 +308,8 @@ class Nene(missile.Cog):
         #     if nick:
         #         sys_msg += f"{name}'s nickname: {nick}\n"
 
-        msgs.appendleft({'role': 'system', 'content': f"Your name is DimBot. You are trained with the {model} model. Users: {','.join(authors)}. You must reply in under 4096 characters."})
+        msgs.appendleft({'role': 'system',
+                         'content': f"Your name is DimBot. You are trained with the {model} model. Users: {','.join(authors)}. You must reply in under 4096 characters."})
         try:
             async with ctx.typing():
                 resp = await openai.ChatCompletion.acreate(
@@ -310,4 +326,15 @@ class Nene(missile.Cog):
         elif resp_len <= 4096:
             await ctx.reply(embed=missile.Embed(description=resp))
         else:
-            await ctx.reply(embed=missile.Embed(description=resp[:4093] + '...', footer='Note: This response is too long'))
+            await ctx.reply(
+                embed=missile.Embed(description=resp[:4093] + '...', footer='Note: This response is too long'))
+
+    @commands.group(aliases=('tl',), invoke_without_command=True)
+    async def translator(self, ctx):
+        """Automatic chat translation"""
+        await self.send_grp_cmd_help(ctx)
+
+    @translator.command(aliases=('o',))
+    async def override(self, ctx, lang: str = None):
+        """Overrides """
+        await ctx.reply('Test')

@@ -2,9 +2,10 @@ import asyncio
 from typing import Optional
 
 import discord
-from discord.ext.commands import Cog, Context, group, has_guild_permissions
+from discord.ext.commands import Context, group, has_guild_permissions
 
 import missile
+from missile import Cog
 
 guild_id = 285366651312930817
 
@@ -16,11 +17,11 @@ async def solo_vc(vc):
 
 
 class Hamilton(Cog):
-    """Per-guild features
-    Version 2.0"""
+    """Per-guild features, Guild/user settings
+    Version 2.1"""
 
     def __init__(self, bot: missile.Bot):
-        self.bot = bot
+        super().__init__(bot, 'Hamilton')
         self.invites = {}
         self.guild = bot.get_guild(guild_id)  # My own server
         self.logs = bot.get_channel(384636771805298689)  # #logs in my server
@@ -126,17 +127,15 @@ class Hamilton(Cog):
     @has_guild_permissions(manage_guild=True)
     async def guild(self, ctx: Context):
         """Settings for server"""
-        if not ctx.invoked_subcommand:
-            self.bot.help_command.context = ctx
-            await self.bot.help_command.send_group_help(ctx.command)
+        await self.send_grp_cmd_help(ctx)
 
     @guild.command(brief='Changes the custom prefix of DimBot')
     async def prefix(self, ctx: Context, *, p: str = None):
         """`guild  prefix [p]`
         `p` is a SENTENCE so you can send like `Super bad prefix` as `p` without quotation marks.
         Note that d. will still work. Send the command without arguments to remove the custom prefix."""
-        if p and (p.lower().startswith('dimbot') or ctx.me.mention in p):
-            await ctx.reply('Only my little pog champ can use authoritative orders!')
+        if p and p.startswith(ctx.bot.user.mention):
+            await ctx.reply('Prefix cannot start with pinging me!')
         else:
             await self.bot.sql.update_guild_prefix(self.bot.db, guildID=ctx.guild.id, prefix=p)
             await ctx.reply('Updated server prefix.')
@@ -200,3 +199,17 @@ class Hamilton(Cog):
         role: The joinable role to be removed from the database"""
         await self.bot.sql.remove_joinable_role(self.bot.db, role=role.id)
         await ctx.reply('Deleted')
+
+    @group(brief='Settings for a user')
+    async def user(self, ctx: Context):
+        await self.send_grp_cmd_help(ctx)
+
+    @user.command(brief="Sets a user's preferred language")
+    async def lang(self, ctx: Context):
+        locale_msg = await self.bot.ask_msg(ctx,
+                                            'Please reply this message with the ID of your preferred language, '
+                                            'e.g. `en_US`, `ja`, `zh_hant_HK`. See <https://localeplanet.com/icu/>',
+                                            None,
+                                            return_msg_obj=True)
+        await self.bot.sql.set_user_lang(self.bot.db, user=ctx.author.id, locale=locale_msg.content)
+        await locale_msg.add_reaction('👍')

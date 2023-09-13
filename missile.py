@@ -3,7 +3,7 @@ import base64
 import logging
 import re
 from datetime import datetime
-from typing import Union
+from typing import Union, Optional
 
 import aiosql
 import aiosqlite
@@ -44,13 +44,38 @@ def decode(text: str) -> str:
     decoded: bytes = base64.b64decode(b)
     return decoded.decode()
 
+
 def underline(text: str, mag: int = 1) -> str:
-    u_line = '_'*mag
-    text = text.replace(u_line, '\\_'*mag)
+    u_line = '_' * mag
+    text = text.replace(u_line, '\\_' * mag)
     return u_line + text + u_line
+
 
 async def append_msg(msg: discord.Message, content: str, delimiter: str = '\n'):
     await msg.edit(content=f'{msg.content}{delimiter}{content}')
+
+
+def is_url(url: str):
+    """Uses RegEx to check whether a string is a HTTP(s) link"""
+    # https://stackoverflow.com/a/17773849/8314159
+    return re.search(r"(https?://(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9]"
+                     r"[a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?://(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}"
+                     r"|www\.[a-zA-Z0-9]+\.[^\s]{2,})", url)
+
+
+async def prefix_process(bot, msg: discord.Message):
+    """Function for discord.py to extract applicable prefix based on the message"""
+    if msg.guild:
+        g_prefix = await bot.sql.get_guild_prefix(bot.db, guildID=msg.guild.id)
+        if g_prefix:
+            return g_prefix, bot.default_prefix
+    return bot.default_prefix
+
+
+def msg_refers_to_author(msg, author):
+    """Checks whether the msg is referring to the author"""
+    if msg.reference and msg.reference.cached_message and msg.reference.cached_message.author == author:
+        return msg.reference.cached_message
 
 
 # similar to @commands.is_owner()
@@ -129,23 +154,6 @@ def is_mod():
     return commands.check(check)
 
 
-def is_url(url: str):
-    """Uses RegEx to check whether a string is a HTTP(s) link"""
-    # https://stackoverflow.com/a/17773849/8314159
-    return re.search(r"(https?://(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9]"
-                     r"[a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?://(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}"
-                     r"|www\.[a-zA-Z0-9]+\.[^\s]{2,})", url)
-
-
-async def prefix_process(bot, msg: discord.Message):
-    """Function for discord.py to extract applicable prefix based on the message"""
-    if msg.guild:
-        g_prefix = await bot.sql.get_guild_prefix(bot.db, guildID=msg.guild.id)
-        if g_prefix:
-            return g_prefix, bot.default_prefix
-    return bot.default_prefix
-
-
 def in_guilds(*guilds):
     """When a command has been invoked, checks whether the invoked channel is in one of the guilds"""
 
@@ -209,7 +217,7 @@ class Bot(commands.Bot):
             async with self.session.get('http://169.254.169.254/latest/meta-data/public-ipv4') as r:
                 self.ip = f"http://{await r.text()}:4010/"
 
-    async def ask_msg(self, ctx, msg: str, timeout: int = 10):
+    async def ask_msg(self, ctx, msg: str, timeout: Optional[int] = 10, timeout_msg: str = None, return_msg_obj=False):
         """Asks a follow-up question"""
         nene = self.get_cog('Nene')
         p = await ctx.reply(msg)
@@ -221,10 +229,17 @@ class Bot(commands.Bot):
                 'message', timeout=timeout,
                 # Checks whether mess is replying to p
                 check=lambda mess: mess.reference and mess.reference.cached_message == p)
-            r = reply.content
+            if return_msg_obj:
+                r = reply
+            else:
+                r = reply.content
         except asyncio.TimeoutError:
-            pass
-        nene.no_ai.remove(p.id)
+            if timeout_msg:
+                await p.reply(timeout_msg)
+        if timeout is None:  # This will be executed after nene.on_msg
+            nene.no_ai.append(p.id)
+        else:  # nene.on_msg first
+            nene.no_ai.remove(p.id)
         return r
 
     async def ask_reaction(self, ctx: commands.Context, ask: str, emoji: str = '✅', timeout: int = 10) -> bool:
@@ -287,6 +302,14 @@ class Cog(commands.Cog):
     def __init__(self, bot, name):
         self.bot: Bot = bot
         self.logger = get_logger(name)
+
+    async def send_grp_cmd_help(self, ctx):
+        if not ctx.invoked_subcommand:
+            self.bot.help_command.context = ctx
+            await self.bot.help_command.send_group_help(ctx.command)
+
+    async def msg_is_cmd(self, msg):
+        return msg.content.startswith(await self.bot.get_prefix(msg))
 
 
 class _Help(commands.HelpCommand):
