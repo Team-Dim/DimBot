@@ -273,7 +273,7 @@ class Nene(missile.Cog):
         await self.gpt_common('gpt-4', ctx, msg)
 
     async def gpt_common(self, model, ctx, msg):
-        potential_ref = missile.msg_refers_to_author(msg, self.bot.user)
+        potential_ref = missile.msg_refers_to_author(ctx.message, self.bot.user)
         if potential_ref and potential_ref.id in self.no_ai:
             return
 

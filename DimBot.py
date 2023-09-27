@@ -15,7 +15,7 @@ import dimsecret
 import missile
 import tribe
 import os
-from bruckserver.vireg import Verstapen
+# from bruckserver.vireg import Verstapen
 from diminator.cog import Diminator
 from diminator.obj import BasePPException
 from echo import Bottas

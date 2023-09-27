@@ -1,13 +1,13 @@
-beautifulsoup4~=4.9.3
+beautifulsoup4~=4.9
 feedparser~=6.0.2
 discord.py[voice]==1.7.3
 aiohttp~=3.8.3
-aiosqlite~=0.17.0
-aiosql~=3.4.1
+aiosqlite~=0.17
+aiosql>=3.4.1
 matplotlib~=3.6
-psutil~=5.8.0
-git+https://github.com/Rapptz/discord-ext-menus
-python-digitalocean
-pytube>=12.0.0
+psutil~=5.9
+discord-ext-menus @ git+https://github.com/Rapptz/discord-ext-menus
+# python-digitalocean
+pytube>=15.0.0
 openai>=0.27.2
 coc.py>=2.3.1

@@ -72,7 +72,7 @@ async def prefix_process(bot, msg: discord.Message):
     return bot.default_prefix
 
 
-def msg_refers_to_author(msg, author):
+def msg_refers_to_author(msg: discord.Message, author):
     """Checks whether the msg is referring to the author"""
     if msg.reference and msg.reference.cached_message and msg.reference.cached_message.author == author:
         return msg.reference.cached_message
