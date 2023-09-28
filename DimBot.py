@@ -404,7 +404,7 @@ async def hug(ctx: commands.Context, *target: discord.Member):
                 delta = t - hug_record[1]
                 if delta < 86400:
                     wait = time.gmtime(86400 - delta)
-                    s += f"You've already hugged {name} today! Streaks: **{hug_record[0]}**. "\
+                    s += f"You've already hugged {name} today! Streaks: **{hug_record[0]}**. " \
                          f"Please wait for {wait.tm_hour}h {wait.tm_min}m {wait.tm_sec}s"
                 elif delta < 172800:
                     new_streak = hug_record[0] + 1
@@ -526,4 +526,10 @@ async def ready_tasks():
 
 bot.loop.create_task(bot.async_init())
 bot.loop.create_task(ready_tasks())
-bot.run(dimsecret.discord)
+try:
+    bot.loop.run_until_complete(bot.start(dimsecret.discord))
+except Exception as e:
+    bot.loop.run_until_complete(bot.db.close())
+    raise e
+except:
+    bot.loop.run_until_complete(bot.db.close())
