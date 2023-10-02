@@ -74,8 +74,9 @@ async def prefix_process(bot, msg: discord.Message):
 
 def msg_refers_to_author(msg: discord.Message, author):
     """Checks whether the msg is referring to the author"""
-    if msg.reference and msg.reference.cached_message and msg.reference.cached_message.author == author:
-        return msg.reference.cached_message
+    ref_msg = MsgRefIter.get_ref_msg(msg)
+    if ref_msg and ref_msg.author == author:
+        return ref_msg
 
 
 # similar to @commands.is_owner()
@@ -225,10 +226,15 @@ class Bot(commands.Bot):
         r = None
         # Waits for the time specified
         try:
+            def __check__(m):
+                ref = MsgRefIter.get_ref_msg(m)
+                if ref:
+                    return ref == p
+
             reply = await self.wait_for(
                 'message', timeout=timeout,
                 # Checks whether mess is replying to p
-                check=lambda mess: mess.reference and mess.reference.cached_message == p)
+                check=__check__)
             if return_msg_obj:
                 r = reply
             else:
@@ -355,3 +361,46 @@ class _Help(commands.HelpCommand):
         if cmd.aliases:
             embed.add_field('Aliases', ', '.join(cmd.aliases))
         await self.context.reply(embed=embed)
+
+
+class MsgRefIter:
+
+    def __init__(self, msg: discord.Message, resolve=False, include_self=False):
+        self.msg = msg
+        self.resolve = resolve
+        self.include_self = include_self
+
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        if self.include_self:
+            self.include_self = False
+            return self.msg
+        ref = self.msg.reference
+        if ref:
+            cached = ref.cached_message
+            if cached:
+                self.msg = cached
+                return cached
+            cached = ref.resolved
+            if cached and isinstance(cached, discord.Message):
+                self.msg = cached
+                return cached
+            if self.resolve:
+                cached = await self.msg.channel.fetch_message(ref.message_id)
+                if cached:
+                    self.msg = cached
+                    return cached
+        raise StopAsyncIteration
+
+    @staticmethod
+    def get_ref_msg(msg):
+        ref = msg.reference
+        if ref:
+            cached = ref.cached_message
+            if cached:
+                return cached
+            cached = ref.resolved
+            if cached and isinstance(cached, discord.Message):
+                return cached

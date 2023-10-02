@@ -187,11 +187,9 @@ class Bottas(commands.Cog):
         if name:
             content = await self.bot.sql.get_tag_content(self.bot.db, name=name, guildID=ctx.guild.id)
             if content:
-                if ctx.message.reference:
-                    if ctx.message.reference.cached_message:
-                        await ctx.message.reference.cached_message.reply(content[0])
-                    else:
-                        await ctx.channel.get_partial_message(ctx.message.reference.message_id).reply(content[0])
+                ref_msg = missile.MsgRefIter.get_ref_msg(ctx.message)
+                if ref_msg:
+                    await ref_msg.reply(content[0])
                 else:
                     await ctx.reply(content[0])
             else:

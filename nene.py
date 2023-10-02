@@ -75,11 +75,7 @@ class Nene(missile.Cog):
             return
 
         my_name = msg.guild.me.display_name if msg.guild else self.bot.user.name
-        ref = msg.reference
-        msgs = [msg]
-        while ref and ref.cached_message:
-            msgs.append(ref.cached_message)
-            ref = ref.cached_message.reference
+        msgs = [ref async for ref in missile.MsgRefIter(msg, include_self=True)]
         participants, convo = [], []
         for m in reversed(msgs):
             if m.author != self.bot.user and m.author.display_name not in participants:
@@ -282,13 +278,11 @@ class Nene(missile.Cog):
                 return 'assistant', ''
             return 'user', m.author.name + ': '
 
-        ref = ctx.message.reference
         msgs = deque([{"role": 'user', "content": f'{ctx.author.name}: {msg}'}])
         authors = [ctx.author.name]
 
         # nicknames = {ctx.author.name: ctx.author.nick if ctx.guild and ctx.author.nick else None}
-        while ref and ref.cached_message:
-            ref_msg = ref.cached_message
+        async for ref_msg in missile.MsgRefIter(ctx.message):
             ref_author = ref_msg.author
             content = ref_msg.content
 
@@ -302,7 +296,6 @@ class Nene(missile.Cog):
                 authors.append(ref_author.name)
             role, prefix = role_prefix(ref_msg)
             msgs.appendleft({"role": role, "content": prefix + content})
-            ref = ref_msg.reference
 
         # for name, nick in nicknames.items():
         #     if nick:

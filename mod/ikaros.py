@@ -301,9 +301,6 @@ class Ikaros(Cog):
     @missile.is_mod()
     @missile.guild_only()
     async def purgechs(self, ctx: Context):
-        if ctx.message.reference:
-            if ctx.message.reference.cached_message:
-                msg = ctx.message.reference.cached_message
-            else:
-                msg = await ctx.fetch_message(ctx.message.reference.message_id)
-            await self.purge_all_ch(msg)
+        ref_msg = missile.MsgRefIter.get_ref_msg(ctx.message)
+        if ref_msg:
+            await self.purge_all_ch(ref_msg)
