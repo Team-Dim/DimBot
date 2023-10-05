@@ -24,7 +24,7 @@ from mod.aegis import Aegis
 from mod.ikaros import Ikaros
 from nene import Nene
 from raceline import Ricciardo
-from skybow import SkyBow
+# from skybow import SkyBow
 from xp import XP
 
 # Variables needed for initialising the bot
@@ -494,7 +494,7 @@ async def ready_tasks():
     bot.add_cog(Aegis(bot))
     bot.add_cog(XP(bot))
     bot.add_cog(Diminator(bot))
-    bot.add_cog(SkyBow(bot))
+    # bot.add_cog(SkyBow(bot))
     bot.add_cog(Nene(bot))
     bot.add_cog(Hyperstellar(bot))
     await bot.wait_until_ready()
