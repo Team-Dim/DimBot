@@ -4,7 +4,6 @@ import os
 
 import discord
 import openai
-from collections import deque
 from discord.ext import commands
 from openai import OpenAIError
 
@@ -18,6 +17,48 @@ def qa_to_jsonl_str(uname, question, ans):
         'prompt': f'DimBot: {question}\n{uname}:{fine_tune_stop}',
         'completion': ' ' + ans + fine_tune_stop
     })
+
+
+class GPTPrompt:
+
+    def __init__(self, sys=''):
+        self.data = [{'role': 'system', 'content': sys}]
+
+    def __str__(self):
+        return str(self.data)
+
+    def user(self, content):
+        self.data.append({'role': 'user', 'content': content})
+
+    def bot(self, content):
+        self.data.append({'role': 'assistant', 'content': content})
+
+    def sys(self, content):
+        self.data[0]['content'] = content
+
+    def load_convo(self, ctx: commands.Context):
+        authors = set()
+
+        for ref_msg in missile.MsgRefIter(ctx.message, include_self=True):
+            ref_author = ref_msg.author
+            content = ref_msg.content
+
+            if not content and ref_msg.embeds:  # Use embed description as content
+                emb = ref_msg.embeds[0]
+                if emb.description:
+                    content = emb.description
+            if ref_author == ctx.bot.user:
+                self.data.insert(1,  {'role': 'assistant', 'content': content})
+            # if ref_author.name not in nicknames and ref_author != self.bot.user:
+            #     nicknames[ref_author.name] = ref_author.nick if ctx.guild and ref_author.nick else None
+            else:
+                authors.add(ref_author.name)
+                self.data.insert(1, {'role': 'user', 'content': ref_author.name + ': ' + content})
+
+        return authors
+
+    async def req(self, model):
+        return await openai.ChatCompletion.acreate(model=model, messages=self.data)
 
 
 class Nene(missile.Cog):
@@ -75,7 +116,7 @@ class Nene(missile.Cog):
             return
 
         my_name = msg.guild.me.display_name if msg.guild else self.bot.user.name
-        msgs = [ref async for ref in missile.MsgRefIter(msg, include_self=True)]
+        msgs = [ref for ref in missile.MsgRefIter(msg, include_self=True)]
         participants, convo = [], []
         for m in reversed(msgs):
             if m.author != self.bot.user and m.author.display_name not in participants:
@@ -265,7 +306,6 @@ class Nene(missile.Cog):
 
     @commands.command(brief='Chat using the GPT-4 model')
     async def gpt4(self, ctx, *, msg):
-        # Add async with typing
         await self.gpt_common('gpt-4', ctx, msg)
 
     async def gpt_common(self, model, ctx, msg):
@@ -273,45 +313,21 @@ class Nene(missile.Cog):
         if potential_ref and potential_ref.id in self.no_ai:
             return
 
-        def role_prefix(m):
-            if m.author == self.bot.user:
-                return 'assistant', ''
-            return 'user', m.author.name + ': '
-
-        msgs = deque([{"role": 'user', "content": f'{ctx.author.name}: {msg}'}])
-        authors = [ctx.author.name]
-
+        prompt = GPTPrompt()
         # nicknames = {ctx.author.name: ctx.author.nick if ctx.guild and ctx.author.nick else None}
-        async for ref_msg in missile.MsgRefIter(ctx.message):
-            ref_author = ref_msg.author
-            content = ref_msg.content
-
-            if not content and ref_msg.embeds:  # Use embed description as content
-                emb = ref_msg.embeds[0]
-                if emb.description:
-                    content = emb.description
-            # if ref_author.name not in nicknames and ref_author != self.bot.user:
-            #     nicknames[ref_author.name] = ref_author.nick if ctx.guild and ref_author.nick else None
-            if ref_author != self.bot.user and ref_author.name not in authors:
-                authors.append(ref_author.name)
-            role, prefix = role_prefix(ref_msg)
-            msgs.appendleft({"role": role, "content": prefix + content})
+        authors = prompt.load_convo(ctx)
 
         # for name, nick in nicknames.items():
         #     if nick:
         #         sys_msg += f"{name}'s nickname: {nick}\n"
 
-        msgs.appendleft({'role': 'system',
-                         'content': f"Your name is DimBot. You are trained with the {model} model. Users: {','.join(authors)}. You must reply in under 4096 characters."})
+        prompt.sys(f"Your name is DimBot. You are trained with the {model} model. This conversation has users: {','.join(authors)}. You must reply in under 4096 characters.")
         try:
             async with ctx.typing():
-                resp = await openai.ChatCompletion.acreate(
-                    model=model, messages=list(msgs)
-                )
+                resp = await prompt.req(model)
         except OpenAIError as e:
             await ctx.reply('Hmm... Who am I? What is DimBot? Sus\n' + e.user_message)
             return
-        self.logger.debug(msgs)
         resp = resp['choices'][0]['message']['content'].replace('@', '**@**')
         resp_len = len(resp)
         if resp_len <= 2000:

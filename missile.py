@@ -72,7 +72,7 @@ async def prefix_process(bot, msg: discord.Message):
     return bot.default_prefix
 
 
-def msg_refers_to_author(msg: discord.Message, author):
+def msg_refers_to_author(msg: discord.Message, author) -> discord.Message:
     """Checks whether the msg is referring to the author"""
     ref_msg = MsgRefIter.get_ref_msg(msg)
     if ref_msg and ref_msg.author == author:
@@ -365,13 +365,32 @@ class _Help(commands.HelpCommand):
 
 class MsgRefIter:
 
-    def __init__(self, msg: discord.Message, resolve=False, include_self=False):
+    def __init__(self, msg: discord.Message, include_self=False):
         self.msg = msg
-        self.resolve = resolve
         self.include_self = include_self
+
+    def __iter__(self):
+        return self
 
     def __aiter__(self):
         return self
+
+    def __next__(self):
+        if self.include_self:
+            self.include_self = False
+            return self.msg
+        ref = self.msg.reference
+        if ref:
+            cached = ref.cached_message
+            if cached:
+                self.msg = cached
+                return cached
+            # It seems that the first "un-cached" ref is always available
+            cached = ref.resolved
+            if cached and isinstance(cached, discord.Message):
+                self.msg = cached
+                return cached
+        raise StopIteration
 
     async def __anext__(self):
         if self.include_self:
@@ -387,11 +406,10 @@ class MsgRefIter:
             if cached and isinstance(cached, discord.Message):
                 self.msg = cached
                 return cached
-            if self.resolve:
-                cached = await self.msg.channel.fetch_message(ref.message_id)
-                if cached:
-                    self.msg = cached
-                    return cached
+            cached = await self.msg.channel.fetch_message(ref.message_id)
+            if cached:
+                self.msg = cached
+                return cached
         raise StopAsyncIteration
 
     @staticmethod
