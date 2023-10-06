@@ -34,7 +34,7 @@ bot = missile.Bot(intents=intent)
 logger = missile.get_logger('DimBot')
 sponsor_txt = '世界の未来はあなたの手にある <https://streamlabs.com/pythonic_rainbow/tip> <https://www.patreon.com/ChingDim>'
 reborn_channel = None
-last_modified = datetime.fromtimestamp(os.path.getmtime('DimBot.py')).strftime('%b %d, %Y %I:%M%p')
+last_modified = int(os.path.getmtime('DimBot.py'))
 
 try:
     # If the bot is restarting, read the channel ID that invoked the restart command
@@ -363,7 +363,7 @@ async def bs(ctx: commands.Context, server: int):
 
 @arccore.command()
 async def changelog(ctx):
-    await bot.get_channel(977778385247944754).send(f"""# __{missile.ver} ({last_modified})__
+    await bot.get_channel(977778385247944754).send(f"""# __{missile.ver} (<t:{last_modified}>)__
 ## Maximum character length of GPT response: 2000 => 4096 (Embed descriptions, also supported in a conversation).
 * Now gracefully handles GPT responses that are too long.
 * Added a typing indicator when using GPT 3/4
