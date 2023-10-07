@@ -40,21 +40,3 @@ WHERE guildID = :guild;
 --name: add-lockdown!
 INSERT INTO GuildLockdown
 VALUES (:guild, :role, :perm);
-
---name: get-joinable-role^
-SELECT requiredRoleID, checkHighestRole
-FROM RoleJoinable
-WHERE roleID = :role;
-
---name: add-joinable-role!
-INSERT INTO RoleJoinable
-VALUES (:role, :required, :checkHighest);
-
---name: update-joinable-role!
-UPDATE RoleJoinable
-SET requiredRoleID = :required, checkHighestRole = :checkHighest
-WHERE roleID = :role;
-
---name: remove-joinable-role!
-DELETE FROM RoleJoinable
-WHERE roleID = :role;

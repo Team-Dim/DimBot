@@ -134,6 +134,7 @@ def vc_only():
 
 
 def bot_has_perm(**kwargs):
+    """Checks whether DimBot has perms in that guild channel"""
     async def check(ctx):
         remote = ctx.guild.me.permissions_in(ctx.channel)
         has = remote.is_superset(discord.Permissions(**kwargs))

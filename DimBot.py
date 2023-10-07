@@ -485,6 +485,15 @@ async def decode(ctx: commands.Context, content: str):
         await ctx.send('Malformed base64 string.')
 
 
+@missile.guild_only()
+@missile.bot_has_perm(mention_everyone=True)
+@bot.command(brief='If the user is in the role, pings the role')
+async def roleping(ctx: commands.Context, role: discord.Role):
+    """roleping <role>"""
+    if not role.is_default() and not role.is_premium_subscriber() and role in ctx.author.roles:
+        await ctx.reply(role.mention)
+
+
 async def ready_tasks():
     bot.add_cog(Ricciardo(bot))
     # bot.add_cog(Verstapen(bot))

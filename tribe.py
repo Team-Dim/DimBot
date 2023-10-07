@@ -1,4 +1,5 @@
 import asyncio
+from sqlite3 import IntegrityError
 from typing import Optional
 
 import discord
@@ -199,6 +200,19 @@ class Hamilton(Cog):
         role: The joinable role to be removed from the database"""
         await self.bot.sql.remove_joinable_role(self.bot.db, role=role.id)
         await ctx.reply('Deleted')
+
+    @guild.command()
+    async def roleping(self, ctx: Context, role: discord.Role):
+        if role.is_default() or role.is_premium_subscriber():
+            await ctx.reply('The role cannot be the default role or Nitro role')
+        else:
+            resp = 'The role is no longer pingable by its members'
+            try:
+                await self.bot.sql.add_role_ping(self.bot.db, role=role.id)
+                resp = 'The role is now pingable by its members'
+            except IntegrityError:
+                await self.bot.sql.remove_role_ping(self.bot.db, role=role.id)
+            await ctx.reply(resp)
 
     @group(brief='Settings for a user')
     async def user(self, ctx: Context):
