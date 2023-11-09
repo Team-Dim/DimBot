@@ -2,7 +2,7 @@ import dimsecret
 import missile
 import coc
 
-clan_tag = '#URU2RY9J'
+clan_tag = '#2QU2UCJJC'
 
 class Hyperstellar(missile.Cog):
 
