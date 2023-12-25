@@ -225,5 +225,8 @@ class Hamilton(Cog):
                                             'e.g. `en_US`, `ja`, `zh_hant_HK`. See <https://localeplanet.com/icu/>',
                                             None,
                                             return_msg_obj=True)
-        await self.bot.sql.set_user_lang(self.bot.db, user=ctx.author.id, locale=locale_msg.content)
+        try:
+            await self.bot.sql.add_user_lang(self.bot.db, user=ctx.author.id, locale=locale_msg.content)
+        except IntegrityError:
+            await self.bot.sql.update_user_lang(self.bot.db, user=ctx.author.id, locale=locale_msg.content)
         await locale_msg.add_reaction('👍')

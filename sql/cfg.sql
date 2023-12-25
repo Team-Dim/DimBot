@@ -76,7 +76,12 @@ SELECT LocalePref
 FROM UserCfg
 WHERE ID = :user;
 
---name: set-user-lang!
+--name: add-user-lang!
 INSERT INTO UserCfg (ID, LocalePref)
-VALUES (:user, :locale)
-ON CONFLICT (ID) DO UPDATE SET LocalePref = :locale;
+VALUES (:user, :locale);
+--ON CONFLICT (ID) DO UPDATE SET LocalePref = :locale;
+
+--name: update-user-lang!
+UPDATE UserCfg
+SET LocalePref = :locale
+WHERE ID = :user;
