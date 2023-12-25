@@ -363,14 +363,20 @@ async def bs(ctx: commands.Context, server: int):
 
 @arccore.command()
 async def changelog(ctx):
-    await bot.get_channel(977778385247944754).send(f"""# __{missile.ver} (<t:{last_modified}>)__
-## Maximum character length of GPT response: 2000 => 4096 (Embed descriptions, also supported in a conversation).
-* Now gracefully handles GPT responses that are too long.
-* Added a typing indicator when using GPT 3/4
-* Updated prompt engineering for GPT 3/4
-* Removed `d.gpt`
-* Removed discriminator in `d.hug`
-* Replying to DimBot's message with mention OFF will no longer trigger the AI.
+    ch = 666431254312517633 if dimsecret.debug else 977778385247944754
+    await bot.get_channel(ch).send(f"""# __{missile.ver} (<t:{last_modified}>)__
+Changelog timestamps now use Discord format ^
++ Added `d.roleping` & `d.guild roleping` - Set a role so that the bot will ping it on behalf of the user
++ Added `d.gpt3i` - InstructGPT 3.5
+
+## Introducing __Automatic Chat Translation__
+DimBot can translate to multiple languages within a conversation!!!
+1. Set your preferred language using `d.user lang`
+2. If you are the host, start a convo: `d.tl c [topic]`
+3. Invite others by asking them to send `d.tl j @you` within the same channel (They also need to set their language)
+4. Just talk!
+
+More details: `d.help tl`
 """)
 
 

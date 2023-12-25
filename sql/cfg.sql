@@ -71,6 +71,11 @@ WHERE roleID = :role;
  * User cfg
  */
 
+--name: get-user-lang$
+SELECT LocalePref
+FROM UserCfg
+WHERE ID = :user;
+
 --name: set-user-lang!
 INSERT INTO UserCfg (ID, LocalePref)
 VALUES (:user, :locale)
