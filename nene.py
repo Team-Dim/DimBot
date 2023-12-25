@@ -212,8 +212,8 @@ class Nene(missile.Cog):
         locales_set.remove(names_locales[msg.author.id][1])  # Remove author's locale because why need translation
         if not locales_set:
             return  # No locales to translate to
-        topic = creator_topic[1] if creator_topic[1] else ''
-        prompt = (f'The following is a conversation about {topic} between these people (and their main language): '
+        topic = f'about {creator_topic[1]} ' if creator_topic[1] else ''
+        prompt = (f'The following is a conversation {topic}between these people (and their main language): '
                   f'{", ".join(f"{name} ({locale})" for name, locale in names_locales.values())}. '
                   'Each line is in the format <pupil>: <message>.\n\n')
         convo = ''
