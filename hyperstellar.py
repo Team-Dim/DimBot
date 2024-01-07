@@ -4,50 +4,14 @@ import coc
 
 clan_tag = '#2QU2UCJJC'
 
+
 class Hyperstellar(missile.Cog):
 
     def __init__(self, bot):
         super().__init__(bot, 'Hyperstellar')
         self.clan_log = None
-        self.donated = {}
-        self.received = {}
         self.coc = coc.EventsClient()
         self.coc.add_war_updates(clan_tag)
-        self.coc.add_clan_updates(clan_tag)
-
-        @self.coc.event
-        @coc.ClanEvents.member_donations()
-        async def on_member_donation(old: coc.ClanMember, new: coc.ClanMember):
-            if new.donations > old.donations:
-                delta = new.donations - old.donations
-                if new.name in self.donated:
-                    self.donated[new.name] += delta
-                else:
-                    self.donated[new.name] = delta
-
-        @self.coc.event
-        @coc.ClanEvents.member_received()
-        async def on_member_received(old: coc.ClanMember, new: coc.ClanMember):
-            if new.received > old.received:
-                delta = new.received - old.received
-                if new.name in self.received:
-                    self.received[new.name] += delta
-                else:
-                    self.received[new.name] = delta
-
-        @self.coc.event
-        @coc.ClientEvents.clan_loop_finish()
-        async def on_client_clan_loop_finish(no):
-            if self.donated:
-                msg = '[DNT]'
-                for member, count in self.donated.items():
-                    msg += f' {member}: {count}'
-                msg += '\n =>'
-                for member, count in self.received.items():
-                    msg += f' {member}: {count}'
-                self.donated.clear()
-                self.received.clear()
-                await self.clan_log.send(msg)
 
         @self.coc.event
         @coc.WarEvents.state()
@@ -57,7 +21,7 @@ class Hyperstellar(missile.Cog):
                     await self.clan_log.send('War has started: ' + new.opponent.name)
                 elif new.state == 'warEnded':
                     msg = "War has ended. The following members didn't attack:\n" + \
-                    f"{', '.join(member.name for member in new.members if not member.is_opponent and not member.attacks)}"
+                          f"{', '.join(member.name for member in new.members if not member.is_opponent and not member.attacks)}"
                     await self.clan_log.send(msg)
 
         @self.coc.event
@@ -79,8 +43,8 @@ class Hyperstellar(missile.Cog):
                     pos = missile.underline(pos, 2)
                 await self.clan_log.send(f'[ATK] {name} {pos} {attack_count}⚔️ @{atk_time}')
 
-
     @missile.Cog.listener()
     async def on_ready(self):
-        self.clan_log = self.bot.get_cog('Hamilton').bot_test if dimsecret.debug else self.bot.get_channel(1099026457268863017)
+        self.clan_log = self.bot.get_cog('Hamilton').bot_test if dimsecret.debug else self.bot.get_channel(
+            1099026457268863017)
         await self.coc.login_with_tokens(dimsecret.coc)
