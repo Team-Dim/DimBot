@@ -15,7 +15,7 @@ from diminator.obj import PP
 import dimsecret
 
 __lvl__ = logging.DEBUG if dimsecret.debug else logging.INFO
-ver = '0.10.25.1'
+ver = '0.10.25.2'
 
 
 def get_logger(name: str) -> logging.Logger:
@@ -135,6 +135,7 @@ def vc_only():
 
 def bot_has_perm(**kwargs):
     """Checks whether DimBot has perms in that guild channel"""
+
     async def check(ctx):
         remote = ctx.guild.me.permissions_in(ctx.channel)
         has = remote.is_superset(discord.Permissions(**kwargs))
@@ -173,6 +174,22 @@ def in_guilds(*guilds):
             return is_guild
         await no_guild()
         return False
+
+    return commands.check(check)
+
+
+def cooldown_no_rainbow(rate, per, typee=commands.BucketType.default):
+    def check(ctx: commands.Context):
+        if not hasattr(ctx.command, '_gay_bucket'):
+            ctx.command._buckets = commands.CooldownMapping(commands.Cooldown(rate, per, typee))
+            ctx.command._gay_bucket = None
+        if ctx.author.id == ctx.bot.owner_id:
+            if ctx.command._buckets._cooldown:
+                ctx.command._gay_bucket = ctx.command._buckets._cooldown
+                ctx.command._buckets._cooldown = None
+        elif ctx.command._buckets._cooldown is None:
+                ctx.command._buckets._cooldown = ctx.command._gay_bucket
+        return True
 
     return commands.check(check)
 

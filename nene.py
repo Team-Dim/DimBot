@@ -537,3 +537,22 @@ class Nene(missile.Cog):
         await self.bot.sql.remove_translator_convo(self.bot.db, creator=ctx.author.id, ch=ctx.channel.id)
         await ctx.reply('Done')
 
+    @commands.command(brief='DALL-E 2 image generation')
+    @missile.cooldown_no_rainbow(1, 600, commands.BucketType.user)
+    async def de(self, ctx, *, prompt: str):
+        try:
+            async with ctx.typing():
+                resp = await openai.Image.acreate(prompt=prompt, size='256x256')
+                await ctx.reply(resp['data'][0]['url'])
+        except OpenAIError as e:
+            await ctx.reply('Hmm... Who am I? What is DimBot? Sus\n' + e.user_message)
+
+    @commands.command(brief='DALL-E 3 image generation')
+    @missile.cooldown_no_rainbow(1, 1200, commands.BucketType.user)
+    async def de3(self, ctx, *, prompt: str):
+        try:
+            async with ctx.typing():
+                resp = await openai.Image.acreate(prompt=prompt, model='dall-e-3')
+                await ctx.reply(resp['data'][0]['url'])
+        except OpenAIError as e:
+            await ctx.reply('Hmm... Who am I? What is DimBot? Sus\n' + e.user_message)

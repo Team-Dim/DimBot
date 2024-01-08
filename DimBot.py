@@ -365,7 +365,8 @@ async def bs(ctx: commands.Context, server: int):
 async def changelog(ctx):
     ch = 666431254312517633 if dimsecret.debug else 977778385247944754
     await bot.get_channel(ch).send(f"""# __{missile.ver} (<t:{last_modified}>)__
-`Project Hyperstellar` is now a separate project. Donation events are sent by another bot.
+Added `d.de` and `d.de3`: OpenAI DALL-E image generation.
+__PLEASE DO NOT SPAM THE COMMAND IT COSTS ME A FUCK TON OF MONEY!!!!!__
 """)
 
 
@@ -500,7 +501,8 @@ async def ready_tasks():
     bot.add_cog(Diminator(bot))
     # bot.add_cog(SkyBow(bot))
     bot.add_cog(Nene(bot))
-    bot.add_cog(Hyperstellar(bot))
+    if not dimsecret.debug:
+        bot.add_cog(Hyperstellar(bot))
     await bot.wait_until_ready()
     bot.add_cog(tribe.Hamilton(bot))
     psutil.cpu_percent(percpu=True)
